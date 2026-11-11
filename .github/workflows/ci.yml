@@ -9,6 +9,7 @@ on:
       - "fix/**"
       - "migration/**"
       - "integration/**"
+      - "test/**"
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
@@ -36,7 +37,7 @@ jobs:
           node-version: "20"
 
       - name: Run Python engine tests
-        run: python -m unittest -v test_engine.py
+        run: python -m unittest -v test_engine.py test_parity.py
 
       - name: Run JavaScript engine tests
         run: node test_engine.js
@@ -45,6 +46,7 @@ jobs:
         run: |
           node --check app.js
           node --check engine.js
+          node --check parity_runner.js
 
       - name: Run Python engine smoke test
         run: python python_engine.py

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101a2b">
+  <title>DealFlow Alpha — Decision Desk</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark">D</div><div><strong>DealFlow</strong><span>ALPHA · DECISION INTELLIGENCE</span></div></div>
+    <div class="top-note"><span class="live-dot"></span> Local prototype · Synthetic data · 01.2</div>
+  </header>
+
+  <main class="shell">
+    <section class="intro">
+      <div>
+        <p class="eyebrow">THE DECISION DESK</p>
+        <h1>Where should your attention go <em>right now?</em></h1>
+        <p class="sub">Allocate limited working time to the actions with the greatest expected incremental agent commission.</p>
+      </div>
+      <div class="alpha-badge">ALPHA 01.2<br><small>Not financial proof</small></div>
+    </section>
+
+    <section class="control-panel panel">
+      <div class="control-copy"><span class="eyebrow">TODAY'S CAPACITY</span><strong>Available working time</strong><small>How much time can you realistically invest?</small></div>
+      <label class="capacity-control"><input id="capacity" type="number" min="0.5" max="24" step="0.5" value="6"><span>hours</span></label>
+      <button class="primary" id="optimizeBtn">Optimize my attention <span>→</span></button>
+    </section>
+
+    <section id="summary" class="summary-grid" aria-live="polite"></section>
+
+    <section class="section-head">
+      <div><p class="eyebrow">YOUR OPPORTUNITY PORTFOLIO</p><h2>Candidate actions</h2><p class="muted">Each row is an opportunity-action pair, not simply a lead score.</p></div>
+      <button class="secondary" id="addToggle">＋ Add action</button>
+    </section>
+
+    <section id="addFormWrap" class="panel form-panel hidden">
+      <div class="form-heading"><h3>Add an opportunity-action pair</h3><button class="text-button" id="closeAdd">Close</button></div>
+      <form id="addForm" class="form-grid">
+        <label>Opportunity / client<input name="name" required maxlength="70" placeholder="e.g. Marina buyer — 2BR"></label>
+        <label>Opportunity ID (shared by actions for the same deal)<input name="opportunityId" maxlength="70" placeholder="e.g. DEAL-001"><small>Use the same ID for every action concerning the same transaction.</small></label>
+        <label>Action to take<input name="action" required maxlength="100" placeholder="e.g. Confirm viewing and financing"></label>
+        <label>Agent commission if closed (AED)<input name="commission" type="number" min="0" required></label>
+        <label>Close probability WITH action (%)<input name="pWith" type="number" min="0" max="100" required></label>
+        <label>Close probability WITHOUT action (%)<input name="pWithout" type="number" min="0" max="100" required></label>
+        <label>Effort required (minutes)<input name="effort" type="number" min="1" required></label>
+        <label>Deadline in hours<input name="deadline" type="number" min="0.01" max="8760" step="0.5" required></label>
+        <label>Prerequisite action ID (optional)<input name="dependency" placeholder="Leave blank if none"><small>Prerequisites must be included or marked completed in the current prototype.</small></label>
+        <label>Evidence status<select name="evidenceStatus"><option value="unverified">Unverified assumption</option><option value="user_reported">User reported</option><option value="documented">Documented</option><option value="verified">Verified</option></select></label>
+        <label>Confidence in assumptions (%)<input name="confidence" type="number" min="0" max="100" value="50" required></label>
+        <label>Evidence source URL (optional)<input name="evidenceUrl" type="url" placeholder="https://..."></label>
+        <label>Evidence updated date (optional)<input name="evidenceUpdatedAt" type="date"></label>
+        <label class="wide">Evidence note (optional)<input name="evidenceNote" maxlength="300" placeholder="What supports this estimate?"></label>
+        <div class="form-actions"><button class="primary" type="submit">Add to portfolio</button></div>
+      </form>
+      <p class="form-hint">Probabilities are assumptions for testing, not AI predictions. Commission means the individual agent's expected net payout after splits and fees.</p>
+    </section>
+
+    <section class="panel results-panel">
+      <div class="panel-title-row"><div><p class="eyebrow">RECOMMENDED PORTFOLIO</p><h2>What to do first</h2></div><span class="tag" id="runStatus">Not optimized yet</span></div>
+      <div id="recommendations" class="recommendations"><div class="empty-state">Run the optimizer to see the best feasible combination of actions.</div></div>
+      <div class="result-foot" id="resultFoot"></div>
+    </section>
+
+    <section class="section-head compact">
+      <div><p class="eyebrow">SANITY CHECK</p><h2>How does the optimizer compare?</h2><p class="muted">Same time budget and feasibility rules; different selection strategies.</p></div>
+    </section>
+    <section class="comparison-grid" id="comparison"></section>
+
+    <section class="section-head compact">
+      <div><p class="eyebrow">PORTFOLIO INPUTS</p><h2>All candidate actions</h2><p class="muted">Edit assumptions or remove a scenario. Changes are saved on this device.</p></div>
+      <div class="row-actions"><button class="secondary small" id="exportBtn">Export backup</button><label class="secondary small" for="importFile">Import backup</label><input id="importFile" type="file" accept="application/json,.json" hidden><button class="secondary small" id="resetBtn">Reset demo data</button></div>
+    </section>
+    <section class="panel table-panel">
+      <div class="table-scroll"><table><thead><tr><th>Opportunity / action</th><th>Net agent commission</th><th>P(close)<br>with / without</th><th>Incremental<br>commission</th><th>Effort</th><th>Deadline</th><th>Evidence</th><th></th></tr></thead><tbody id="actionRows"></tbody></table></div>
+      <p class="table-note">Schedule assumption: one agent, sequential non-preemptive actions; an action must finish by its deadline. The engine searches feasible precedence-respecting schedule prefixes exactly for portfolios of up to 20 actions. Multiple actions on one opportunity are allowed; positive commission lift is credited once per opportunity using the largest positive action lift, while negative prerequisite lift remains included. Expected incremental commission = net agent commission × (P(close with action) − P(close without action)). These are user-entered assumptions, not predictions.</p>
+    </section>
+
+    <section class="section-head compact">
+      <div><p class="eyebrow">LEARNING LOOP</p><h2>Record what actually happened</h2><p class="muted">A recommendation is a hypothesis. Actual paid commission is the financial outcome.</p></div>
+    </section>
+    <section class="panel outcome-panel">
+      <form id="outcomeForm" class="outcome-form">
+        <label>Action ID<select id="outcomeAction" required></select></label>
+        <label>Outcome<select id="outcomeStatus"><option value="completed">Completed</option><option value="not_completed">Not completed</option><option value="lost">Opportunity lost / no close</option><option value="pending">Still pending</option></select></label>
+        <label>Actual agent commission received (AED)<input id="actualCommission" type="number" min="0" step="0.01" value="0"></label>
+        <label>Actual time spent (minutes)<input id="actualEffort" type="number" min="0" step="1" value="0"></label>
+        <button class="primary" type="submit">Save outcome</button>
+      </form>
+      <div id="outcomeHistory" class="outcome-history"></div>
+      <p class="form-hint">One current outcome record is maintained per action; submitting again updates that record rather than silently creating a duplicate. A completed action followed by a sale is not proof that the action caused the sale.</p>
+    </section>
+
+    <footer><strong>DealFlow Alpha</strong> · Decision logic prototype · All demo scenarios are synthetic · No data leaves this browser.</footer>
+  </main>
+  <script src="engine.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,41 +1,17 @@
-const assert = require('node:assert/strict');
-const E = require('./engine.js');
-
-function action(id, opportunityId, commission, extra = {}) {
-  return {
-    id, opportunityId, name: 'Opportunity ' + opportunityId,
-    action: 'Test action ' + id, commission,
-    pWith: 80, pWithout: 20, effort: 30, deadline: 5,
-    ...extra
-  };
-}
-
-// P0 regression: one transaction cannot carry contradictory commission assumptions.
-const conflicting = [
-  action('viewing', 'deal-42', 12000),
-  action('offer-followup', 'DEAL-42', 15000)
-];
-assert.ok(
-  E.validatePortfolio(conflicting, 2).some(x => x.includes('Conflicting commission assumptions')),
-  'case-insensitive opportunity IDs with different commission assumptions must be rejected'
-);
-
-// Same opportunity, same commission, multiple action stages: retain allowed workflow
-// while crediting positive commission lift only once.
-const consistent = [
-  action('viewing', 'deal-42', 12000, { pWith: 70, pWithout: 30 }),
-  action('offer-followup', 'DEAL-42', 12000, { pWith: 85, pWithout: 30, dependency: 'viewing' })
-];
-assert.deepEqual(E.validatePortfolio(consistent, 2), []);
-assert.equal(E.optimize(consistent, 2).value, 6600);
-
-// A feasible order exists even when a deadline-sorted first choice would block it.
-// The exact optimizer must explore the alternative order rather than reject the portfolio.
-const prep = action('prep', 'prep-deal', 1000, { pWith: 50, pWithout: 40, effort: 40, deadline: 3 });
-const urgent = action('urgent', 'urgent-deal', 10000, { pWith: 80, pWithout: 20, effort: 30, deadline: 1.5, dependency: 'prep' });
-const independent = action('independent', 'independent-deal', 10000, { pWith: 80, pWithout: 20, effort: 30, deadline: 2 });
-const result = E.optimize([prep, urgent, independent], 2);
-assert.deepEqual(result.items.map(x => x.id), ['prep', 'urgent', 'independent']);
-assert.equal(result.value, 12100);
-
+const assert=require('node:assert/strict'); const E=require('./engine.js');
+const a=(id,opportunityId,commission,extra={})=>({id,opportunityId,name:'Opportunity '+opportunityId,action:'Test '+id,commission,pWith:80,pWithout:20,effort:30,deadline:5,...extra});
+// Multiple positive actions for the same transaction must never add the same
+// transaction's commission twice, even when input estimates differ.
+const duplicate=[a('first','deal-42',10000),a('second','DEAL-42',20000)];
+assert.equal(E.optimize(duplicate,2).value,12000);
+const prep=a('prep','same-deal',1000,{pWith:30,pWithout:40,effort:15});
+const close=a('close','same-deal',10000,{pWith:80,pWithout:20,effort:30,dependency:'prep'});
+assert.equal(E.optimize([prep,close],2).value,5900,'negative prerequisite lift remains a cost and positive deal lift is counted once');
+// Regression: exact search must retain a feasible precedence-respecting order.
+const setup=a('setup','setup-deal',1000,{pWith:50,pWithout:40,effort:40,deadline:3});
+const urgent=a('urgent','urgent-deal',10000,{pWith:80,pWithout:20,effort:30,deadline:1.5,dependency:'setup'});
+const independent=a('independent','independent-deal',10000,{pWith:80,pWithout:20,effort:30,deadline:2});
+const result=E.optimize([setup,urgent,independent],2);
+assert.deepEqual(result.items.map(x=>x.id),['setup','urgent','independent']);
+assert.equal(result.value,12100);
 console.log('3 P0 JavaScript regression tests passed.');

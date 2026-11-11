@@ -68,7 +68,7 @@ class CrossEngineParityTests(unittest.TestCase):
                 else:
                     self.assertIsNotNone(js)
                     self.assertEqual(result["minutes"], js["minutes"])
-                    self.assertEqual(result["order"], js["order"])
+                    self.assertEqual([list(x) for x in result["order"]], js["order"])
 
     def test_opportunity_id_validation_matches(self):
         for bad_id in ("", 17):

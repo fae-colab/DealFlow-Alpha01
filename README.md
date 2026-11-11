@@ -1,15 +1,19 @@
-# DealFlow Alpha
+# DealFlow Alpha 01.2
 
-A mobile-first prototype for testing revenue decision intelligence in real estate.
+A static, mobile-friendly prototype for testing opportunity-action prioritization for real-estate agents. The Python and JavaScript engines use the same probability scale (0–100) and the same commission-accounting and scheduling rules.
 
-## Purpose
+## Run locally
 
-DealFlow explores how to prioritize competing opportunity-action pairs under limited time, accounting for expected incremental commission, effort, deadlines, dependencies, and uncertainty.
+Open `index.html` in a modern browser. No build step, login, paid service, server, or external API is required.
 
-## Important validation distinction
+## Automated checks
 
-Passing software tests verifies implemented code behavior. It does not establish decision quality, market demand, competitive differentiation, or measurable financial impact. Those require separate evaluation against credible baselines and real-world evidence.
+```bash
+python -m unittest -v test_engine.py
+node test_engine.js
+node --check app.js
+node --check engine.js
+python python_engine.py
+```
 
-## Status
-
-Repository initialization. Prototype source files and test suite are to be added in subsequent commits.
+All demo data is synthetic. Passing software tests does not establish decision quality, market demand, superiority, or causal financial impact. See `README.txt` and `FOUNDING_PRINCIPLES.md` for assumptions and evidence standards.

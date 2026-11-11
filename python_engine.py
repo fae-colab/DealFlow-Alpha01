@@ -35,7 +35,6 @@ def validate_portfolio(actions, capacity_hours, completed_ids=()):
     if len(actions) > MAX_ACTIONS:
         errors.append(f"At most {MAX_ACTIONS} actions are supported.")
     ids = set()
-    commission_by_opportunity = {}
     for a in actions:
         if not isinstance(a, Action):
             errors.append("Every item must be an Action instance.")
@@ -59,13 +58,7 @@ def validate_portfolio(actions, capacity_hours, completed_ids=()):
         for field in ("evidence_url", "evidence_updated_at", "evidence_note"):
             if not isinstance(getattr(a, field), str):
                 errors.append(f"{a.id}: {field} must be text.")
-        if isinstance(a.commission, (int, float)) and not isinstance(a.commission, bool):
-            opportunity_key = (a.opportunity_id or a.id).strip().lower()
-            previous = commission_by_opportunity.get(opportunity_key)
-            if previous is not None and previous != a.commission:
-                errors.append(f"Conflicting commission assumptions for opportunity {opportunity_key}.")
-            else:
-                commission_by_opportunity[opportunity_key] = a.commission
+
 
     completed = set(completed_ids)
     by_id = {a.id: a for a in actions if isinstance(a, Action) and isinstance(a.id, str)}

@@ -3,7 +3,6 @@ name: DealFlow CI
 on:
   push:
     branches:
-      - main
       - baseline/alpha-01.2
       - "chore/**"
       - "fix/**"

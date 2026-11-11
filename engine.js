@@ -8,7 +8,7 @@
     if(!Array.isArray(actions)) return ['Actions must be an array.'];
     if(!Number.isFinite(capacityHours)||capacityHours<=0||capacityHours>24) errors.push('Capacity must be greater than 0 and no more than 24 hours.');
     if(actions.length>MAX_ACTIONS) errors.push(`At most ${MAX_ACTIONS} actions are supported.`);
-    const ids=new Set();
+    const ids=new Set(); const commissionByOpportunity=new Map();
     for(const a of actions){
       if(!a||typeof a!=='object'){errors.push('Every action must be an object.');continue;}
       if(typeof a.id!=='string'||!a.id.trim()) errors.push('Every action needs a non-empty ID.'); else if(ids.has(a.id)) errors.push(`Duplicate action ID: ${a.id}.`); else ids.add(a.id);
@@ -17,6 +17,11 @@
       for(const [key,min,max] of [['commission',0,1e9],['pWith',0,100],['pWithout',0,100],['effort',1,10080],['deadline',0,8760],['confidence',0,100]]) if(!Number.isFinite(a[key]??(key==='confidence'?50:NaN))||(a[key]??(key==='confidence'?50:NaN))<min||(a[key]??(key==='confidence'?50:NaN))>max) errors.push(`${a.id||'Action'}: ${key} must be between ${min} and ${max}.`);
       if(a.dependency&&a.dependency===a.id) errors.push(`${a.id}: an action cannot depend on itself.`);
       if(a.evidenceStatus!==undefined&&!EVIDENCE_STATUSES.has(a.evidenceStatus)) errors.push(`${a.id}: invalid evidenceStatus.`);
+      if(Number.isFinite(a.commission)){
+        const opportunityKey=String(a.opportunityId||a.id).trim().toLowerCase();
+        if(commissionByOpportunity.has(opportunityKey)&&commissionByOpportunity.get(opportunityKey)!==a.commission) errors.push(`Conflicting commission assumptions for opportunity ${opportunityKey}.`);
+        else commissionByOpportunity.set(opportunityKey,a.commission);
+      }
       for(const k of ['evidenceUrl','evidenceUpdatedAt','evidenceNote']) if(a[k]!==undefined&&typeof a[k]!=='string') errors.push(`${a.id}: ${k} must be text.`);
     }
     const completed=new Set(completedIds);

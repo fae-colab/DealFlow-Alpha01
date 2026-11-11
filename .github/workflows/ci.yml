@@ -1,0 +1,48 @@
+name: DealFlow CI
+
+on:
+  push:
+    branches:
+      - main
+      - baseline/alpha-01.2
+      - "chore/**"
+      - "fix/**"
+      - "migration/**"
+      - "integration/**"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Python + JavaScript integrity tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run Python engine tests
+        run: python -m unittest -v test_engine.py
+
+      - name: Run JavaScript engine tests
+        run: node test_engine.js
+
+      - name: Check JavaScript syntax
+        run: |
+          node --check app.js
+          node --check engine.js
+
+      - name: Run Python engine smoke test
+        run: python python_engine.py

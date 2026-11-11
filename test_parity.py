@@ -1,7 +1,7 @@
 import json
 import subprocess
 import unittest
-from python_engine import Action, optimize, validate_portfolio
+from python_engine import Action, optimize, schedule, validate_portfolio
 
 CASES = [
     {"capacityHours": 2, "actions": [
@@ -25,7 +25,11 @@ CASES = [
     {"capacityHours": 2, "actions": [
         {"id":"root","opportunityId":"d1","commission":1000,"pWith":50,"pWithout":40,"effort":20,"deadline":2},
         {"id":"middle","opportunityId":"d1","commission":10000,"pWith":70,"pWithout":20,"effort":20,"deadline":2,"dependency":"root"},
-        {"id":"leaf","opportunityId":"d1","commission":10000,"pWith":90,"pWithout":20,"effort":20,"deadline":2,"dependency":"middle"}]}
+        {"id":"leaf","opportunityId":"d1","commission":10000,"pWith":90,"pWithout":20,"effort":20,"deadline":2,"dependency":"middle"}]},
+    {"capacityHours": 1, "actions": [
+        {"id":"a","opportunityId":"d1","commission":1000,"pWith":80,"pWithout":20,"effort":10,"deadline":1},
+        {"id":"B","opportunityId":"d2","commission":1000,"pWith":80,"pWithout":20,"effort":10,"deadline":1},
+        {"id":"A","opportunityId":"d3","commission":1000,"pWith":80,"pWithout":20,"effort":10,"deadline":1}]}
 ]
 
 def to_action(a):
@@ -52,6 +56,19 @@ class CrossEngineParityTests(unittest.TestCase):
                 self.assertEqual(result["minutes"], js["minutes"])
                 self.assertEqual([a.id for a in result["items"]], js["items"])
                 self.assertEqual([[x[0], x[1], x[2]] for x in result["schedule"]], js["schedule"])
+
+    def test_public_schedule_api_order_matches(self):
+        for i, case in enumerate(CASES):
+            with self.subTest(case=i):
+                py_actions = [to_action(a) for a in case["actions"]]
+                result = schedule(py_actions, set(case.get("completedIds", [])))
+                js = self.javascript[i]["scheduleApi"]
+                if result is None:
+                    self.assertIsNone(js)
+                else:
+                    self.assertIsNotNone(js)
+                    self.assertEqual(result["minutes"], js["minutes"])
+                    self.assertEqual(result["order"], js["order"])
 
     def test_opportunity_id_validation_matches(self):
         for bad_id in ("", 17):

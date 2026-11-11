@@ -14,6 +14,8 @@ r=E.optimize([A0,A1,A2],2);assert.equal(r.value,12100);assert.deepEqual(r.items.
 r=E.optimize([a('prep','same',10000,60,20,30,5),a('close','same',10000,90,20,30,5,'prep')],2);assert.equal(r.value,7000);assert.equal(r.items.length,2);
 r=E.optimize([a('e','d',1000,80,20,30,5,'',{confidence:75,evidenceStatus:'documented',evidenceUrl:'https://example.com',evidenceUpdatedAt:'2026-11-06',evidenceNote:'Source note'})],1);assert.equal(r.items[0].evidenceStatus,'documented');
 assert.ok(E.validatePortfolio([a('bad-confidence','d',1000,80,20,30,5,'',{confidence:101})],1).length);
+assert.ok(E.validatePortfolio([a('bad-opportunity-id','d',1000,80,20,30,5,'',{opportunityId:''})],1).some(x=>x.includes('opportunityId')));
+assert.ok(E.validatePortfolio([a('bad-opportunity-id-type','d',1000,80,20,30,5,'',{opportunityId:17})],1).some(x=>x.includes('opportunityId')));
 r=E.optimize([a('setup','deal',1000,30,40,15,3),a('close-step','deal',10000,80,20,30,3,'setup')],2);assert.equal(r.value,5900,'negative prerequisite lift remains a cost');
 const demo=[a('A','D1',24000,58,38,75,5),a('B','D2',18000,52,43,45,12),a('C','D3',32000,42,24,110,24),a('D','D4',21000,63,57,35,3),a('E','D5',45000,30,18,90,48),a('F','D6',16000,55,35,30,8),a('G','D7',9000,48,40,40,36),a('H','D8',38000,46,29,100,6)];assert.equal(E.optimize(demo,6).value,21840,'Alpha 01.2 preserves the synthetic baseline result');
 console.log('12 JavaScript engine tests passed.');

@@ -15,6 +15,7 @@
       if(typeof a.name!=='string'||!a.name.trim()) errors.push(`Action ${a.id||'?'} needs an opportunity name.`);
       if(typeof a.action!=='string'||!a.action.trim()) errors.push(`Action ${a.id||'?'} needs an action description.`);
       for(const [key,min,max] of [['commission',0,1e9],['pWith',0,100],['pWithout',0,100],['effort',1,10080],['deadline',0,8760],['confidence',0,100]]) if(!Number.isFinite(a[key]??(key==='confidence'?50:NaN))||(a[key]??(key==='confidence'?50:NaN))<min||(a[key]??(key==='confidence'?50:NaN))>max) errors.push(`${a.id||'Action'}: ${key} must be between ${min} and ${max}.`);
+      if(a.opportunityId!=null&&(typeof a.opportunityId!=='string'||!a.opportunityId.trim())) errors.push(`${a.id}: opportunityId must be a non-empty string when supplied.`);
       if(a.dependency&&a.dependency===a.id) errors.push(`${a.id}: an action cannot depend on itself.`);
       if(a.evidenceStatus!==undefined&&!EVIDENCE_STATUSES.has(a.evidenceStatus)) errors.push(`${a.id}: invalid evidenceStatus.`);
       for(const k of ['evidenceUrl','evidenceUpdatedAt','evidenceNote']) if(a[k]!==undefined&&typeof a[k]!=='string') errors.push(`${a.id}: ${k} must be text.`);

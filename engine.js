@@ -14,6 +14,7 @@
       if(typeof a.id!=='string'||!a.id.trim()) errors.push('Every action needs a non-empty ID.'); else if(ids.has(a.id)) errors.push(`Duplicate action ID: ${a.id}.`); else ids.add(a.id);
       if(typeof a.name!=='string'||!a.name.trim()) errors.push(`Action ${a.id||'?'} needs an opportunity name.`);
       if(typeof a.action!=='string'||!a.action.trim()) errors.push(`Action ${a.id||'?'} needs an action description.`);
+      if(a.opportunityId!==undefined&&a.opportunityId!==null&&(typeof a.opportunityId!=='string'||!a.opportunityId.trim())) errors.push(`${a.id||'Action'}: opportunityId must be a non-empty string when supplied.`);
       for(const [key,min,max] of [['commission',0,1e9],['pWith',0,100],['pWithout',0,100],['effort',1,10080],['deadline',0,8760],['confidence',0,100]]) if(!Number.isFinite(a[key]??(key==='confidence'?50:NaN))||(a[key]??(key==='confidence'?50:NaN))<min||(a[key]??(key==='confidence'?50:NaN))>max) errors.push(`${a.id||'Action'}: ${key} must be between ${min} and ${max}.`);
       if(a.dependency&&a.dependency===a.id) errors.push(`${a.id}: an action cannot depend on itself.`);
       if(a.evidenceStatus!==undefined&&!EVIDENCE_STATUSES.has(a.evidenceStatus)) errors.push(`${a.id}: invalid evidenceStatus.`);
@@ -33,7 +34,8 @@
     for(const a of items)if(a.dependency&&!byId.has(a.dependency)&&!external.has(a.dependency))return null;
     function visit(mask,minutes,order){if(mask===(1<<n)-1)return{minutes,items:order.map(i=>({...items[i],scheduledStartMinutes:0,scheduledFinishMinutes:0}))};if(visited.has(mask))return null;visited.add(mask);const ready=[];
       for(let i=0;i<n;i++){if(mask&(1<<i))continue;const a=items[i],dep=byId.get(a.dependency);if(a.dependency&&!external.has(a.dependency)&&(dep===undefined||!(mask&(1<<dep))))continue;ready.push(i);}
-      ready.sort((i,j)=>items[i].deadline-items[j].deadline||items[i].effort-items[j].effort||items[i].id.localeCompare(items[j].id));
+      const compareIds=(a,b)=>{const x=Array.from(a,ch=>ch.codePointAt(0)),y=Array.from(b,ch=>ch.codePointAt(0));for(let k=0;k<Math.min(x.length,y.length);k++)if(x[k]!==y[k])return x[k]-y[k];return x.length-y.length;};
+      ready.sort((i,j)=>items[i].deadline-items[j].deadline||items[i].effort-items[j].effort||compareIds(items[i].id,items[j].id));
       for(const i of ready){const a=items[i],finish=minutes+a.effort;if(finish>a.deadline*60+1e-9)continue;const result=visit(mask|(1<<i),finish,[...order,i]);if(result)return result;}return null;
     }
     const result=visit(0,0,[]);if(result){let t=0;result.items=result.items.map(a=>{const x={...a,scheduledStartMinutes:t};t+=x.effort;x.scheduledFinishMinutes=t;return x;});}return result;

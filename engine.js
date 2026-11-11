@@ -34,7 +34,8 @@
     for(const a of items)if(a.dependency&&!byId.has(a.dependency)&&!external.has(a.dependency))return null;
     function visit(mask,minutes,order){if(mask===(1<<n)-1)return{minutes,items:order.map(i=>({...items[i],scheduledStartMinutes:0,scheduledFinishMinutes:0}))};if(visited.has(mask))return null;visited.add(mask);const ready=[];
       for(let i=0;i<n;i++){if(mask&(1<<i))continue;const a=items[i],dep=byId.get(a.dependency);if(a.dependency&&!external.has(a.dependency)&&(dep===undefined||!(mask&(1<<dep))))continue;ready.push(i);}
-      ready.sort((i,j)=>items[i].deadline-items[j].deadline||items[i].effort-items[j].effort||items[i].id.localeCompare(items[j].id));
+      const compareIds=(a,b)=>{const x=Array.from(a,ch=>ch.codePointAt(0)),y=Array.from(b,ch=>ch.codePointAt(0));for(let k=0;k<Math.min(x.length,y.length);k++)if(x[k]!==y[k])return x[k]-y[k];return x.length-y.length;};
+      ready.sort((i,j)=>items[i].deadline-items[j].deadline||items[i].effort-items[j].effort||compareIds(items[i].id,items[j].id));
       for(const i of ready){const a=items[i],finish=minutes+a.effort;if(finish>a.deadline*60+1e-9)continue;const result=visit(mask|(1<<i),finish,[...order,i]);if(result)return result;}return null;
     }
     const result=visit(0,0,[]);if(result){let t=0;result.items=result.items.map(a=>{const x={...a,scheduledStartMinutes:t};t+=x.effort;x.scheduledFinishMinutes=t;return x;});}return result;

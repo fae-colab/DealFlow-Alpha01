@@ -1,5 +1,5 @@
 import unittest
-from python_engine import Action, optimize
+from python_engine import Action, optimize, validate_portfolio
 
 class P0IntegritySchedulingTests(unittest.TestCase):
     def test_positive_commission_for_one_opportunity_is_counted_once(self):
@@ -16,4 +16,8 @@ class P0IntegritySchedulingTests(unittest.TestCase):
         result=optimize([setup,urgent,independent],2)
         self.assertEqual([x[0] for x in result["schedule"]],["setup","urgent","independent"])
         self.assertAlmostEqual(result["value"],12100)
+    def test_rejects_whitespace_only_opportunity_id(self):
+        actions=[Action('space-1',10000,80,20,30,5,opportunity_id=' '),Action('space-2',10000,80,20,30,5,opportunity_id=' ')]
+        self.assertTrue(all('opportunity_id must be a non-empty string' in error for error in validate_portfolio(actions,2)))
+
 if __name__=="__main__": unittest.main(verbosity=2)

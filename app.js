@@ -58,6 +58,9 @@ function renderOutcomeSelect(){
  const current=DealFlowAudit.deriveCurrentOutcomes(state.outcomeEvents||[]);
  correction.innerHTML='<option value="">New outcome event (not a correction)</option>'+current.map(o=>`<option value="${safe(o.eventId)}">${safe(o.actionId)} · ${safe(o.eventId)} · ${safe(o.status||o.eventType)}</option>`).join('');
  if(current.some(o=>o.eventId===oldCorrection))correction.value=oldCorrection;
+ const runSelect=document.getElementById('outcomeRun'),oldRun=runSelect.value;
+ runSelect.innerHTML='<option value="">Not linked to a recommendation run</option>'+(state.recommendationSnapshots||[]).slice().reverse().map(x=>`<option value="${safe(x.runId)}">${safe(x.runId)} · ${new Date(x.createdAt).toLocaleString()}</option>`).join('');
+ if((state.recommendationSnapshots||[]).some(x=>x.runId===oldRun))runSelect.value=oldRun;
 }
 function renderHistory(){
  const el=document.getElementById('outcomeHistory'),events=state.outcomeEvents||[],current=DealFlowAudit.deriveCurrentOutcomes(events);
@@ -88,7 +91,7 @@ document.getElementById('outcomeForm').addEventListener('submit',e=>{
  if(!action||!Number.isFinite(actual)||actual<0||!Number.isFinite(minutes)||minutes<0){alert('Select an action and enter valid non-negative commission and time.');return;}
  const now=new Date().toISOString(),correctionId=document.getElementById('outcomeCorrection').value;
  const prior=correctionId?(state.outcomeEvents||[]).find(x=>x.eventId===correctionId):null;
- if(correctionId&&(!prior||prior.actionId!==action.id)){alert('A correction must target a current event for the selected action.');return;}
+ if(correctionId&&(!prior||prior.actionId!==action.id)){alert('A correction must target a current event for the selected action.');return;}\n const selectedRun=document.getElementById('outcomeRun').value;\n if(prior&&selectedRun&&selectedRun!==(prior.recommendationRunId||'')){alert('A correction must retain the original recommendation-run link.');return;}
  const rawIncremental=document.getElementById('actualIncrementalCommission').value.trim();
  const attributionMethod=document.getElementById('attributionMethod').value.trim();
  const incremental=rawIncremental===''?null:Number(rawIncremental);
@@ -98,7 +101,7 @@ document.getElementById('outcomeForm').addEventListener('submit',e=>{
   eventType:prior?'correction':'status_update',status:document.getElementById('outcomeStatus').value,
   actualCommission:actual,currency:'AED',actualMinutes:minutes,occurredAt:now,recordedAt:now,
   sourceType:'user_input',verificationStatus:'unverified',note:prior?'Correction entered by the user; original event is retained.':'Outcome entered by the user; not independently verified.',
-  supersedesEventId:prior?prior.eventId:null,actualIncrementalCommission:incremental,attributionMethod:attributionMethod||null
+  supersedesEventId:prior?prior.eventId:null,recommendationRunId:prior?(prior.recommendationRunId||null):(selectedRun||null),actualIncrementalCommission:incremental,attributionMethod:attributionMethod||null
  };
  try{state.outcomeEvents=DealFlowAudit.appendOutcomeEvent(state.outcomeEvents,event);save();renderHistory();render();}
  catch(err){alert('Outcome was not saved: '+err.message);}

@@ -26,4 +26,8 @@ const restored=R.migrateState({actions:edited,outcomes:[],recommendationSnapshot
 assert.deepEqual(restored.recommendationSnapshots,log);
 assert.throws(()=>R.migrateState({recommendationSnapshots:[{...snapshot,selectedActionIds:['missing']}]}),/selected action is absent/);
 assert.equal(R.migrateState({}).recommendationSnapshots.length,0);
+const oldSnapshot=JSON.parse(JSON.stringify(snapshot));oldSnapshot.decisions[0].expectedIncrementalCommission=3000;delete oldSnapshot.decisions[0].standaloneExpectedIncrementalCommission;
+const upgraded=R.migrateState({recommendationSnapshots:[oldSnapshot]});
+assert.equal(upgraded.recommendationSnapshots[0].decisions[0].standaloneExpectedIncrementalCommission,3000,'older snapshots migrate without losing their original estimate');
+assert.equal(upgraded.recommendationSnapshots[0].decisions[0].valueBasis,'standalone_action_estimate_not_allocated_portfolio_contribution');
 console.log('Immutable recommendation snapshot tests passed.');

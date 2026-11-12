@@ -43,6 +43,23 @@ assert.equal(migrated.actions[0].evidenceStatus,'verified','legacy action fields
 assert.equal(migrated.actions[1].confidence,75,'confidence remains on the action independently of evidence quality');
 assert.equal(customClaims[0].quality,'none','evidence quality is not derived from confidence');
 
+const edited={...migrated.actions[1],commission:2500,pWith:72,pWithout:35};
+const beforeEdit=migrated.evidence.filter(x=>x.subjectId==='CUSTOM-1'&&['commission','pWith','pWithout'].includes(x.claimKey));
+E.syncActionClaims(edited,migrated.evidence);
+for(const [claimKey,value] of [['commission',2500],['pWith',72],['pWithout',35]]){
+ const records=migrated.evidence.filter(x=>x.subjectId==='CUSTOM-1'&&x.claimKey===claimKey);
+ const supersededIds=new Set(records.map(x=>x.supersedesId).filter(Boolean));
+ const current=records.filter(x=>!supersededIds.has(x.id));
+ assert.equal(current.length,1,'exactly one current evidence record remains for '+claimKey);
+ assert.equal(current[0].claimValue,value,'current evidence matches edited '+claimKey);
+ assert.equal(current[0].kind,'assumption');
+ assert.equal(current[0].sourceType,'user_input');
+ assert.equal(current[0].quality,'none');
+ assert.equal(current[0].supersedesId,beforeEdit.find(x=>x.claimKey===claimKey).id,'edited evidence links to its prior version');
+}
+assert.deepEqual(beforeEdit.map(x=>x.claimValue),[1000,60,40],'previous evidence records remain unchanged for audit');
+assert.equal(E.validateEvidence(migrated.evidence).length,0);
+
 const again=E.migrateState(migrated,seeds);
 assert.equal(again.evidence.length,migrated.evidence.length,'migration is idempotent');
 assert.deepEqual(again.evidence,migrated.evidence);

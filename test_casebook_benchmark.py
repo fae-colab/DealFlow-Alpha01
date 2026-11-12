@@ -56,8 +56,8 @@ class PublicCasebookBenchmarkTests(unittest.TestCase):
         self.assertTrue(validate_engine_readiness(case))
         # The only supported path is to stop at readiness. Mapping nulls to zero,
         # defaults, or guessed values would turn an evidence gap into fake precision.
-        with self.assertRaises((TypeError, ValueError)):
-            actions_from_case(case)
+        with self.assertRaises(ValueError):
+            optimize(actions_from_case(case), case["capacity_hours"])
 
     def test_stress_fixture_is_explicitly_synthetic_and_valid(self):
         case = load_case(STRESS_CASE)

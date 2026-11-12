@@ -12,7 +12,9 @@ Open `index.html` in a modern browser. No build step, login, paid service, serve
 python -m unittest -v test_engine.py
 node test_engine.js
 node test_evidence.js
+node test_outcomes.js
 node --check evidence.js
+node --check outcomes.js
 node --check app.js
 node --check engine.js
 python python_engine.py
@@ -24,3 +26,8 @@ All demo data is synthetic. Passing software tests does not establish decision q
 ## Evidence migration (Alpha 01.3)
 
 The app migrates local Alpha 01.2/01.1 data to schema version 1.3 in the browser. Legacy evidence labels and source fields remain readable and are copied into traceable legacy evidence records; a legacy `verified` label, URL, or date is not treated as independent verification or upgraded evidence quality. Synthetic seed assumptions are explicitly marked `synthetic_demo`. Existing outcomes and optimization history are preserved unchanged in this first migration step.
+
+
+## Append-only outcome events (P1.2)
+
+Outcome submissions are stored as an append-only event log. A subsequent submission creates a correction event that references the event it supersedes; earlier events are retained and displayed as superseded. Legacy single-record outcomes migrate to clearly labeled `legacy_migration` events. Current outcome values are derived as a projection of the event log. A blank actual-commission field means unknown, not zero. Actual commission is not treated as incremental or caused by a recommended action.

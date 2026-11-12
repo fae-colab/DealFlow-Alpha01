@@ -85,18 +85,20 @@
       <form id="outcomeForm" class="outcome-form">
         <label>Action ID<select id="outcomeAction" required></select></label>
         <label>Outcome<select id="outcomeStatus"><option value="completed">Completed</option><option value="not_completed">Not completed</option><option value="lost">Opportunity lost / no close</option><option value="pending">Still pending</option></select></label>
-        <label>Actual agent commission received (AED)<input id="actualCommission" type="number" min="0" step="0.01" value="0"></label>
+        <label>Actual agent commission received (AED)<input id="actualCommission" type="number" min="0" step="0.01" value="" placeholder="Leave blank if unknown"></label>
         <label>Actual time spent (minutes)<input id="actualEffort" type="number" min="0" step="1" value="0"></label>
+        <label>Correction / context note (optional)<input id="outcomeNotes" type="text" maxlength="300" placeholder="e.g. Updated from commission statement"></label>
         <button class="primary" type="submit">Save outcome</button>
       </form>
       <div id="outcomeHistory" class="outcome-history"></div>
-      <p class="form-hint">One current outcome record is maintained per action; submitting again updates that record rather than silently creating a duplicate. A completed action followed by a sale is not proof that the action caused the sale.</p>
+      <p class="form-hint">Every submission appends a new event. Later submissions supersede the current event without deleting it; the full correction history remains visible. Leave actual commission blank when it is not yet known. A completed action followed by a sale is not proof that the action caused the sale.</p>
     </section>
 
     <footer><strong>DealFlow Alpha</strong> · Decision logic prototype · All demo scenarios are synthetic · No data leaves this browser.</footer>
   </main>
   <script src="engine.js"></script>
   <script src="evidence.js"></script>
+  <script src="outcomes.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

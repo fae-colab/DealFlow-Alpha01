@@ -26,4 +26,6 @@ assert.ok(O.validateOutcomeEvents([...corrected.slice(0,2),{...corrected[1],even
 const reloaded=O.migrateState({actions:[],outcomes:[],outcomeEvents:corrected});
 assert.deepEqual(reloaded.outcomeEvents,corrected,'event log survives reload migration');
 assert.equal(reloaded.outcomes[0].actualCommission,13200);
+const unknown=O.migrateState({actions:[],outcomes:[{id:'A2',status:'pending',minutes:0,at:'2026-11-04T10:00:00Z'}]});
+assert.equal(unknown.outcomeEvents[0].actualCommission,null,'legacy missing commission remains unknown, not zero');
 console.log('Append-only outcome event tests passed.');

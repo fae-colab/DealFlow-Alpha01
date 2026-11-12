@@ -11,7 +11,7 @@ const correction={...event,eventId:'EV2',eventType:'correction',actualCommission
 const corrected=A.appendOutcomeEvent(log,correction);
 assert.equal(log.length,2,'correction does not mutate source log');
 assert.equal(corrected.length,3,'correction is a new event');
-assert.equal(A.deriveCurrentOutcomes(corrected).find(x=>x.actionId==='A1').actualCommission,10000);
+assert.equal(A.deriveCurrentOutcomes(corrected).find(x=>x.actionId==='A1'&&x.recommendationRunId==='RUN1').actualCommission,10000);
 assert.throws(()=>A.appendOutcomeEvent(corrected,{...correction,eventId:'EV3',actionId:'OTHER'}),/same action/);
 assert.throws(()=>A.appendOutcomeEvent(corrected,{...correction,eventId:'EV5',recommendationRunId:'OTHER-RUN'}),/preserve the original/);
 assert.ok(A.validateOutcomeEvent({...correction,eventId:'EV4',supersedesEventId:null}).length,'corrections require a superseded event');
@@ -32,7 +32,8 @@ assert.equal(reconciled[0].actualIncrementalCommission,null,'no causal uplift in
 assert.equal(reconciled[0].attributionStatus,'unknown');
 const attributed=A.appendOutcomeEvent(corrected,{...event,eventId:'EV3',recordedAt:'2026-01-04T00:00:00Z',actualIncrementalCommission:3000,attributionMethod:'Documented counterfactual analysis'});
 const attributedRows=A.reconcile([snap],attributed);assert.equal(attributedRows[0].actualIncrementalCommission,3000);assert.equal(attributedRows[0].attributionStatus,'method_supplied_unverified');
-const unrelated=A.appendOutcomeEvent(corrected,{...event,eventId:'EV-OTHER',recommendationRunId:'OTHER-RUN',recordedAt:'2026-01-05T00:00:00Z'});assert.equal(A.reconcile([snap],unrelated)[0].actualCommissionStatus,'not_recorded','events are not retroactively attached to unrelated snapshots');
+const unrelated=A.appendOutcomeEvent(corrected,{...event,eventId:'EV-OTHER',recommendationRunId:'OTHER-RUN',recordedAt:'2026-01-05T00:00:00Z'});assert.equal(A.reconcile([snap],unrelated)[0].actualCommissionStatus,'observed','a later run event does not erase the earlier run outcome');
+const otherSnapshot={...snap,runId:'OTHER-RUN'};assert.equal(A.reconcile([otherSnapshot],unrelated)[0].actualCommissionObserved,12000,'run-specific outcomes reconcile only to their linked run');
 assert.ok(A.validateOutcomeEvent({...event,actualIncrementalCommission:5000}).length,'incremental commission requires attribution method');
 assert.equal(A.validateOutcomeEvent({...event,actualIncrementalCommission:5000,attributionMethod:'documented counterfactual study'}).length,0);
 console.log('Append-only outcomes, immutable snapshots and reconciliation tests passed.');

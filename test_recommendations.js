@@ -10,7 +10,7 @@ const snapshot=R.captureSnapshot({createdAt:'2026-11-12T10:00:00Z',sequence:1,ca
  evidence:[{id:'e-A-commission',subjectType:'action',subjectId:'A',claimKey:'commission'}],
  incremental:a=>a.commission*(a.pWith-a.pWithout)/100});
 assert.deepEqual(snapshot.selectedActionIds,['A']);
-assert.equal(snapshot.decisions[0].expectedIncrementalCommission,3000);
+assert.equal(snapshot.decisions[0].standaloneExpectedIncrementalCommission,3000);
 assert.equal(snapshot.decisions[0].evidenceRecordIds[0],'e-A-commission');
 assert.equal(snapshot.decisions[0].reasonCode,'selected_by_portfolio_optimizer');
 assert.equal(snapshot.decisions[1].selected,false);

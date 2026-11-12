@@ -122,4 +122,5 @@
   }
   root.DealFlowEvidence={SCHEMA_VERSION,KINDS:[...KINDS],QUALITIES:[...QUALITIES],SOURCE_TYPES:[...SOURCE_TYPES],
     normalizeAction,migrateState,createInitialState,validateEvidence};
+  if(typeof module!=='undefined'&&module.exports)module.exports=root.DealFlowEvidence;
 })(typeof globalThis!=='undefined'?globalThis:this);

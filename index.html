@@ -95,12 +95,34 @@
       <p class="form-hint">Every submission appends a new event. Later submissions supersede the current event without deleting it; the full correction history remains visible. Leave actual commission blank when it is not yet known. A completed action followed by a sale is not proof that the action caused the sale.</p>
     </section>
 
+    <section class="section-head compact">
+      <div><p class="eyebrow">EVIDENCE-LED RECONCILIATION</p><h2>Compare recommendations with outcomes</h2><p class="muted">Link a selected recommendation to its current outcome. Association is not causal attribution.</p></div>
+    </section>
+    <section class="panel outcome-panel">
+      <form id="reconcileForm" class="outcome-form">
+        <label>Recommendation snapshot<select id="reconcileSnapshot" required></select></label>
+        <label>Selected action<select id="reconcileAction" required></select></label>
+        <label>Current outcome event<select id="reconcileOutcomeEvent" required></select></label>
+        <label>Attribution level<select id="reconcileAttribution"><option value="associated_only">Associated outcome only</option><option value="incremental_supported">Incremental impact supported by counterfactual evidence</option></select></label>
+        <div id="incrementalAttributionFields" class="wide hidden">
+          <label>Actual incremental commission (AED)<input id="actualIncrementalCommission" type="number" step="0.01" placeholder="Required for supported attribution"></label>
+          <label>Counterfactual method<input id="counterfactualMethod" type="text" maxlength="200" placeholder="How was the counterfactual estimated?"></label>
+          <label>Evidence reference<input id="attributionEvidenceRef" type="text" maxlength="300" placeholder="Document, dataset or report reference"></label>
+          <label>Reviewed by<input id="attributionReviewer" type="text" maxlength="100" placeholder="Reviewer"></label>
+        </div>
+        <button class="primary" type="submit">Save reconciliation</button>
+      </form>
+      <div id="reconciliationHistory" class="outcome-history"></div>
+      <p class="form-hint">Actual paid commission and predicted incremental commission are displayed separately. The system will not calculate a predicted-versus-actual incremental difference unless a documented counterfactual method, evidence reference and reviewer are supplied.</p>
+    </section>
+
     <footer><strong>DealFlow Alpha</strong> · Decision logic prototype · All demo scenarios are synthetic · No data leaves this browser.</footer>
   </main>
   <script src="engine.js"></script>
   <script src="evidence.js"></script>
   <script src="outcomes.js"></script>
   <script src="recommendations.js"></script>
+  <script src="reconciliation.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

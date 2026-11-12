@@ -11,7 +11,8 @@ TEMPLATE = json.loads((ROOT / "validation" / "case_template.json").read_text(enc
 def complete_case():
     case = copy.deepcopy(TEMPLATE)
     case["capacity_hours"] = 3
-    case["candidate_actions"][0].update({
+    action = case["candidate_actions"][0]
+    action.update({
         "net_commission_aed": 20000, "p_close_with_action_pct": 60,
         "p_close_without_action_pct": 35, "effort_minutes": 45,
         "deadline_hours": 8, "confidence_pct": 70, "evidence_status": "documented",
@@ -32,20 +33,26 @@ class AbstentionPolicyTests(unittest.TestCase):
         self.assertEqual(result["decision"], "READY_FOR_OPTIMIZATION")
         self.assertEqual(result["eligible_action_ids"], ["ACT-001"])
 
-    def test_unknown_capacity_requires_abstention(self):
-        case = complete_case(); case["capacity_hours"] = None
+    def test_unknown_capacity_requires_case_level_abstention(self):
+        case = complete_case()
+        case["capacity_hours"] = None
+        case["capacity_status"] = "unknown"
         result = evaluate_case(case)
         self.assertEqual(result["decision"], "ABSTAIN")
-        self.assertTrue(any("capacity_hours" in reason for reason in result["reasons"]))
+        self.assertTrue(any("capacity" in reason.lower() for reason in result["reasons"]))
 
-    def test_unknown_commission_requires_abstention(self):
+    def test_unknown_commission_excludes_only_that_action(self):
         case = complete_case()
-        case["candidate_actions"][0]["net_commission_aed"] = None
-        case["candidate_actions"][0]["input_provenance"]["net_commission_aed"] = "unknown"
-        self.assertEqual(evaluate_case(case)["decision"], "ABSTAIN")
+        action = case["candidate_actions"][0]
+        action["net_commission_aed"] = None
+        action["input_provenance"]["net_commission_aed"] = "unknown"
+        result = evaluate_case(case)
+        self.assertEqual(result["decision"], "ABSTAIN")
+        self.assertTrue(any("net_commission_aed" in reason for reason in result["reasons"]))
 
     def test_unverified_evidence_rejects_action(self):
-        case = complete_case(); case["candidate_actions"][0]["evidence_status"] = "unverified"
+        case = complete_case()
+        case["candidate_actions"][0]["evidence_status"] = "unverified"
         result = evaluate_case(case)
         self.assertEqual(result["decision"], "ABSTAIN")
         self.assertTrue(any("unverified" in reason for reason in result["reasons"]))
@@ -57,10 +64,16 @@ class AbstentionPolicyTests(unittest.TestCase):
                 case["candidate_actions"][0]["p_close_with_action_pct"] = 35 + uplift
                 self.assertEqual(evaluate_case(case)["decision"], "ABSTAIN")
 
-    def test_mixed_case_excludes_weak_action_but_keeps_supported_candidate(self):
+    def test_mixed_case_keeps_supported_candidate_and_excludes_incomplete_one(self):
         case = complete_case()
         second = copy.deepcopy(case["candidate_actions"][0])
-        second.update({"action_id": "ACT-002", "opportunity_id": "OPP-002", "evidence_status": "unverified"})
+        second.update({
+            "action_id": "ACT-002",
+            "opportunity_id": "OPP-002",
+            "evidence_status": "unverified",
+            "net_commission_aed": None,
+        })
+        second["input_provenance"]["net_commission_aed"] = "unknown"
         case["candidate_actions"].append(second)
         result = evaluate_case(case)
         self.assertEqual(result["decision"], "READY_FOR_OPTIMIZATION")

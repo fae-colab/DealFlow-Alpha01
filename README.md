@@ -11,8 +11,8 @@ Open `index.html` in a modern browser. No build step, login, paid service, serve
 ```bash
 python -m unittest -v test_engine.py
 node test_engine.js
-node test_evidence.js
-node --check evidence.js
+node test_evidence.js\nnode test_audit.js
+node --check evidence.js\nnode --check audit.js
 node --check app.js
 node --check engine.js
 python python_engine.py
@@ -24,3 +24,8 @@ All demo data is synthetic. Passing software tests does not establish decision q
 ## Evidence migration (Alpha 01.3)
 
 The app migrates local Alpha 01.2/01.1 data to schema version 1.3 in the browser. Legacy evidence labels and source fields remain readable and are copied into traceable legacy evidence records; a legacy `verified` label, URL, or date is not treated as independent verification or upgraded evidence quality. Synthetic seed assumptions are explicitly marked `synthetic_demo`. Existing outcomes and optimization history are preserved unchanged in this first migration step.
+
+
+## P1.2 audit trail
+
+Outcome submissions are append-only events; corrections are new events linked to the event they supersede. Every optimizer run stores a copied recommendation snapshot containing candidate inputs, evidence, selected actions, schedule, capacity and predicted objective value. Reconciliation reports observed transaction commission separately from predicted incremental commission; causal incremental commission remains unknown unless a documented attribution method is supplied.

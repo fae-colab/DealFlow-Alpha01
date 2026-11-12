@@ -84,4 +84,16 @@ Do not blend these categories. Every reported result must state the number of ca
 4. Run `python -m unittest -v test_validation_cases.py`.
 5. Have a human review the case for identifying details and consent before committing it.
 
-## Public casebook entry 001\n\n`casebook/DF-PUBLIC-001.json` is the first public reconstruction. It records three Dubai Land Department registered-sale observations reported for 9 November 2026: JVC, Business Bay, and Dubai Investment Park First. The public facts are useful market context, but they do not reveal a realtor's actual client pipeline, agreed net commission, probability lift, effort, deadlines, or available time.\n\nThe entry therefore stores those agent-specific inputs as explicit unknowns. It is valid casebook evidence but **not optimizer-ready**. The expected behavior is to block replay rather than fabricate a ranking. This is a deliberate integrity challenge, not a product failure.\n\n## Case readiness and optimizer replay\n\nA case can be valid for research storage without being ready for optimizer replay. For public reconstructions and agent-originated cases, every numeric input must carry field-level provenance: `public_source`, `agent_reported`, `assumption`, or `unknown`. A null value must be marked `unknown`; a numeric assumption must have a written explanation. `validate_engine_readiness(case)` is separate from `validate_case(case)`; unknown required inputs block replay.\n\nNever fill gaps with plausible guesses. Public facts about transactions are not evidence of a specific agent's commission agreement, client conversion probability, workload, deadline, or decision baseline.\n\nNo real agent cases are included yet. The eight current demo scenarios remain synthetic. The next genuinely agent-originated contribution must come from a consenting agent.
+## Public casebook entry 001
+
+`casebook/DF-PUBLIC-001.json` is the first public reconstruction. It records three Dubai Land Department registered-sale observations reported for 9 November 2026: JVC, Business Bay, and Dubai Investment Park First. The public facts are useful market context, but they do not reveal a realtor's actual client pipeline, agreed net commission, probability lift, effort, deadlines, or available time.
+
+The entry therefore stores those agent-specific inputs as explicit unknowns. It is valid casebook evidence but **not optimizer-ready**. The expected behavior is to block replay rather than fabricate a ranking. This is a deliberate integrity challenge, not a product failure.
+
+## Case readiness and optimizer replay
+
+A case can be valid for research storage without being ready for optimizer replay. For public reconstructions and agent-originated cases, every numeric input must carry field-level provenance: `public_source`, `agent_reported`, `assumption`, or `unknown`. A null value must be marked `unknown`; a numeric assumption must have a written explanation. `validate_engine_readiness(case)` is separate from `validate_case(case)`; unknown required inputs block replay.
+
+Never fill gaps with plausible guesses. Public facts about transactions are not evidence of a specific agent's commission agreement, client conversion probability, workload, deadline, or decision baseline.
+
+No real agent cases are included yet. The eight current demo scenarios remain synthetic. The next genuinely agent-originated contribution must come from a consenting agent.

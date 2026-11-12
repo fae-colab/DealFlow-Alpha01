@@ -1,10 +1,10 @@
 const assert=require('node:assert/strict');
 const R=require('./reconciliation.js');
-const snapshot={snapshotId:'S1',selectedActionIds:['A'],decisions:[{actionId:'A',selected:true,expectedIncrementalCommission:3000}]};
+const snapshot={snapshotId:'S1',selectedActionIds:['A'],decisions:[{actionId:'A',selected:true,standaloneExpectedIncrementalCommission:3000}]};
 const events=[{eventId:'E1',actionId:'A',status:'completed',actualCommission:12500,minutes:45,supersedesEventId:null}];
 const associated=R.appendReconciliation([],{snapshotId:'S1',actionId:'A',outcomeEventId:'E1',attributionStatus:'associated_only',recordedAt:'2026-11-12T12:00:00Z'},[snapshot],events);
 assert.equal(associated[0].actualCommission,12500);
-assert.equal(associated[0].predictedIncrementalCommission,3000);
+assert.equal(associated[0].predictedStandaloneEstimate,3000);
 assert.equal(associated[0].actualIncrementalCommission,null,'association must not be presented as incremental impact');
 assert.equal(associated[0].predictedActualDelta,null,'no predicted-vs-actual delta without attribution');
 assert.equal(R.validateReconciliations(associated,[snapshot],events).length,0);

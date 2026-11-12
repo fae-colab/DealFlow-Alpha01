@@ -19,6 +19,16 @@
     return Boolean(seed && action.opportunityId===seed.opportunityId &&
       action.name===seed.name && action.action===seed.action);
   }
+  function makeAssumptionRecord(action,claimKey){
+    return {
+      id:'assumption:'+action.id+':'+claimKey,
+      subjectType:'action',subjectId:action.id,claimKey,claimValue:action[claimKey],
+      kind:'assumption',quality:'none',sourceType:'user_input',sourceRef:'',
+      capturedAt:null,observedAt:null,verifiedAt:null,verifiedBy:null,
+      note:'User-entered scenario assumption; no supporting source has been recorded.',
+      isSynthetic:false,supersedesId:null
+    };
+  }
   function makeSyntheticRecord(action,claimKey){
     return {
       id:'synthetic:'+action.id+':'+claimKey,
@@ -88,15 +98,14 @@
     const subjectClaims=new Set(evidence.map(x=>x&&x.subjectType==='action'?x.subjectId+'|'+x.claimKey:''));
     for(const action of actions){
       if(!action.id||typeof action.id!=='string')throw new Error('Every action needs a non-empty ID before evidence migration.');
-      if(isKnownSeed(action,seeds)){
-        action.isSynthetic=true;
-        for(const claimKey of CLAIMS){
-          const key=action.id+'|'+claimKey;
-          if(!subjectClaims.has(key)){
-            const record=makeSyntheticRecord(action,claimKey);
-            if(!existingIds.has(record.id)){evidence.push(record);existingIds.add(record.id);}
-            subjectClaims.add(key);
-          }
+      const synthetic=isKnownSeed(action,seeds);
+      if(synthetic)action.isSynthetic=true;
+      for(const claimKey of CLAIMS){
+        const key=action.id+'|'+claimKey;
+        if(!subjectClaims.has(key)){
+          const record=synthetic?makeSyntheticRecord(action,claimKey):makeAssumptionRecord(action,claimKey);
+          if(!existingIds.has(record.id)){evidence.push(record);existingIds.add(record.id);}
+          subjectClaims.add(key);
         }
       }
       if(hasLegacyEvidence(action)){

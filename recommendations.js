@@ -57,6 +57,7 @@
   function migrateState(input){
     const state=clone(input);
     if(!Array.isArray(state.recommendationSnapshots))state.recommendationSnapshots=[];
+    state.recommendationSnapshots=state.recommendationSnapshots.map(snapshot=>({...snapshot,decisions:(snapshot.decisions||[]).map(decision=>({...decision,standaloneExpectedIncrementalCommission:decision.standaloneExpectedIncrementalCommission??decision.expectedIncrementalCommission,valueBasis:decision.valueBasis||'standalone_action_estimate_not_allocated_portfolio_contribution'}))}));
     const errors=validateSnapshots(state.recommendationSnapshots);
     if(errors.length)throw new Error(errors.join('\n'));
     state.recommendationSnapshotSchemaVersion=1;

@@ -70,7 +70,7 @@ class PublicCasebookBenchmarkTests(unittest.TestCase):
         # must not carry source refs that could be mistaken for evidence of leads.
         public_source_ids = {source["source_id"] for source in case["sources"]}
         for action in case["candidate_actions"]:
-            self.assertNotIn("evidence_refs", action, action["action_id"])
+            self.assertEqual(action["evidence_refs"], [], action["action_id"])
             self.assertTrue(
                 public_source_ids.isdisjoint(action.get("evidence_refs", [])),
                 f"{action['action_id']} must not claim public-source evidence",

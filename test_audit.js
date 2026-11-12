@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict');
 const A=require('./audit.js');
-const legacy=A.migrateLegacyOutcomes([{id:'A1',status:'completed',actualCommission:12000,minutes:40,at:'2026-01-01T00:00:00Z'}]);
-assert.equal(legacy.length,1);assert.equal(legacy[0].actualCommission,12000);assert.equal(legacy[0].verificationStatus,'unverified');
+const legacy=A.migrateLegacyOutcomes([{id:'A1',status:'completed',actualCommission:12000,minutes:40,at:'2026-01-01T00:00:00Z'}],[{id:'A1',opportunityId:'DEAL-ONE'}]);
+assert.equal(legacy.length,1);assert.equal(legacy[0].actualCommission,12000);assert.equal(legacy[0].verificationStatus,'unverified');assert.equal(legacy[0].opportunityId,'DEAL-ONE');
 const event={eventId:'EV1',actionId:'A1',opportunityId:'D1',eventType:'status_update',status:'completed',actualCommission:12000,currency:'AED',actualMinutes:40,occurredAt:'2026-01-02T00:00:00Z',recordedAt:'2026-01-02T00:00:00Z',sourceType:'user_input',verificationStatus:'unverified',note:'Recorded result',supersedesEventId:null,actualIncrementalCommission:null,attributionMethod:null};
 const log=A.appendOutcomeEvent(legacy,event);
 assert.equal(legacy.length,1,'append leaves original event array unchanged');
@@ -17,7 +17,7 @@ const actions=[{id:'A1',opportunityId:'D1',commission:10000,pWith:80,pWithout:20
 const evidence=[{id:'E1',claimValue:1}];
 const result={value:8000,minutes:30,items:[{...actions[0],scheduledStartMinutes:0,scheduledFinishMinutes:30}]};
 const snap=A.createRecommendationSnapshot({runId:'RUN1',createdAt:'2026-01-01T00:00:00Z',capacityHours:1,actions,evidence,result});
-assert.equal(A.validateSnapshot(snap).length,0);
+assert.equal(A.validateSnapshot(snap).length,0);\nconst archive=A.appendRecommendationSnapshot([],snap);assert.equal(archive.length,1);assert.equal(A.appendRecommendationSnapshot(archive,{...snap,runId:'RUN2'}).length,2);assert.throws(()=>A.appendRecommendationSnapshot(archive,snap),/Duplicate/);
 actions[0].commission=1;evidence[0].claimValue=2;result.items[0].commission=1;
 assert.equal(snap.candidateActions[0].commission,10000,'snapshot copies original inputs');
 assert.equal(snap.evidence[0].claimValue,1,'snapshot copies original evidence');
@@ -26,7 +26,7 @@ const reconciled=A.reconcile([snap],corrected);
 assert.equal(reconciled.length,1);
 assert.equal(reconciled[0].actualCommissionObserved,10000);
 assert.equal(reconciled[0].actualIncrementalCommission,null,'no causal uplift inferred');
-assert.equal(reconciled[0].attributionStatus,'unknown');
+assert.equal(reconciled[0].attributionStatus,'unknown');\nconst attributed=A.appendOutcomeEvent(corrected,{...event,eventId:'EV3',recordedAt:'2026-01-04T00:00:00Z',actualIncrementalCommission:3000,attributionMethod:'Documented counterfactual analysis'});\nconst attributedRows=A.reconcile([snap],attributed);assert.equal(attributedRows[0].actualIncrementalCommission,3000);assert.equal(attributedRows[0].attributionStatus,'documented_method_recorded');
 assert.ok(A.validateOutcomeEvent({...event,actualIncrementalCommission:5000}).length,'incremental commission requires attribution method');
 assert.equal(A.validateOutcomeEvent({...event,actualIncrementalCommission:5000,attributionMethod:'documented counterfactual study'}).length,0);
 console.log('Append-only outcomes, immutable snapshots and reconciliation tests passed.');

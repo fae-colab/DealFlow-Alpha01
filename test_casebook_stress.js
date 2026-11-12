@@ -7,8 +7,8 @@ assert.equal(caseData.case_type, 'synthetic_fixture');
 assert.equal(caseData.public_context.linked_public_case_id, 'DF-PUBLIC-001');
 const publicSourceIds = new Set(caseData.sources.map(source => source.source_id));
 for (const action of caseData.candidate_actions) {
-  assert.equal(Object.hasOwn(action, 'evidence_refs'), false,
-    action.action_id + ' must not carry public evidence refs');
+  assert.deepEqual(action.evidence_refs, [],
+    action.action_id + ' must have no public evidence refs');
   for (const ref of action.evidence_refs || []) {
     assert.equal(publicSourceIds.has(ref), false,
       action.action_id + ' must not claim public-source evidence');

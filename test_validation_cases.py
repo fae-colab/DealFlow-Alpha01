@@ -1,4 +1,5 @@
 import json
+import math
 import unittest
 from pathlib import Path
 
@@ -24,17 +25,44 @@ NUMERIC_FIELDS = {
 FIELD_PROVENANCE = {"public_source", "agent_reported", "assumption", "unknown"}
 
 
+def _source_catalogue(case, errors):
+    sources = case.get("sources", [])
+    if not isinstance(sources, list):
+        errors.append("sources must be a list.")
+        return {}
+    catalogue = {}
+    for index, source in enumerate(sources):
+        if not isinstance(source, dict):
+            errors.append(f"sources[{index}] must be an object.")
+            continue
+        source_id = source.get("source_id")
+        if not isinstance(source_id, str) or not source_id.strip():
+            errors.append(f"sources[{index}].source_id must be non-empty text.")
+        elif source_id in catalogue:
+            errors.append(f"duplicate source_id: {source_id}.")
+        else:
+            catalogue[source_id] = source
+    return catalogue
+
+
 def validate_engine_readiness(case):
-    """A valid evidence record may intentionally be unsuitable for optimizer replay."""
-    errors = []
+    """Only structurally valid cases with complete, in-range inputs can be replayed."""
+    errors = validate_case(case)
+    if errors:
+        return ["Case validation failed; optimizer replay is blocked.", *errors]
     capacity = case.get("capacity_hours")
-    if not isinstance(capacity, (int, float)) or isinstance(capacity, bool) or not 0 < capacity <= 24:
+    if not isinstance(capacity, (int, float)) or isinstance(capacity, bool) or not math.isfinite(capacity) or not 0 < capacity <= 24:
         errors.append("capacity_hours is unknown or invalid; optimizer replay is blocked.")
-    for index, action in enumerate(case.get("candidate_actions", [])):
-        for key in NUMERIC_FIELDS:
+    actions = case.get("candidate_actions")
+    if not isinstance(actions, list) or not actions:
+        errors.append("candidate_actions must contain at least one action; optimizer replay is blocked.")
+        return errors
+    for index, action in enumerate(actions):
+        for key, (low, high) in NUMERIC_FIELDS.items():
             value = action.get(key)
-            if not isinstance(value, (int, float)) or isinstance(value, bool):
-                errors.append(f"candidate_actions[{index}].{key} is unknown; optimizer replay is blocked.")
+            if (not isinstance(value, (int, float)) or isinstance(value, bool)
+                    or not math.isfinite(value) or not low <= value <= high):
+                errors.append(f"candidate_actions[{index}].{key} is unknown or invalid; optimizer replay is blocked.")
     return errors
 
 
@@ -46,7 +74,7 @@ def validate_case(case):
     def inspect_keys(value, path="$"):
         if isinstance(value, dict):
             for key, child in value.items():
-                if key.lower() in BANNED_KEYS:
+                if isinstance(key, str) and key.lower() in BANNED_KEYS:
                     errors.append(f"{path}: identifying field '{key}' is not allowed.")
                 inspect_keys(child, f"{path}.{key}")
         elif isinstance(value, list):
@@ -68,12 +96,14 @@ def validate_case(case):
     capacity = case.get("capacity_hours")
     if capacity is None and case_type in {"public_reconstruction", "anonymized_agent_case"}:
         if case.get("capacity_status") != "unknown":
-            errors.append("Unknown public capacity must be explicitly marked capacity_status=unknown.")
-    elif not isinstance(capacity, (int, float)) or isinstance(capacity, bool) or not 0 < capacity <= 24:
-        errors.append("capacity_hours must be greater than 0 and no more than 24, or explicitly unknown for public cases.")
+            errors.append("Unknown capacity must be explicitly marked capacity_status=unknown.")
+    elif (not isinstance(capacity, (int, float)) or isinstance(capacity, bool)
+          or not math.isfinite(capacity) or not 0 < capacity <= 24):
+        errors.append("capacity_hours must be greater than 0 and no more than 24, or explicitly unknown.")
     if case.get("commission_value_basis") not in {"exact", "rounded", "banded", "unknown"}:
         errors.append("commission_value_basis must be exact, rounded, banded, or unknown.")
 
+    source_catalogue = _source_catalogue(case, errors)
     actions = case.get("candidate_actions")
     if not isinstance(actions, list) or not actions or len(actions) > 20:
         errors.append("candidate_actions must contain between 1 and 20 actions.")
@@ -99,13 +129,16 @@ def validate_case(case):
         if case_type in {"public_reconstruction", "anonymized_agent_case"} and not isinstance(provenance, dict):
             errors.append(f"{prefix}.input_provenance must be an object.")
             provenance = {}
+        if not isinstance(provenance, dict):
+            provenance = {}
         for key, (low, high) in NUMERIC_FIELDS.items():
             value = action.get(key)
             if value is None and case_type in {"public_reconstruction", "anonymized_agent_case"}:
                 if provenance.get(key) != "unknown":
                     errors.append(f"{prefix}.{key} is null but its provenance is not unknown.")
-            elif not isinstance(value, (int, float)) or isinstance(value, bool) or not low <= value <= high:
-                errors.append(f"{prefix}.{key} must be numeric in [{low}, {high}] or explicitly unknown for public cases.")
+            elif (not isinstance(value, (int, float)) or isinstance(value, bool)
+                  or not math.isfinite(value) or not low <= value <= high):
+                errors.append(f"{prefix}.{key} must be numeric in [{low}, {high}] or explicitly unknown.")
             elif case_type in {"public_reconstruction", "anonymized_agent_case"}:
                 status = provenance.get(key)
                 if status not in FIELD_PROVENANCE - {"unknown"}:
@@ -115,14 +148,24 @@ def validate_case(case):
 
         if action.get("evidence_status") not in EVIDENCE:
             errors.append(f"{prefix}.evidence_status is invalid.")
-        if not isinstance(action.get("evidence_refs"), list):
+        refs = action.get("evidence_refs")
+        if not isinstance(refs, list):
             errors.append(f"{prefix}.evidence_refs must be a list.")
+            refs = []
+        else:
+            for ref in refs:
+                if not isinstance(ref, str) or not ref.strip():
+                    errors.append(f"{prefix}.evidence_refs entries must be non-empty source IDs.")
+                elif ref not in source_catalogue:
+                    errors.append(f"{prefix}.evidence_refs references unknown source_id '{ref}'.")
+        if case_type in {"public_reconstruction", "anonymized_agent_case"}:
+            for key, status in provenance.items():
+                if status == "public_source" and not refs:
+                    errors.append(f"{prefix}.{key} claims public_source provenance without a source reference.")
+
         dependency = action.get("dependency_action_id")
         if dependency is not None and not isinstance(dependency, str):
             errors.append(f"{prefix}.dependency_action_id must be text or null.")
-        if isinstance(dependency, str) and dependency and dependency not in ids:
-            # Resolve after all IDs have been collected below.
-            pass
 
     completed = case.get("completed_action_ids", [])
     if not isinstance(completed, list):
@@ -180,8 +223,7 @@ class ValidationCaseTests(unittest.TestCase):
 
     def test_duplicate_action_ids_are_rejected(self):
         case = json.loads(TEMPLATE.read_text(encoding="utf-8"))
-        duplicate = dict(case["candidate_actions"][0])
-        case["candidate_actions"].append(duplicate)
+        case["candidate_actions"].append(dict(case["candidate_actions"][0]))
         self.assertTrue(any("duplicate action_id" in e for e in validate_case(case)))
 
     def test_public_reconstruction_preserves_unknowns_and_blocks_replay(self):
@@ -209,6 +251,47 @@ class ValidationCaseTests(unittest.TestCase):
         case = json.loads(PUBLIC_CASE.read_text(encoding="utf-8"))
         case["candidate_actions"][0]["dependency_action_id"] = "DOES-NOT-EXIST"
         self.assertTrue(any("unknown action" in e for e in validate_case(case)))
+
+    def test_readiness_rejects_empty_candidate_actions(self):
+        case = json.loads(TEMPLATE.read_text(encoding="utf-8"))
+        case["candidate_actions"] = []
+        self.assertTrue(any("Case validation failed" in e for e in validate_engine_readiness(case)))
+
+    def test_readiness_rejects_out_of_range_and_non_finite_values(self):
+        case = json.loads(TEMPLATE.read_text(encoding="utf-8"))
+        case["candidate_actions"][0]["confidence_pct"] = 101
+        self.assertTrue(any("Case validation failed" in e for e in validate_engine_readiness(case)))
+        case["candidate_actions"][0]["confidence_pct"] = float("nan")
+        self.assertTrue(any("Case validation failed" in e for e in validate_engine_readiness(case)))
+
+    def test_readiness_rejects_missing_capacity_and_malformed_case(self):
+        case = json.loads(TEMPLATE.read_text(encoding="utf-8"))
+        case["capacity_hours"] = None
+        self.assertTrue(any("Case validation failed" in e for e in validate_engine_readiness(case)))
+        self.assertTrue(validate_engine_readiness({"capacity_hours": 4, "candidate_actions": []}))
+
+    def test_unknown_evidence_reference_is_rejected(self):
+        case = json.loads(PUBLIC_CASE.read_text(encoding="utf-8"))
+        case["candidate_actions"][0]["evidence_refs"].append("SRC-NOT-IN-CASE")
+        self.assertTrue(any("unknown source_id" in e for e in validate_case(case)))
+
+    def test_public_source_provenance_requires_a_reference(self):
+        case = json.loads(PUBLIC_CASE.read_text(encoding="utf-8"))
+        action = case["candidate_actions"][0]
+        action["net_commission_aed"] = 10000
+        action["input_provenance"]["net_commission_aed"] = "public_source"
+        action["evidence_refs"] = []
+        self.assertTrue(any("without a source reference" in e for e in validate_case(case)))
+
+    def test_duplicate_source_ids_are_rejected(self):
+        case = json.loads(PUBLIC_CASE.read_text(encoding="utf-8"))
+        case["sources"].append(dict(case["sources"][0]))
+        self.assertTrue(any("duplicate source_id" in e for e in validate_case(case)))
+
+    def test_evidence_reference_must_be_a_non_empty_string(self):
+        case = json.loads(PUBLIC_CASE.read_text(encoding="utf-8"))
+        case["candidate_actions"][0]["evidence_refs"].append(" ")
+        self.assertTrue(any("non-empty source IDs" in e for e in validate_case(case)))
 
 
 if __name__ == "__main__":

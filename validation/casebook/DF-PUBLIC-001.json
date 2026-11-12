@@ -1,0 +1,180 @@
+{
+  "schema_version": "1.0",
+  "case_id": "DF-PUBLIC-001",
+  "case_type": "public_reconstruction",
+  "consent_status": "not_required_public",
+  "agent_alias": "NOT_APPLICABLE_PUBLIC",
+  "market": "Dubai, UAE",
+  "as_of": "2026-11-09T23:59:00+04:00",
+  "capacity_hours": null,
+  "capacity_status": "unknown",
+  "commission_value_basis": "unknown",
+  "public_context": {
+    "description": "A small set of newly registered Dubai residential transactions provides market context, but public records do not reveal an individual realtor's live pipeline, client instructions, commission agreement, available hours, or action deadlines.",
+    "observations": [
+      {
+        "observation_id": "PUB-OBS-001",
+        "date": "2026-11-09",
+        "area": "Jumeirah Village Circle",
+        "property_type": "apartment",
+        "bedrooms": 1,
+        "registration_type": "ready_existing",
+        "size_sqft": 814,
+        "registered_price_aed": 639000,
+        "reported_price_aed_per_sqft": 786,
+        "source_refs": ["SRC-DLD-MIRROR-001"]
+      },
+      {
+        "observation_id": "PUB-OBS-002",
+        "date": "2026-11-09",
+        "area": "Business Bay",
+        "project": "Regalia",
+        "property_type": "apartment",
+        "bedrooms": 1,
+        "registration_type": "ready_existing",
+        "size_sqft": 731,
+        "registered_price_aed": 1400000,
+        "reported_price_aed_per_sqft": 1943,
+        "source_refs": ["SRC-DLD-MIRROR-001"]
+      },
+      {
+        "observation_id": "PUB-OBS-003",
+        "date": "2026-11-09",
+        "area": "Dubai Investment Park First",
+        "project": "Verdana Residence",
+        "property_type": "apartment",
+        "bedrooms": 2,
+        "registration_type": "off_plan",
+        "size_sqft": 951,
+        "registered_price_aed": 995000,
+        "reported_price_aed_per_sqft": 1046,
+        "source_refs": ["SRC-DLD-MIRROR-001"]
+      }
+    ],
+    "interpretation_limits": [
+      "These are registered transactions, not active listings or verified leads.",
+      "The three observations differ by area, project, size, and registration type; they are not interchangeable comparables.",
+      "No buyer, seller, landlord, tenant, or agent identity is present.",
+      "The observations do not prove that any realtor has a related client or a task to perform."
+    ]
+  },
+  "candidate_actions": [
+    {
+      "action_id": "PUB-ACT-001",
+      "opportunity_id": "PUB-OPP-JVC-001",
+      "opportunity_type": "public_market_signal",
+      "area": "Jumeirah Village Circle",
+      "action_description": "If an existing seller mandate makes this relevant, review the registered JVC 1BR sale as one input to a fresh pricing conversation; no seller mandate is established by this public record.",
+      "net_commission_aed": null,
+      "p_close_with_action_pct": null,
+      "p_close_without_action_pct": null,
+      "effort_minutes": null,
+      "deadline_hours": null,
+      "dependency_action_id": null,
+      "evidence_status": "unverified",
+      "confidence_pct": null,
+      "evidence_refs": ["SRC-DLD-MIRROR-001", "SRC-DLD-OFFICIAL-001"],
+      "input_provenance": {
+        "net_commission_aed": "unknown",
+        "p_close_with_action_pct": "unknown",
+        "p_close_without_action_pct": "unknown",
+        "effort_minutes": "unknown",
+        "deadline_hours": "unknown",
+        "confidence_pct": "unknown"
+      },
+      "assumption_notes": "No agent-specific opportunity, agreed fee, net broker/agent split, action effect, effort, or deadline is publicly evidenced. This is a research hypothesis, not a verified live action."
+    },
+    {
+      "action_id": "PUB-ACT-002",
+      "opportunity_id": "PUB-OPP-BB-001",
+      "opportunity_type": "public_market_signal",
+      "area": "Business Bay",
+      "action_description": "If an existing seller or buyer mandate makes this relevant, check whether the Regalia 1BR transaction changes the client's local market context; no related client mandate is established.",
+      "net_commission_aed": null,
+      "p_close_with_action_pct": null,
+      "p_close_without_action_pct": null,
+      "effort_minutes": null,
+      "deadline_hours": null,
+      "dependency_action_id": null,
+      "evidence_status": "unverified",
+      "confidence_pct": null,
+      "evidence_refs": ["SRC-DLD-MIRROR-001", "SRC-DLD-OFFICIAL-001"],
+      "input_provenance": {
+        "net_commission_aed": "unknown",
+        "p_close_with_action_pct": "unknown",
+        "p_close_without_action_pct": "unknown",
+        "effort_minutes": "unknown",
+        "deadline_hours": "unknown",
+        "confidence_pct": "unknown"
+      },
+      "assumption_notes": "No agent-specific opportunity, agreed fee, net broker/agent split, action effect, effort, or deadline is publicly evidenced. This is a research hypothesis, not a verified live action."
+    },
+    {
+      "action_id": "PUB-ACT-003",
+      "opportunity_id": "PUB-OPP-DIP-001",
+      "opportunity_type": "public_market_signal",
+      "area": "Dubai Investment Park First",
+      "action_description": "If an existing client mandate makes off-plan stock in this area relevant, verify project and unit details before using this registered sale in a client recommendation; no client mandate is established.",
+      "net_commission_aed": null,
+      "p_close_with_action_pct": null,
+      "p_close_without_action_pct": null,
+      "effort_minutes": null,
+      "deadline_hours": null,
+      "dependency_action_id": null,
+      "evidence_status": "unverified",
+      "confidence_pct": null,
+      "evidence_refs": ["SRC-DLD-MIRROR-001", "SRC-DLD-OFFICIAL-001"],
+      "input_provenance": {
+        "net_commission_aed": "unknown",
+        "p_close_with_action_pct": "unknown",
+        "p_close_without_action_pct": "unknown",
+        "effort_minutes": "unknown",
+        "deadline_hours": "unknown",
+        "confidence_pct": "unknown"
+      },
+      "assumption_notes": "No agent-specific opportunity, agreed fee, net broker/agent split, action effect, effort, or deadline is publicly evidenced. This is a research hypothesis, not a verified live action."
+    }
+  ],
+  "agent_baseline": {
+    "status": "not_available_public_reconstruction",
+    "explanation": "Public sources cannot establish an individual agent's decision-time priority plan. This case must not be scored as an agent-vs-DealFlow comparison."
+  },
+  "dealflow_evaluation": {
+    "status": "blocked_missing_agent_specific_inputs",
+    "run_at": null,
+    "recommendation_snapshot_id": null,
+    "selected_action_ids": [],
+    "portfolio_expected_incremental_commission_aed": null,
+    "reviewer_notes": "Expected result for this first public case: do not fabricate a ranked recommendation. Preserve unknowns and block optimizer replay until an authorized agent supplies the missing decision-time inputs."
+  },
+  "follow_up": {
+    "status": "not_started",
+    "review_due_at": null,
+    "actions_taken": [],
+    "outcomes": []
+  },
+  "sources": [
+    {
+      "source_id": "SRC-DLD-MIRROR-001",
+      "title": "Dubai property transactions — registered sales explorer",
+      "publisher": "Dubai Real Estate Data",
+      "source_type": "public_secondary_mirror_of_official_data",
+      "source_url": "https://www.dubairealestatedata.com/transactions",
+      "data_origin": "Dubai Land Department via Dubai Pulse",
+      "data_through": "2026-11-09",
+      "accessed_at": "2026-11-12",
+      "license": "CC BY 4.0 as stated by publisher",
+      "facts_used": "Rows dated 9 Nov 2026: JVC 1BR ready-existing 814 sqft AED 639,000; Business Bay Regalia 1BR ready-existing 731 sqft AED 1.4m; Dubai Investment Park First Verdana Residence 2BR off-plan 951 sqft AED 995,000."
+    },
+    {
+      "source_id": "SRC-DLD-OFFICIAL-001",
+      "title": "Dubai Land Department — Real Estate Data",
+      "publisher": "Dubai Land Department",
+      "source_type": "official_primary_source",
+      "source_url": "https://dubailand.gov.ae/en/open-data/real-estate-data/",
+      "accessed_at": "2026-11-12",
+      "facts_used": "Official portal exposes transaction records and fields including transaction date, area, property type/subtype, amount, transaction/property size, and room count; it directs users to Dubai Pulse for previous-year data."
+    }
+  ],
+  "research_notes": "First public casebook entry. This is a public-data reconstruction of market context, not an anonymized realtor case and not evidence that any of the described actions exists in an agent's live pipeline. The meaningful engine challenge is abstention: the system should not optimize or invent commission, conversion lift, effort, deadlines, capacity, or an agent baseline when public sources do not provide them."
+}

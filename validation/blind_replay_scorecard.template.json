@@ -7,10 +7,14 @@
   "sealed_agent_plan_sha256": null,
   "dealflow_snapshot_id": null,
   "output_labels": {
-    "PLAN_A": "sealed_agent_plan",
-    "PLAN_B": "urgency_deadline_first",
-    "PLAN_C": "expected_incremental_commission_per_effort",
-    "PLAN_D": "dealflow"
+    "neutral_labels": [
+      "PLAN_A",
+      "PLAN_B",
+      "PLAN_C",
+      "PLAN_D"
+    ],
+    "unblinding_key_location": "Keep mapping outside repository until independent assessment is complete.",
+    "unblinding_key_sha256": null
   },
   "baseline_status": {
     "agent_plan": "not_scored",

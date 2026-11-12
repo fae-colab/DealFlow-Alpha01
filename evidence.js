@@ -72,8 +72,9 @@
     if(record.verifiedBy!==null && record.verifiedBy!==undefined && typeof record.verifiedBy!=='string')return 'verifiedBy must be text or null';
     if(typeof record.isSynthetic!=='boolean')return 'isSynthetic must be boolean';
     if(record.supersedesId!==null && record.supersedesId!==undefined && typeof record.supersedesId!=='string')return 'supersedesId must be text or null';
-    if(record.kind==='verified_fact' && (!record.verifiedAt||!record.verifiedBy))return 'verified_fact requires verifiedAt and verifiedBy';
+    if(record.kind==='verified_fact' && (!record.verifiedAt||!record.verifiedBy||!record.verifiedBy.trim()||record.quality==='none'||record.sourceType==='synthetic_demo'))return 'verified_fact requires a verification timestamp, verifier, non-none evidence quality, and non-synthetic source';
     if(record.isSynthetic && record.sourceType!=='synthetic_demo')return 'synthetic records must use synthetic_demo sourceType';
+    if(record.sourceType==='synthetic_demo' && !record.isSynthetic)return 'synthetic_demo sourceType requires isSynthetic=true';
     return null;
   }
   function validateEvidence(records){

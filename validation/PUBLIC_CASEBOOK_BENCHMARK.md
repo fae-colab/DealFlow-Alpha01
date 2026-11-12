@@ -26,7 +26,7 @@ With 3 hours of capacity, the deterministic optimizer should select:
 
 Total: 165 minutes; expected incremental commission under the fixture's assumptions: AED 15,700.
 
-The first two actions share one opportunity. Their commission contribution is the maximum action lift for that opportunity (AED 9,600), not the sum of AED 6,000 and AED 9,600. The third action contributes AED 4,500.
+The two JVC actions share one opportunity. Their commission contribution is the maximum action lift for that opportunity (AED 9,600), not the sum of AED 6,000 and AED 9,600. The rental action contributes AED 1,600 and the Business Bay seller action contributes AED 4,500.
 
 This is a deterministic optimizer regression result under invented assumptions. It is **not** evidence that these deals, probabilities, commissions, or outcomes exist in Dubai or for any agent.
 

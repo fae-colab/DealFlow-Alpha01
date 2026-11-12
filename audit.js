@@ -50,9 +50,10 @@
     const current=events.filter(x=>!superseded.has(x.eventId));
     const byAction=new Map();
     for(const event of current){
-      const old=byAction.get(event.actionId);
+      const key=event.actionId+'|'+(event.recommendationRunId||'');
+      const old=byAction.get(key);
       if(!old||String(event.recordedAt).localeCompare(String(old.recordedAt))>0||
-        (event.recordedAt===old.recordedAt&&event.eventId.localeCompare(old.eventId)>0))byAction.set(event.actionId,event);
+        (event.recordedAt===old.recordedAt&&event.eventId.localeCompare(old.eventId)>0))byAction.set(key,event);
     }
     return [...byAction.values()].map(clone);
   }

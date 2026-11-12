@@ -1,0 +1,218 @@
+{
+  "schema_version": "1.0",
+  "case_id": "DF-STRESS-001",
+  "case_type": "synthetic_fixture",
+  "consent_status": "not_applicable_synthetic",
+  "agent_alias": "SYNTHETIC-AGENT-001",
+  "market": "Dubai, UAE",
+  "as_of": "2026-11-13T09:00:00+04:00",
+  "capacity_hours": 3,
+  "commission_value_basis": "rounded",
+  "public_context": {
+    "linked_public_case_id": "DF-PUBLIC-001",
+    "description": "A deliberately hypothetical agent workload constructed to stress the optimizer. The three public registered transactions in DF-PUBLIC-001 provide market context only; they do not establish these leads, mandates, commissions, probabilities, deadlines, or tasks.",
+    "public_observation_refs": [
+      "PUB-OBS-001",
+      "PUB-OBS-002",
+      "PUB-OBS-003"
+    ],
+    "boundary": "All candidate actions and all numeric business inputs below are synthetic assumptions. They are not claims about a real agent, client, listing, mandate, or commission."
+  },
+  "candidate_actions": [
+    {
+      "action_id": "ST-ACT-001",
+      "opportunity_id": "ST-OPP-JVC-BUYER",
+      "opportunity_type": "buyer",
+      "area": "Jumeirah Village Circle",
+      "action_description": "Confirm viewing availability and decision-maker attendance",
+      "net_commission_aed": 24000,
+      "p_close_with_action_pct": 65,
+      "p_close_without_action_pct": 40,
+      "effort_minutes": 30,
+      "deadline_hours": 2,
+      "dependency_action_id": null,
+      "evidence_status": "unverified",
+      "confidence_pct": 50,
+      "evidence_refs": [
+        "SRC-DLD-OFFICIAL-001"
+      ],
+      "input_provenance": {
+        "net_commission_aed": "assumption",
+        "p_close_with_action_pct": "assumption",
+        "p_close_without_action_pct": "assumption",
+        "effort_minutes": "assumption",
+        "deadline_hours": "assumption",
+        "confidence_pct": "assumption"
+      },
+      "assumption_notes": "Entire hypothetical buyer opportunity and all numeric inputs are invented for optimizer stress testing; public transaction data does not evidence this buyer or mandate."
+    },
+    {
+      "action_id": "ST-ACT-002",
+      "opportunity_id": "ST-OPP-JVC-BUYER",
+      "opportunity_type": "buyer",
+      "area": "Jumeirah Village Circle",
+      "action_description": "Complete viewing follow-up and confirm next-step commitment",
+      "net_commission_aed": 24000,
+      "p_close_with_action_pct": 80,
+      "p_close_without_action_pct": 40,
+      "effort_minutes": 45,
+      "deadline_hours": 3,
+      "dependency_action_id": "ST-ACT-001",
+      "evidence_status": "unverified",
+      "confidence_pct": 50,
+      "evidence_refs": [
+        "SRC-DLD-OFFICIAL-001"
+      ],
+      "input_provenance": {
+        "net_commission_aed": "assumption",
+        "p_close_with_action_pct": "assumption",
+        "p_close_without_action_pct": "assumption",
+        "effort_minutes": "assumption",
+        "deadline_hours": "assumption",
+        "confidence_pct": "assumption"
+      },
+      "assumption_notes": "Hypothetical dependent action. Same opportunity ID as ST-ACT-001 deliberately tests that commission lift is not double-counted."
+    },
+    {
+      "action_id": "ST-ACT-003",
+      "opportunity_id": "ST-OPP-BB-SELLER",
+      "opportunity_type": "seller",
+      "area": "Business Bay",
+      "action_description": "Prepare a focused pricing discussion using relevant local market context",
+      "net_commission_aed": 18000,
+      "p_close_with_action_pct": 60,
+      "p_close_without_action_pct": 35,
+      "effort_minutes": 60,
+      "deadline_hours": 4,
+      "dependency_action_id": null,
+      "evidence_status": "unverified",
+      "confidence_pct": 50,
+      "evidence_refs": [
+        "SRC-DLD-OFFICIAL-001"
+      ],
+      "input_provenance": {
+        "net_commission_aed": "assumption",
+        "p_close_with_action_pct": "assumption",
+        "p_close_without_action_pct": "assumption",
+        "effort_minutes": "assumption",
+        "deadline_hours": "assumption",
+        "confidence_pct": "assumption"
+      },
+      "assumption_notes": "Hypothetical seller opportunity and all numeric inputs are invented; no seller mandate is evidenced."
+    },
+    {
+      "action_id": "ST-ACT-004",
+      "opportunity_id": "ST-OPP-VERDANA-BUYER",
+      "opportunity_type": "buyer",
+      "area": "Dubai Investment Park First",
+      "action_description": "Verify off-plan project and unit details before a client recommendation",
+      "net_commission_aed": 30000,
+      "p_close_with_action_pct": 45,
+      "p_close_without_action_pct": 30,
+      "effort_minutes": 120,
+      "deadline_hours": 6,
+      "dependency_action_id": null,
+      "evidence_status": "unverified",
+      "confidence_pct": 50,
+      "evidence_refs": [
+        "SRC-DLD-OFFICIAL-001"
+      ],
+      "input_provenance": {
+        "net_commission_aed": "assumption",
+        "p_close_with_action_pct": "assumption",
+        "p_close_without_action_pct": "assumption",
+        "effort_minutes": "assumption",
+        "deadline_hours": "assumption",
+        "confidence_pct": "assumption"
+      },
+      "assumption_notes": "Hypothetical buyer opportunity and all numeric inputs are invented; the public Verdana transaction does not establish a related buyer."
+    },
+    {
+      "action_id": "ST-ACT-005",
+      "opportunity_id": "ST-OPP-RENTAL",
+      "opportunity_type": "tenant",
+      "area": "Dubai Marina",
+      "action_description": "Respond to a tenant enquiry and confirm viewing requirements",
+      "net_commission_aed": 8000,
+      "p_close_with_action_pct": 70,
+      "p_close_without_action_pct": 50,
+      "effort_minutes": 30,
+      "deadline_hours": 1,
+      "dependency_action_id": null,
+      "evidence_status": "unverified",
+      "confidence_pct": 50,
+      "evidence_refs": [
+        "SRC-DLD-OFFICIAL-001"
+      ],
+      "input_provenance": {
+        "net_commission_aed": "assumption",
+        "p_close_with_action_pct": "assumption",
+        "p_close_without_action_pct": "assumption",
+        "effort_minutes": "assumption",
+        "deadline_hours": "assumption",
+        "confidence_pct": "assumption"
+      },
+      "assumption_notes": "Entire rental opportunity and all numeric inputs are invented; no public observation supports this lead."
+    },
+    {
+      "action_id": "ST-ACT-006",
+      "opportunity_id": "ST-OPP-DOCUMENTS",
+      "opportunity_type": "transaction_support",
+      "area": "Business Bay",
+      "action_description": "Resolve an urgent document-check item for a separate transaction",
+      "net_commission_aed": 15000,
+      "p_close_with_action_pct": 70,
+      "p_close_without_action_pct": 40,
+      "effort_minutes": 90,
+      "deadline_hours": 2.5,
+      "dependency_action_id": null,
+      "evidence_status": "unverified",
+      "confidence_pct": 50,
+      "evidence_refs": [
+        "SRC-DLD-OFFICIAL-001"
+      ],
+      "input_provenance": {
+        "net_commission_aed": "assumption",
+        "p_close_with_action_pct": "assumption",
+        "p_close_without_action_pct": "assumption",
+        "effort_minutes": "assumption",
+        "deadline_hours": "assumption",
+        "confidence_pct": "assumption"
+      },
+      "assumption_notes": "Hypothetical transaction-support action and all numeric inputs are invented; it is deliberately deadline-sensitive."
+    }
+  ],
+  "agent_baseline": {
+    "recorded_at": "2026-11-13T09:00:00+04:00",
+    "recorded_before_dealflow": true,
+    "selected_action_ids": [],
+    "priority_order": [],
+    "rationale": "No real agent baseline exists. This synthetic fixture tests deterministic engine behavior only."
+  },
+  "dealflow_evaluation": {
+    "status": "test_fixture_not_agent_evaluation",
+    "run_at": null,
+    "recommendation_snapshot_id": null,
+    "selected_action_ids": [],
+    "portfolio_expected_incremental_commission_aed": null,
+    "reviewer_notes": "Expected optimizer result is asserted in the Python and JavaScript regression tests. This is not a performance or financial-impact claim."
+  },
+  "follow_up": {
+    "status": "not_applicable_synthetic",
+    "review_due_at": null,
+    "actions_taken": [],
+    "outcomes": []
+  },
+  "sources": [
+    {
+      "source_id": "SRC-DLD-OFFICIAL-001",
+      "title": "Dubai Land Department — Real Estate Data",
+      "publisher": "Dubai Land Department",
+      "source_type": "official_primary_source",
+      "source_url": "https://dubailand.gov.ae/en/open-data/real-estate-data/",
+      "accessed_at": "2026-11-13",
+      "facts_used": "Context only: official transaction data fields. No candidate-action or numeric business assumptions are sourced from this page."
+    }
+  ],
+  "research_notes": "Separate synthetic optimization stress fixture linked to DF-PUBLIC-001. Public facts and invented workload assumptions are explicitly separated. Do not present this as an anonymized agent case or evidence of real commission outcomes."
+}

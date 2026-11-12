@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "case_id": "DF-REAL-PILOT-001",
+  "artifact_type": "sealed_agent_plan",
+  "captured_at": "YYYY-MM-DDTHH:MM:SS+04:00",
+  "recorded_before_dealflow": true,
+  "decision_as_of": "YYYY-MM-DDTHH:MM:SS+04:00",
+  "available_capacity_hours": null,
+  "selected_action_ids": ["ACT-001"],
+  "priority_order": ["ACT-001"],
+  "reasons_by_action": [
+    {
+      "action_id": "ACT-001",
+      "reason": "Anonymized explanation captured verbatim or faithfully summarized",
+      "agent_urgency": "unknown",
+      "agent_confidence_pct": null
+    }
+  ],
+  "agent_declared_omissions": [],
+  "sealed_file_sha256": null,
+  "custodian_notes": "Keep this artifact separate from DealFlow engine inputs until the run and all baselines are locked. Template only; replace example values."
+}

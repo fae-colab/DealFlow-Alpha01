@@ -40,6 +40,8 @@ assert.equal(customClaims.length,3,'every action numeric input receives claim-le
 assert.ok(customClaims.every(x=>x.kind==='assumption'&&x.quality==='none'&&x.sourceType==='user_input'));
 assert.ok(customClaims.every(x=>x.isSynthetic===false));
 assert.equal(migrated.actions[0].evidenceStatus,'verified','legacy action fields remain readable');
+assert.equal(migrated.actions[1].confidence,75,'confidence remains on the action independently of evidence quality');
+assert.equal(customClaims[0].quality,'none','evidence quality is not derived from confidence');
 
 const again=E.migrateState(migrated,seeds);
 assert.equal(again.evidence.length,migrated.evidence.length,'migration is idempotent');

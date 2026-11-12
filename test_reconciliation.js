@@ -19,6 +19,7 @@ assert.equal(correction[1].supersedesReconciliationId,associated[0].reconciliati
 assert.deepEqual(correction[0],associated[0],'reconciliation correction preserves prior record');
 const stale=[...events,{...events[0],eventId:'E2',supersedesEventId:'E1'}];
 assert.throws(()=>R.appendReconciliation([],{snapshotId:'S1',actionId:'A',outcomeEventId:'E1'},[snapshot],stale),/superseded/);
+assert.equal(R.validateReconciliations(associated,[snapshot],stale).length,0,'historical reconciliation remains valid after a later outcome correction');
 assert.throws(()=>R.migrateState({reconciliations:[{...associated[0],actualIncrementalCommission:12500}]},[snapshot],events),/cannot claim incremental/);
 assert.equal(R.migrateState({},[snapshot],events).reconciliations.length,0);
 console.log('Outcome reconciliation tests passed.');

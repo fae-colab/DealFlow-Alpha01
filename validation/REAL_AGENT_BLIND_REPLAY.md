@@ -28,9 +28,9 @@ A case cannot enter the repository unless the participant has consented and a hu
 
 Use three artifacts with different access timing:
 
-1. **Frozen engine input** — `blind_replay_case_input.json`. Contains the anonymized decision-time opportunity/action set, evidence references, assumptions, capacity and constraints. It MUST NOT contain the agent's original plan, its ranking, later outcomes, or evaluator judgments.
-2. **Sealed agent plan** — `sealed_agent_plan_template.json`. Capture the agent's original action choices, ranking, reasons, and confidence before DealFlow is run. Keep this artifact outside the engine-input folder and do not expose it to the DealFlow operator until the run and its immutable recommendation snapshot are locked. Prefer a separate custodian.
-3. **Evaluation scorecard** — `blind_replay_scorecard_template.json`. Complete only after the DealFlow run and baseline outputs have been locked. Where practical, use neutral labels (Plan A/B/C/D) and have the agent/reviewer assess them without knowing which is DealFlow.
+1. **Frozen engine input** — `blind_replay_case_input.template.json`. Contains the anonymized decision-time opportunity/action set, evidence references, assumptions, capacity and constraints. It MUST NOT contain the agent's original plan, its ranking, later outcomes, or evaluator judgments.
+2. **Sealed agent plan** — `sealed_agent_plan.template.json`. Capture the agent's original action choices, ranking, reasons, and confidence before DealFlow is run. Keep this artifact outside the engine-input folder and do not expose it to the DealFlow operator until the run and its immutable recommendation snapshot are locked. Prefer a separate custodian.
+3. **Evaluation scorecard** — `blind_replay_scorecard.template.json`. Complete only after the DealFlow run and baseline outputs have been locked. Where practical, use neutral labels (Plan A/B/C/D) and have the agent/reviewer assess them without knowing which is DealFlow.
 
 The templates are schemas/examples only. Never fill them with invented real-agent data.
 

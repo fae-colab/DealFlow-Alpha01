@@ -89,14 +89,14 @@
         <label>Actual time spent (minutes)<input id="actualEffort" type="number" min="0" step="1" value="0"></label>
         <button class="primary" type="submit">Save outcome</button>
       </form>
-      <div id="outcomeHistory" class="outcome-history"></div>
-      <p class="form-hint">One current outcome record is maintained per action; submitting again updates that record rather than silently creating a duplicate. A completed action followed by a sale is not proof that the action caused the sale.</p>
+      <h3>Immutable outcome event log</h3><div id="outcomeHistory" class="outcome-history"></div><h3>Recommendation snapshot archive</h3><div id="snapshotHistory" class="outcome-history"></div><h3>Opportunity-level reconciliation</h3><div id="reconciliationHistory" class="outcome-history"></div>
+      <p class="form-hint">Every submission appends a new outcome event. Historical events are never overwritten. Corrections must be separate linked events. Actual transaction commission is not proof of incremental commission caused by an action.</p>
     </section>
 
     <footer><strong>DealFlow Alpha</strong> · Decision logic prototype · All demo scenarios are synthetic · No data leaves this browser.</footer>
   </main>
   <script src="engine.js"></script>
-  <script src="evidence.js"></script>
+  <script src="evidence.js"></script>\n  <script src="audit.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "case_id": "DF-REAL-PILOT-001",
   "case_type": "anonymized_agent_case",
-  "consent_status": "explicit_agent_consent",
+  "consent_status": "pending_not_eligible_for_repository",
   "consent_date": "YYYY-MM-DD",
   "agent_alias": "AGENT-01",
   "market": "Dubai, UAE",

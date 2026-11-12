@@ -85,7 +85,7 @@
       <form id="outcomeForm" class="outcome-form">
         <label>Action ID<select id="outcomeAction" required></select></label>
         <label>Outcome<select id="outcomeStatus"><option value="completed">Completed</option><option value="not_completed">Not completed</option><option value="lost">Opportunity lost / no close</option><option value="pending">Still pending</option></select></label>
-        <label>Actual agent commission received (AED)<input id="actualCommission" type="number" min="0" step="0.01" value="0"></label>
+        <label>Actual agent commission received (AED)<input id="actualCommission" type="number" min="0" step="0.01" value="" placeholder="Leave blank if unknown"></label>
         <label>Actual time spent (minutes)<input id="actualEffort" type="number" min="0" step="1" value="0"></label>
         <label>Correction / context note (optional)<input id="outcomeNotes" type="text" maxlength="300" placeholder="e.g. Updated from commission statement"></label>
         <button class="primary" type="submit">Save outcome</button>

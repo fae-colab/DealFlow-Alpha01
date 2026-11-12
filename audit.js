@@ -11,7 +11,7 @@
     if(event.actualCommission!==null&&event.actualCommission!==undefined&&(!Number.isFinite(event.actualCommission)||event.actualCommission<0))errors.push('actualCommission must be a non-negative number or null.');
     if(event.actualMinutes!==null&&event.actualMinutes!==undefined&&(!Number.isFinite(event.actualMinutes)||event.actualMinutes<0))errors.push('actualMinutes must be a non-negative number or null.');
     for(const key of ['recordedAt','occurredAt'])if(event[key]!==null&&event[key]!==undefined&&Number.isNaN(Date.parse(event[key])))errors.push(key+' must be a valid timestamp or null.');
-    if(event.supersedesEventId!==null&&event.supersedesEventId!==undefined&&typeof event.supersedesEventId!=='string')errors.push('supersedesEventId must be text or null.');
+    if(event.supersedesEventId!==null&&event.supersedesEventId!==undefined&&typeof event.supersedesEventId!=='string')errors.push('supersedesEventId must be text or null.');\n    if(event.eventType==='correction'&&!event.supersedesEventId)errors.push('A correction must reference the event it supersedes.');
     if(event.actualIncrementalCommission!==null&&event.actualIncrementalCommission!==undefined&&(!Number.isFinite(event.actualIncrementalCommission)||typeof event.attributionMethod!=='string'||!event.attributionMethod.trim()))errors.push('actualIncrementalCommission requires a documented attributionMethod.');
     return errors;
   }

@@ -42,7 +42,7 @@ assert.equal(again.evidence.length,migrated.evidence.length,'migration is idempo
 assert.deepEqual(again.evidence,migrated.evidence);
 
 const bad=JSON.parse(JSON.stringify(initial));
-bad.evidence.push({...bad.evidence[0],id:'duplicate'});
+bad.evidence.push({...bad.evidence[0]});
 assert.ok(E.validateEvidence(bad.evidence).length);
 const ungrounded={...bad.evidence[0],id:'bad-verified',kind:'verified_fact',verifiedAt:null,verifiedBy:null};
 assert.ok(E.validateEvidence([ungrounded]).length);

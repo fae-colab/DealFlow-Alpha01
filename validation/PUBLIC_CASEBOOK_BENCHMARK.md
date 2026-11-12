@@ -20,10 +20,11 @@ The CI workflow should run both commands in addition to the existing engine, par
 With 3 hours of capacity, the deterministic optimizer should select:
 
 1. `ST-ACT-001` — JVC buyer viewing preparation (30 minutes)
-2. `ST-ACT-002` — dependent JVC buyer follow-up (45 minutes)
-3. `ST-ACT-003` — Business Bay seller pricing discussion (60 minutes)
+2. `ST-ACT-005` — urgent rental enquiry response (30 minutes)
+3. `ST-ACT-002` — dependent JVC buyer follow-up (45 minutes)
+4. `ST-ACT-003` — Business Bay seller pricing discussion (60 minutes)
 
-Total: 135 minutes; expected incremental commission under the fixture's assumptions: AED 14,100.
+Total: 165 minutes; expected incremental commission under the fixture's assumptions: AED 15,700.
 
 The first two actions share one opportunity. Their commission contribution is the maximum action lift for that opportunity (AED 9,600), not the sum of AED 6,000 and AED 9,600. The third action contributes AED 4,500.
 

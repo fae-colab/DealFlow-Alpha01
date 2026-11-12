@@ -51,8 +51,9 @@
   }
   function validateRecord(record){
     if(!record||typeof record!=='object'||Array.isArray(record))return 'must be an object';
-    for(const key of ['id','subjectType','subjectId','claimKey','sourceType','sourceRef','note'])
+    for(const key of ['id','subjectType','subjectId','claimKey','sourceType','note'])
       if(typeof record[key]!=='string'||!record[key].trim())return key+' must be non-empty text';
+    if(typeof record.sourceRef!=='string')return 'sourceRef must be text';
     if(!KINDS.has(record.kind))return 'kind is invalid';
     if(!QUALITIES.has(record.quality))return 'quality is invalid';
     if(!SOURCE_TYPES.has(record.sourceType))return 'sourceType is invalid';

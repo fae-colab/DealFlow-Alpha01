@@ -4,6 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent
 TEMPLATE = ROOT / "validation" / "case_template.json"
+PUBLIC_CASE = ROOT / "validation" / "casebook" / "DF-PUBLIC-001.json"
 BANNED_KEYS = {
     "client_name", "customer_name", "owner_name", "agent_name", "full_name",
     "email", "phone", "mobile", "whatsapp", "address", "street_address",
@@ -12,6 +13,29 @@ BANNED_KEYS = {
 }
 CASE_TYPES = {"anonymized_agent_case", "public_reconstruction", "synthetic_fixture"}
 EVIDENCE = {"unverified", "user_reported", "documented", "verified"}
+NUMERIC_FIELDS = {
+    "net_commission_aed": (0, 1_000_000_000),
+    "p_close_with_action_pct": (0, 100),
+    "p_close_without_action_pct": (0, 100),
+    "effort_minutes": (1, 10080),
+    "deadline_hours": (0, 8760),
+    "confidence_pct": (0, 100),
+}
+FIELD_PROVENANCE = {"public_source", "agent_reported", "assumption", "unknown"}
+
+
+def validate_engine_readiness(case):
+    """A valid evidence record may intentionally be unsuitable for optimizer replay."""
+    errors = []
+    capacity = case.get("capacity_hours")
+    if not isinstance(capacity, (int, float)) or isinstance(capacity, bool) or not 0 < capacity <= 24:
+        errors.append("capacity_hours is unknown or invalid; optimizer replay is blocked.")
+    for index, action in enumerate(case.get("candidate_actions", [])):
+        for key in NUMERIC_FIELDS:
+            value = action.get(key)
+            if not isinstance(value, (int, float)) or isinstance(value, bool):
+                errors.append(f"candidate_actions[{index}].{key} is unknown; optimizer replay is blocked.")
+    return errors
 
 
 def validate_case(case):
@@ -33,14 +57,20 @@ def validate_case(case):
     for key in ("schema_version", "case_id", "case_type", "agent_alias", "market", "as_of"):
         if not isinstance(case.get(key), str) or not case[key].strip():
             errors.append(f"{key} must be non-empty text.")
-    if case.get("case_type") not in CASE_TYPES:
+    case_type = case.get("case_type")
+    if case_type not in CASE_TYPES:
         errors.append("case_type must identify agent, public, or synthetic provenance.")
-    if case.get("case_type") == "anonymized_agent_case" and case.get("consent_status") != "explicit_agent_consent":
+    if case_type == "anonymized_agent_case" and case.get("consent_status") != "explicit_agent_consent":
         errors.append("Agent-originated cases require explicit_agent_consent.")
-    if case.get("case_type") == "public_reconstruction" and case.get("consent_status") not in (None, "not_required_public"):
+    if case_type == "public_reconstruction" and case.get("consent_status") != "not_required_public":
         errors.append("Public reconstructions must use not_required_public consent status.")
-    if not isinstance(case.get("capacity_hours"), (int, float)) or isinstance(case.get("capacity_hours"), bool) or not 0 < case["capacity_hours"] <= 24:
-        errors.append("capacity_hours must be greater than 0 and no more than 24.")
+
+    capacity = case.get("capacity_hours")
+    if capacity is None and case_type == "public_reconstruction":
+        if case.get("capacity_status") != "unknown":
+            errors.append("Unknown public capacity must be explicitly marked capacity_status=unknown.")
+    elif not isinstance(capacity, (int, float)) or isinstance(capacity, bool) or not 0 < capacity <= 24:
+        errors.append("capacity_hours must be greater than 0 and no more than 24, or explicitly unknown for public cases.")
     if case.get("commission_value_basis") not in {"exact", "rounded", "banded", "unknown"}:
         errors.append("commission_value_basis must be exact, rounded, banded, or unknown.")
 
@@ -64,26 +94,51 @@ def validate_case(case):
         for key in ("opportunity_id", "opportunity_type", "action_description", "area"):
             if not isinstance(action.get(key), str) or not action[key].strip():
                 errors.append(f"{prefix}.{key} must be non-empty text.")
-        for key, low, high in (
-            ("net_commission_aed", 0, 1_000_000_000),
-            ("p_close_with_action_pct", 0, 100),
-            ("p_close_without_action_pct", 0, 100),
-            ("effort_minutes", 1, 10080),
-            ("deadline_hours", 0, 8760),
-            ("confidence_pct", 0, 100),
-        ):
+
+        provenance = action.get("input_provenance", {})
+        if case_type in {"public_reconstruction", "anonymized_agent_case"} and not isinstance(provenance, dict):
+            errors.append(f"{prefix}.input_provenance must be an object.")
+            provenance = {}
+        for key, (low, high) in NUMERIC_FIELDS.items():
             value = action.get(key)
-            if not isinstance(value, (int, float)) or isinstance(value, bool) or not low <= value <= high:
-                errors.append(f"{prefix}.{key} must be numeric in [{low}, {high}].")
+            if value is None and case_type == "public_reconstruction":
+                if provenance.get(key) != "unknown":
+                    errors.append(f"{prefix}.{key} is null but its provenance is not unknown.")
+            elif not isinstance(value, (int, float)) or isinstance(value, bool) or not low <= value <= high:
+                errors.append(f"{prefix}.{key} must be numeric in [{low}, {high}] or explicitly unknown for public cases.")
+            elif case_type in {"public_reconstruction", "anonymized_agent_case"}:
+                status = provenance.get(key)
+                if status not in FIELD_PROVENANCE - {"unknown"}:
+                    errors.append(f"{prefix}.{key} has a value but lacks valid field provenance.")
+                if status == "assumption" and not action.get("assumption_notes"):
+                    errors.append(f"{prefix}.{key} is an assumption but assumption_notes are missing.")
+
         if action.get("evidence_status") not in EVIDENCE:
             errors.append(f"{prefix}.evidence_status is invalid.")
         if not isinstance(action.get("evidence_refs"), list):
             errors.append(f"{prefix}.evidence_refs must be a list.")
-        if action.get("dependency_action_id") is not None and not isinstance(action.get("dependency_action_id"), str):
+        dependency = action.get("dependency_action_id")
+        if dependency is not None and not isinstance(dependency, str):
             errors.append(f"{prefix}.dependency_action_id must be text or null.")
+        if isinstance(dependency, str) and dependency and dependency not in ids:
+            # Resolve after all IDs have been collected below.
+            pass
+
+    completed = case.get("completed_action_ids", [])
+    if not isinstance(completed, list):
+        errors.append("completed_action_ids must be a list.")
+        completed = []
+    for index, action in enumerate(actions):
+        if isinstance(action, dict):
+            dependency = action.get("dependency_action_id")
+            if dependency and dependency not in ids and dependency not in completed:
+                errors.append(f"candidate_actions[{index}].dependency_action_id references an unknown action.")
 
     baseline = case.get("agent_baseline")
-    if not isinstance(baseline, dict):
+    if case_type == "public_reconstruction":
+        if not isinstance(baseline, dict) or baseline.get("status") != "not_available_public_reconstruction":
+            errors.append("Public reconstructions must explicitly mark the agent baseline as unavailable.")
+    elif not isinstance(baseline, dict):
         errors.append("agent_baseline is required.")
     else:
         if baseline.get("recorded_before_dealflow") is not True:
@@ -128,6 +183,32 @@ class ValidationCaseTests(unittest.TestCase):
         duplicate = dict(case["candidate_actions"][0])
         case["candidate_actions"].append(duplicate)
         self.assertTrue(any("duplicate action_id" in e for e in validate_case(case)))
+
+    def test_public_reconstruction_preserves_unknowns_and_blocks_replay(self):
+        case = json.loads(PUBLIC_CASE.read_text(encoding="utf-8"))
+        self.assertEqual(validate_case(case), [])
+        self.assertTrue(validate_engine_readiness(case))
+        self.assertTrue(all(a["net_commission_aed"] is None for a in case["candidate_actions"]))
+
+    def test_public_numeric_guess_requires_explicit_provenance(self):
+        case = json.loads(PUBLIC_CASE.read_text(encoding="utf-8"))
+        action = case["candidate_actions"][0]
+        action["p_close_with_action_pct"] = 60
+        action["input_provenance"]["p_close_with_action_pct"] = "unknown"
+        self.assertTrue(any("lacks valid field provenance" in e for e in validate_case(case)))
+
+    def test_public_assumption_must_be_labeled_and_explained(self):
+        case = json.loads(PUBLIC_CASE.read_text(encoding="utf-8"))
+        action = case["candidate_actions"][0]
+        action["effort_minutes"] = 30
+        action["input_provenance"]["effort_minutes"] = "assumption"
+        action["assumption_notes"] = ""
+        self.assertTrue(any("assumption_notes" in e for e in validate_case(case)))
+
+    def test_unknown_dependency_is_rejected(self):
+        case = json.loads(PUBLIC_CASE.read_text(encoding="utf-8"))
+        case["candidate_actions"][0]["dependency_action_id"] = "DOES-NOT-EXIST"
+        self.assertTrue(any("unknown action" in e for e in validate_case(case)))
 
 
 if __name__ == "__main__":

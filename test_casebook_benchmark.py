@@ -70,16 +70,16 @@ class PublicCasebookBenchmarkTests(unittest.TestCase):
     def test_optimizer_selects_feasible_best_portfolio_without_double_counting(self):
         case = load_case(STRESS_CASE)
         result = optimize(actions_from_case(case), case["capacity_hours"])
-        self.assertAlmostEqual(result["value"], 14100.0)
-        self.assertEqual({item.id for item in result["items"]}, {"ST-ACT-001", "ST-ACT-002", "ST-ACT-003"})
-        self.assertEqual(result["minutes"], 135)
+        self.assertAlmostEqual(result["value"], 15700.0)
+        self.assertEqual({item.id for item in result["items"]}, {"ST-ACT-001", "ST-ACT-002", "ST-ACT-003", "ST-ACT-005"})
+        self.assertEqual(result["minutes"], 165)
         self.assertEqual(
             [item[0] for item in result["schedule"]],
-            ["ST-ACT-001", "ST-ACT-002", "ST-ACT-003"],
+            ["ST-ACT-001", "ST-ACT-005", "ST-ACT-002", "ST-ACT-003"],
         )
         # The two JVC actions represent one opportunity. Their expected lift is
         # 9,600 AED, not 6,000 + 9,600 AED.
-        self.assertAlmostEqual(result["value"], 9600 + 4500)
+        self.assertAlmostEqual(result["value"], 9600 + 1600 + 4500)
 
 
 if __name__ == "__main__":

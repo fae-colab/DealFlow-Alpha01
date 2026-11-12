@@ -49,7 +49,7 @@
       state.outcomeEvents=legacy.map(o=>{
         const stamp=o.updatedAt||o.at||'1970-01-01T00:00:00.000Z';
         return {eventId:'legacy-outcome:'+o.id,actionId:String(o.id),eventType:'outcome_recorded',
-          status:o.status||'pending',actualCommission:Number.isFinite(o.actualCommission)?o.actualCommission:0,
+          status:o.status||'pending',actualCommission:Number.isFinite(o.actualCommission)?o.actualCommission:null,
           minutes:Number.isFinite(o.minutes)?o.minutes:0,occurredAt:o.at||stamp,recordedAt:stamp,
           recordedBy:'legacy_migration',notes:'Migrated from the Alpha 01.3 mutable outcome record.',supersedesEventId:null,
           provenance:'legacy_migration'};

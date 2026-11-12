@@ -26,6 +26,8 @@
       const prior=events.find(x=>x.eventId===copy.supersedesEventId);
       if(!prior)throw new Error('A correction must reference an existing outcome event.');
       if(prior.actionId!==copy.actionId)throw new Error('A correction must reference an event for the same action.');
+      if((prior.recommendationRunId||null)!==(copy.recommendationRunId||null))throw new Error('A correction must preserve the original recommendation-run link.');
+      if(events.some(x=>x.supersedesEventId===copy.supersedesEventId))throw new Error('The referenced event has already been superseded.');
     }
     return [...events,copy];
   }
@@ -112,8 +114,8 @@
         group.actualCommissionStatus=amounts.length===0?'not_recorded':amounts.length===1?'observed':'conflicting_observations';
         const attributed=[...new Set(group.actualObservations.map(x=>x.actualIncrementalCommission).filter(x=>x!==null&&x!==undefined))];
         group.actualIncrementalCommission=attributed.length===1?attributed[0]:null;
-        group.attributionStatus=attributed.length===1?'documented_method_recorded':attributed.length>1?'conflicting_attribution_records':'unknown';
-        group.note=group.attributionStatus==='documented_method_recorded'?'Incremental commission was explicitly entered with an attribution method; review its supporting basis.':'Observed transaction commission is not evidence of incremental commission caused by the action.';
+        group.attributionStatus=attributed.length===1?'method_supplied_unverified':attributed.length>1?'conflicting_attribution_records':'unknown';
+        group.note=group.attributionStatus==='method_supplied_unverified'?'An incremental amount and attribution method were entered, but the method and supporting evidence have not been independently verified.':'Observed transaction commission is not evidence of incremental commission caused by the action.';
         rows.push({runId:snapshot.runId,createdAt:snapshot.createdAt,...group});
       }
     }

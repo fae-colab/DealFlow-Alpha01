@@ -39,6 +39,34 @@
       isSynthetic:true,supersedesId:null
     };
   }
+  function syncActionClaims(action,evidence){
+    if(!Array.isArray(evidence))throw new Error('Evidence must be an array.');
+    for(const claimKey of CLAIMS){
+      const records=evidence.filter(record=>record&&record.subjectType==='action'&&record.subjectId===action.id&&record.claimKey===claimKey);
+      const superseded=new Set(records.map(record=>record.supersedesId).filter(Boolean));
+      const current=records.filter(record=>!superseded.has(record.id));
+      if(current.length>1)throw new Error('Multiple current evidence records for '+action.id+'/'+claimKey+'.');
+      const prior=current[0];
+      if(prior&&Object.is(prior.claimValue,action[claimKey]))continue;
+      if(prior&&JSON.stringify(prior.claimValue)===JSON.stringify(action[claimKey]))continue;
+      let id='assumption:'+action.id+':'+claimKey;
+      if(prior){
+        let revision=1;
+        do{id=prior.id+':rev'+revision++;}while(evidence.some(record=>record.id===id));
+      }else if(evidence.some(record=>record.id===id)){
+        let revision=1;
+        do{id='assumption:'+action.id+':'+claimKey+':rev'+revision++;}while(evidence.some(record=>record.id===id));
+      }
+      evidence.push({
+        id,subjectType:'action',subjectId:action.id,claimKey,claimValue:action[claimKey],
+        kind:'assumption',quality:'none',sourceType:'user_input',sourceRef:'',
+        capturedAt:new Date().toISOString(),observedAt:null,verifiedAt:null,verifiedBy:null,
+        note:'Updated user-entered scenario assumption; supporting evidence has not been recorded.',
+        isSynthetic:false,supersedesId:prior?prior.id:null
+      });
+    }
+    return evidence;
+  }
   function hasLegacyEvidence(action){
     return (action.evidenceStatus && action.evidenceStatus!=='unverified') ||
       Boolean(action.evidenceUrl||action.evidenceUpdatedAt||action.evidenceNote);
@@ -113,6 +141,7 @@
         const record=makeLegacyRecord(action);
         if(!existingIds.has(record.id)){evidence.push(record);existingIds.add(record.id);}
       }
+      syncActionClaims(action,evidence);
     }
     const errors=validateEvidence(evidence);
     if(errors.length)throw new Error(errors.join('\n'));
@@ -131,6 +160,6 @@
     return {version:'1.3',schemaVersion:SCHEMA_VERSION,actions,evidence,outcomes:[],history:[]};
   }
   root.DealFlowEvidence={SCHEMA_VERSION,KINDS:[...KINDS],QUALITIES:[...QUALITIES],SOURCE_TYPES:[...SOURCE_TYPES],
-    normalizeAction,migrateState,createInitialState,validateEvidence};
+    normalizeAction,migrateState,createInitialState,validateEvidence,syncActionClaims};
   if(typeof module!=='undefined'&&module.exports)module.exports=root.DealFlowEvidence;
 })(typeof globalThis!=='undefined'?globalThis:this);

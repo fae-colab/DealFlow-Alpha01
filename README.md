@@ -45,3 +45,10 @@ Every optimizer run appends a snapshot of all candidate action inputs, captured 
 ## Outcome reconciliation (P1.4)
 
 Reconciliation links a selected action in an immutable recommendation snapshot to the current outcome event for that action. Associated actual commission is kept distinct from the standalone modeled action estimate. The standalone estimate is not represented as that action's allocated contribution to the total selected portfolio. Association alone never produces an actual incremental commission or prediction delta. An incremental-impact record requires a numeric incremental estimate, an explicit counterfactual method, an evidence reference, and a reviewer. Reconciliation corrections append a new record and preserve the previous record.
+
+
+## P1.5 — Dubai realtor validation
+
+The validation protocol, anonymized case intake checklist, and JSON case template are in `validation/`. Cases must be explicitly labeled as anonymized agent-originated, public reconstructions, or synthetic fixtures. Agent-originated cases require explicit consent and removal of direct identifiers before repository entry. The agent's own priority plan must be captured before DealFlow is revealed. Evaluation compares the agent's plan, simple baselines, and DealFlow under the same frozen inputs and constraints. Observed paid commission is not treated as incremental impact without a defensible counterfactual. No real agent cases are included yet; the eight current demo scenarios remain synthetic.
+
+Run the case-template integrity checks with `python -m unittest -v test_validation_cases.py`.

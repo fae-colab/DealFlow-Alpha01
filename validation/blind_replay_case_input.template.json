@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0",
+  "case_id": "DF-REAL-PILOT-001",
+  "case_type": "anonymized_agent_case",
+  "consent_status": "explicit_agent_consent",
+  "consent_date": "YYYY-MM-DD",
+  "agent_alias": "AGENT-01",
+  "market": "Dubai, UAE",
+  "decision_as_of": "YYYY-MM-DDTHH:MM:SS+04:00",
+  "capacity_hours": null,
+  "capacity_status": "unknown",
+  "commission_value_basis": "unknown",
+  "candidate_actions": [
+    {
+      "action_id": "ACT-001",
+      "opportunity_id": "OPP-001",
+      "opportunity_type": "buyer",
+      "area": "Broad Dubai area only",
+      "action_description": "Anonymized action description without client or property identifiers",
+      "net_commission_aed": null,
+      "p_close_with_action_pct": null,
+      "p_close_without_action_pct": null,
+      "effort_minutes": null,
+      "deadline_hours": null,
+      "dependency_action_id": null,
+      "evidence_status": "unverified",
+      "confidence_pct": null,
+      "evidence_refs": [],
+      "input_provenance": {
+        "net_commission_aed": "unknown",
+        "p_close_with_action_pct": "unknown",
+        "p_close_without_action_pct": "unknown",
+        "effort_minutes": "unknown",
+        "deadline_hours": "unknown",
+        "confidence_pct": "unknown"
+      },
+      "assumption_notes": "Leave unknown unless supported; explain any explicit assumption."
+    }
+  ],
+  "sources": [],
+  "frozen_input_sha256": null,
+  "sealed_agent_plan_sha256": null,
+  "dealflow_run": {
+    "status": "not_run",
+    "run_at": null,
+    "engine_version": null,
+    "readiness_status": null,
+    "abstention_reasons": [],
+    "recommendation_snapshot_id": null
+  },
+  "research_notes": "Template only. Do not put agent baseline, later outcomes, identifying details, or re-identification keys in this engine input."
+}

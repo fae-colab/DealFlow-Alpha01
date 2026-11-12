@@ -66,7 +66,7 @@ def validate_case(case):
         errors.append("Public reconstructions must use not_required_public consent status.")
 
     capacity = case.get("capacity_hours")
-    if capacity is None and case_type == "public_reconstruction":
+    if capacity is None and case_type in {"public_reconstruction", "anonymized_agent_case"}:
         if case.get("capacity_status") != "unknown":
             errors.append("Unknown public capacity must be explicitly marked capacity_status=unknown.")
     elif not isinstance(capacity, (int, float)) or isinstance(capacity, bool) or not 0 < capacity <= 24:
@@ -101,7 +101,7 @@ def validate_case(case):
             provenance = {}
         for key, (low, high) in NUMERIC_FIELDS.items():
             value = action.get(key)
-            if value is None and case_type == "public_reconstruction":
+            if value is None and case_type in {"public_reconstruction", "anonymized_agent_case"}:
                 if provenance.get(key) != "unknown":
                     errors.append(f"{prefix}.{key} is null but its provenance is not unknown.")
             elif not isinstance(value, (int, float)) or isinstance(value, bool) or not low <= value <= high:

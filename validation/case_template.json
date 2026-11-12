@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "case_id": "DF-PILOT-001",
+  "case_type": "anonymized_agent_case",
+  "consent_status": "explicit_agent_consent",
+  "agent_alias": "AGENT-01",
+  "market": "Dubai, UAE",
+  "as_of": "2026-11-12T09:00:00+04:00",
+  "capacity_hours": 4,
+  "commission_value_basis": "rounded",
+  "candidate_actions": [
+    {
+      "action_id": "ACT-001",
+      "opportunity_id": "OPP-001",
+      "opportunity_type": "buyer",
+      "area": "Dubai Marina",
+      "action_description": "Confirm viewing availability and decision-maker attendance",
+      "net_commission_aed": 18000,
+      "p_close_with_action_pct": 55,
+      "p_close_without_action_pct": 35,
+      "effort_minutes": 45,
+      "deadline_hours": 6,
+      "dependency_action_id": null,
+      "evidence_status": "user_reported",
+      "confidence_pct": 60,
+      "evidence_refs": [],
+      "assumption_notes": "Replace this example with sourced, anonymized case information."
+    }
+  ],
+  "agent_baseline": {
+    "recorded_at": "2026-11-12T09:05:00+04:00",
+    "recorded_before_dealflow": true,
+    "selected_action_ids": ["ACT-001"],
+    "priority_order": ["ACT-001"],
+    "rationale": "Record the agent's own reasoning before showing any DealFlow result."
+  },
+  "dealflow_evaluation": {
+    "run_at": null,
+    "recommendation_snapshot_id": null,
+    "selected_action_ids": [],
+    "portfolio_expected_incremental_commission_aed": null,
+    "reviewer_notes": null
+  },
+  "follow_up": {
+    "status": "not_started",
+    "review_due_at": null,
+    "actions_taken": [],
+    "outcomes": []
+  },
+  "research_notes": "Template only. Replace all example values; do not treat this record as a real case."
+}

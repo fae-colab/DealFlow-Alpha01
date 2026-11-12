@@ -27,10 +27,10 @@
     }
     return [...events,copy];
   }
-  function migrateLegacyOutcomes(outcomes){
+  function migrateLegacyOutcomes(outcomes,actions=[]){
     if(!Array.isArray(outcomes))throw new Error('Legacy outcomes must be an array.');
     return outcomes.map((o,i)=>({
-      eventId:'legacy-outcome:'+(o.id||i),actionId:String(o.id||''),opportunityId:String(o.opportunityId||o.id||''),
+      eventId:'legacy-outcome:'+(o.id||i),actionId:String(o.id||''),opportunityId:String(o.opportunityId||(actions.find(x=>x.id===String(o.id||''))||{}).opportunityId||o.id||''),
       eventType:'status_update',status:o.status||'pending',
       actualCommission:Number.isFinite(o.actualCommission)?o.actualCommission:null,
       currency:o.currency||'AED',actualMinutes:Number.isFinite(o.minutes)?o.minutes:null,
@@ -59,6 +59,7 @@
       snapshotVersion:1,runId:String(input.runId),createdAt:input.createdAt||new Date().toISOString(),
       engineVersion:'alpha-01.2-objective-v1',schemaVersion:input.schemaVersion||1,
       objective:'maximize_expected_incremental_commission_under_capacity_deadlines_and_dependencies',
+      selectionExplanation:'Selected portfolio maximizes the engine objective within the supplied capacity, deadlines and dependencies. Unselected candidates are recorded without inventing a specific exclusion reason.',
       capacityHours:input.capacityHours,
       candidateActions:clone(input.actions),
       evidence:clone(input.evidence),
@@ -69,6 +70,13 @@
       allocatedMinutes:input.result.minutes
     };
     return clone(snapshot);
+  }
+  function appendRecommendationSnapshot(snapshots,snapshot){
+    if(!Array.isArray(snapshots))throw new Error('Recommendation snapshot archive must be an array.');
+    const copy=clone(snapshot),errors=validateSnapshot(copy);
+    if(errors.length)throw new Error(errors.join(' '));
+    if(snapshots.some(x=>x.runId===copy.runId))throw new Error('Duplicate recommendation run ID: '+copy.runId);
+    return [...snapshots,copy];
   }
   function validateSnapshot(snapshot){
     if(!snapshot||typeof snapshot!=='object')return ['Snapshot must be an object.'];
@@ -93,10 +101,10 @@
         if(lift<0)group.predictedLift+=lift;
         else group.predictedLift=Math.max(group.predictedLift,lift);
         const event=current.find(x=>x.actionId===action.id);
-        if(event&&event.actualCommission!==null&&event.actualCommission!==undefined)group.actualObservations.push({actionId:action.id,amount:event.actualCommission,eventId:event.eventId,actualIncrementalCommission:event.actualIncrementalCommission,attributionMethod:event.attributionMethod});
+        if(event&&(event.actualCommission!==null&&event.actualCommission!==undefined||event.actualIncrementalCommission!==null&&event.actualIncrementalCommission!==undefined))group.actualObservations.push({actionId:action.id,amount:event.actualCommission,eventId:event.eventId,actualIncrementalCommission:event.actualIncrementalCommission,attributionMethod:event.attributionMethod});
       }
       for(const group of groups.values()){
-        const amounts=[...new Set(group.actualObservations.map(x=>x.amount))];
+        const amounts=[...new Set(group.actualObservations.map(x=>x.amount).filter(x=>x!==null&&x!==undefined))];
         group.actualCommissionObserved=amounts.length===1?amounts[0]:null;
         group.actualCommissionStatus=amounts.length===0?'not_recorded':amounts.length===1?'observed':'conflicting_observations';
         const attributed=[...new Set(group.actualObservations.map(x=>x.actualIncrementalCommission).filter(x=>x!==null&&x!==undefined))];
@@ -108,6 +116,6 @@
     }
     return rows;
   }
-  root.DealFlowAudit={validateOutcomeEvent,appendOutcomeEvent,migrateLegacyOutcomes,deriveCurrentOutcomes,createRecommendationSnapshot,validateSnapshot,reconcile};
+  root.DealFlowAudit={validateOutcomeEvent,appendOutcomeEvent,migrateLegacyOutcomes,deriveCurrentOutcomes,createRecommendationSnapshot,validateSnapshot,appendRecommendationSnapshot,reconcile};
   if(typeof module!=='undefined'&&module.exports)module.exports=root.DealFlowAudit;
 })(typeof globalThis!=='undefined'?globalThis:this);

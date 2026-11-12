@@ -11,7 +11,7 @@
     if(event.actualCommission!==null&&event.actualCommission!==undefined&&(!Number.isFinite(event.actualCommission)||event.actualCommission<0))errors.push('actualCommission must be a non-negative number or null.');
     if(event.actualMinutes!==null&&event.actualMinutes!==undefined&&(!Number.isFinite(event.actualMinutes)||event.actualMinutes<0))errors.push('actualMinutes must be a non-negative number or null.');
     for(const key of ['recordedAt','occurredAt'])if(event[key]!==null&&event[key]!==undefined&&Number.isNaN(Date.parse(event[key])))errors.push(key+' must be a valid timestamp or null.');
-    if(event.supersedesEventId!==null&&event.supersedesEventId!==undefined&&typeof event.supersedesEventId!=='string')errors.push('supersedesEventId must be text or null.');\n    if(event.eventType==='correction'&&!event.supersedesEventId)errors.push('A correction must reference the event it supersedes.');
+    if(event.supersedesEventId!==null&&event.supersedesEventId!==undefined&&typeof event.supersedesEventId!=='string')errors.push('supersedesEventId must be text or null.');\n    if(event.recommendationRunId!==null&&event.recommendationRunId!==undefined&&typeof event.recommendationRunId!=='string')errors.push('recommendationRunId must be text or null.');\n    if(event.eventType==='correction'&&!event.supersedesEventId)errors.push('A correction must reference the event it supersedes.');
     if(event.actualIncrementalCommission!==null&&event.actualIncrementalCommission!==undefined&&(!Number.isFinite(event.actualIncrementalCommission)||typeof event.attributionMethod!=='string'||!event.attributionMethod.trim()))errors.push('actualIncrementalCommission requires a documented attributionMethod.');
     return errors;
   }
@@ -37,7 +37,7 @@
       occurredAt:o.at||null,recordedAt:o.updatedAt||o.at||new Date(0).toISOString(),
       sourceType:'legacy_import',verificationStatus:'unverified',
       note:'Imported from the pre-event Alpha 01.3 outcome record; retained as historical, unverified data.',
-      supersedesEventId:null,actualIncrementalCommission:null,attributionMethod:null,isLegacy:true
+      supersedesEventId:null,recommendationRunId:null,actualIncrementalCommission:null,attributionMethod:null,isLegacy:true
     }));
   }
   function deriveCurrentOutcomes(events){
@@ -88,8 +88,9 @@
     return errors;
   }
   function reconcile(snapshots,events){
-    const current=deriveCurrentOutcomes(events),rows=[];
+    const currentAll=deriveCurrentOutcomes(events),rows=[];
     for(const snapshot of snapshots){
+      const current=currentAll.filter(x=>x.recommendationRunId===snapshot.runId);
       const selected=snapshot.selectedActionIds||[];
       const actions=(snapshot.candidateActions||[]).filter(a=>selected.includes(a.id));
       const groups=new Map();

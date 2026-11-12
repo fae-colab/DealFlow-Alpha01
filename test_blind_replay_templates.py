@@ -65,9 +65,11 @@ class BlindReplayTemplateTests(unittest.TestCase):
         scorecard = load(SCORECARD)
         labels = scorecard["output_labels"]["neutral_labels"]
         self.assertEqual(labels, ["PLAN_A", "PLAN_B", "PLAN_C", "PLAN_D"])
-        self.assertNotIn("PLAN_A", scorecard["output_labels"])
-        self.assertNotIn("PLAN_D", scorecard["output_labels"])
-        self.assertIn("unblinding_key_location", scorecard["output_labels"])
+        self.assertEqual(
+            set(scorecard["output_labels"]),
+            {"neutral_labels", "unblinding_key_location", "unblinding_key_sha256"},
+        )
+        self.assertNotIn("dealflow", json.dumps(scorecard["output_labels"]).lower())
 
 
 if __name__ == "__main__":

@@ -11,8 +11,10 @@ Open `index.html` in a modern browser. No build step, login, paid service, serve
 ```bash
 python -m unittest -v test_engine.py
 node test_engine.js
-node test_evidence.js\nnode test_audit.js
-node --check evidence.js\nnode --check audit.js
+node test_evidence.js
+node test_audit.js
+node --check evidence.js
+node --check audit.js
 node --check app.js
 node --check engine.js
 python python_engine.py

@@ -12,7 +12,7 @@ const corrected=A.appendOutcomeEvent(log,correction);
 assert.equal(log.length,2,'correction does not mutate source log');
 assert.equal(corrected.length,3,'correction is a new event');
 assert.equal(A.deriveCurrentOutcomes(corrected).find(x=>x.actionId==='A1').actualCommission,10000);
-assert.throws(()=>A.appendOutcomeEvent(corrected,{...correction,eventId:'EV3',actionId:'OTHER'}),/same action/);
+assert.throws(()=>A.appendOutcomeEvent(corrected,{...correction,eventId:'EV3',actionId:'OTHER'}),/same action/);\nassert.ok(A.validateOutcomeEvent({...correction,eventId:'EV4',supersedesEventId:null}).length,'corrections require a superseded event');
 const actions=[{id:'A1',opportunityId:'D1',commission:10000,pWith:80,pWithout:20},{id:'A2',opportunityId:'D2',commission:5000,pWith:70,pWithout:30}];
 const evidence=[{id:'E1',claimValue:1}];
 const result={value:8000,minutes:30,items:[{...actions[0],scheduledStartMinutes:0,scheduledFinishMinutes:30}]};

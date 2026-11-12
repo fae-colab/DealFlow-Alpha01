@@ -22,7 +22,7 @@ assert.deepEqual(corrected.slice(0,2),first,'correction appends; it does not mut
 assert.equal(O.validateOutcomeEvents(corrected).length,0);
 assert.throws(()=>O.appendOutcomeEvent(corrected,{actionId:'A1',status:'completed',actualCommission:-1,minutes:2}),/actualCommission/);
 assert.ok(O.validateOutcomeEvents([{...corrected[0],eventId:'bad',eventType:'outcome_corrected',supersedesEventId:'missing'}]).length);
-assert.ok(O.validateOutcomeEvents([corrected[0],{...corrected[1],eventId:'fork',supersedesEventId:corrected[0].eventId}]).length);
+assert.ok(O.validateOutcomeEvents([...corrected.slice(0,2),{...corrected[1],eventId:'fork',supersedesEventId:corrected[0].eventId}]).length,'two correction branches from one event must be rejected');
 const reloaded=O.migrateState({actions:[],outcomes:[],outcomeEvents:corrected});
 assert.deepEqual(reloaded.outcomeEvents,corrected,'event log survives reload migration');
 assert.equal(reloaded.outcomes[0].actualCommission,13200);

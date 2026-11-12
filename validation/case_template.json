@@ -1,11 +1,11 @@
 {
   "schema_version": "1.0",
   "case_id": "DF-PILOT-001",
-  "case_type": "anonymized_agent_case",
-  "consent_status": "explicit_agent_consent",
-  "agent_alias": "AGENT-01",
+  "case_type": "synthetic_fixture",
+  "consent_status": "not_applicable_synthetic",
+  "agent_alias": "AGENT-EXAMPLE",
   "market": "Dubai, UAE",
-  "as_of": "2026-11-12T09:00:00+04:00",
+  "as_of": "YYYY-MM-DDTHH:MM:SS+04:00",
   "capacity_hours": 4,
   "commission_value_basis": "rounded",
   "candidate_actions": [
@@ -28,10 +28,14 @@
     }
   ],
   "agent_baseline": {
-    "recorded_at": "2026-11-12T09:05:00+04:00",
+    "recorded_at": "YYYY-MM-DDTHH:MM:SS+04:00",
     "recorded_before_dealflow": true,
-    "selected_action_ids": ["ACT-001"],
-    "priority_order": ["ACT-001"],
+    "selected_action_ids": [
+      "ACT-001"
+    ],
+    "priority_order": [
+      "ACT-001"
+    ],
     "rationale": "Record the agent's own reasoning before showing any DealFlow result."
   },
   "dealflow_evaluation": {

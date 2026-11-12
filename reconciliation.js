@@ -21,7 +21,7 @@
         if(event.actionId!==r.actionId)errors.push('Reconciliation '+r.reconciliationId+': outcome event belongs to another action.');
         if(r.actualCommission!==event.actualCommission)errors.push('Reconciliation '+r.reconciliationId+': actual commission does not match the linked outcome event.');
       }
-      if(snapshot){const decision=snapshot.decisions.find(d=>d.actionId===r.actionId&&d.selected);if(decision&&r.predictedIncrementalCommission!==decision.expectedIncrementalCommission)errors.push('Reconciliation '+r.reconciliationId+': predicted amount does not match the linked recommendation snapshot.');}
+      if(snapshot){const decision=snapshot.decisions.find(d=>d.actionId===r.actionId&&d.selected);if(decision&&r.predictedStandaloneEstimate!==decision.standaloneExpectedIncrementalCommission)errors.push('Reconciliation '+r.reconciliationId+': predicted amount does not match the linked recommendation snapshot.');}
       if(r.supersedesReconciliationId!==null&&r.supersedesReconciliationId!==undefined){
         children.set(r.supersedesReconciliationId,(children.get(r.supersedesReconciliationId)||0)+1);
         const prior=records.find(x=>x.reconciliationId===r.supersedesReconciliationId);
@@ -52,12 +52,12 @@
     const previous=records.filter(r=>r.snapshotId===input.snapshotId&&r.actionId===input.actionId).filter(r=>!records.some(x=>x.supersedesReconciliationId===r.reconciliationId)).slice(-1)[0]||null;
     const supported=input.attributionStatus==='incremental_supported';
     const actualIncremental=supported?input.actualIncrementalCommission:null;
-    const predicted=decision.expectedIncrementalCommission;
+    const predicted=decision.standaloneExpectedIncrementalCommission;
     const record={reconciliationId:input.reconciliationId||'reconciliation:'+Date.parse(input.recordedAt||new Date().toISOString())+':'+records.length,
       snapshotId:input.snapshotId,actionId:input.actionId,outcomeEventId:input.outcomeEventId,
       recordedAt:input.recordedAt||new Date().toISOString(),outcomeStatus:event.status,
       actualCommission:event.actualCommission,actualMinutes:event.minutes,
-      predictedIncrementalCommission:predicted,attributionStatus:supported?'incremental_supported':'associated_only',
+      predictedStandaloneEstimate:predicted,attributionStatus:supported?'incremental_supported':'associated_only',
       actualIncrementalCommission:actualIncremental,
       predictedActualDelta:supported?actualIncremental-predicted:null,
       counterfactualMethod:supported?input.counterfactualMethod:null,

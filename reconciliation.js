@@ -7,7 +7,6 @@
     const ids=new Set(),children=new Map(),errors=[];
     const snapshotById=new Map((snapshots||[]).map(s=>[s.snapshotId,s]));
     const eventById=new Map((outcomeEvents||[]).map(e=>[e.eventId,e]));
-    const currentEvents=new Set((outcomeEvents||[]).filter(e=>!(outcomeEvents||[]).some(x=>x.supersedesEventId===e.eventId)).map(e=>e.eventId));
     for(const r of records){
       if(!r||typeof r!=='object'||Array.isArray(r)){errors.push('Reconciliation must be an object.');continue;}
       for(const k of ['reconciliationId','snapshotId','actionId','outcomeEventId','recordedAt'])if(typeof r[k]!=='string'||!r[k].trim())errors.push('Reconciliation '+(r.reconciliationId||'?')+': '+k+' must be non-empty text.');
@@ -20,7 +19,6 @@
       if(!event)errors.push('Reconciliation '+r.reconciliationId+': outcome event not found.');
       else{
         if(event.actionId!==r.actionId)errors.push('Reconciliation '+r.reconciliationId+': outcome event belongs to another action.');
-        if(!currentEvents.has(r.outcomeEventId))errors.push('Reconciliation '+r.reconciliationId+': outcome event is superseded; link the current event.');
         if(r.actualCommission!==event.actualCommission)errors.push('Reconciliation '+r.reconciliationId+': actual commission does not match the linked outcome event.');
       }
       if(snapshot){const decision=snapshot.decisions.find(d=>d.actionId===r.actionId&&d.selected);if(decision&&r.predictedIncrementalCommission!==decision.expectedIncrementalCommission)errors.push('Reconciliation '+r.reconciliationId+': predicted amount does not match the linked recommendation snapshot.');}

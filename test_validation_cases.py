@@ -99,6 +99,7 @@ class ValidationCaseTests(unittest.TestCase):
     def test_template_is_valid_and_explicitly_a_template(self):
         case = json.loads(TEMPLATE.read_text(encoding="utf-8"))
         self.assertEqual(validate_case(case), [])
+        self.assertEqual(case["case_type"], "synthetic_fixture")
         self.assertIn("Template only", case["research_notes"])
 
     def test_real_agent_case_requires_explicit_consent(self):

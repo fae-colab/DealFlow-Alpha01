@@ -32,7 +32,7 @@ assert.equal(reconciled[0].actualIncrementalCommission,null,'no causal uplift in
 assert.equal(reconciled[0].attributionStatus,'unknown');
 const attributed=A.appendOutcomeEvent(corrected,{...event,eventId:'EV3',recordedAt:'2026-01-04T00:00:00Z',actualIncrementalCommission:3000,attributionMethod:'Documented counterfactual analysis'});
 const attributedRows=A.reconcile([snap],attributed);assert.equal(attributedRows[0].actualIncrementalCommission,3000);assert.equal(attributedRows[0].attributionStatus,'method_supplied_unverified');
-const unrelated=A.appendOutcomeEvent(corrected,{...event,eventId:'EV-OTHER',recommendationRunId:'OTHER-RUN',recordedAt:'2026-01-05T00:00:00Z'});assert.equal(A.reconcile([snap],unrelated)[0].actualCommissionStatus,'observed','a later run event does not erase the earlier run outcome');
+const unrelated=A.appendOutcomeEvent(corrected,{...event,eventId:'EV-OTHER',recommendationRunId:'OTHER-RUN',recordedAt:'2026-01-05T00:00:00Z'});assert.equal(A.reconcile([snap],unrelated)[0].actualCommissionStatus,'reported_unverified','a later run event does not erase the earlier run outcome');
 const otherSnapshot={...snap,runId:'OTHER-RUN'};assert.equal(A.reconcile([otherSnapshot],unrelated)[0].actualCommissionObserved,12000,'run-specific outcomes reconcile only to their linked run');
 assert.ok(A.validateOutcomeEvent({...event,actualIncrementalCommission:5000}).length,'incremental commission requires attribution method');
 assert.equal(A.validateOutcomeEvent({...event,actualIncrementalCommission:5000,attributionMethod:'documented counterfactual study'}).length,0);

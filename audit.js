@@ -107,12 +107,13 @@
         if(lift<0)group.predictedLift+=lift;
         else group.predictedLift=Math.max(group.predictedLift,lift);
         const event=current.find(x=>x.actionId===action.id);
-        if(event&&(event.actualCommission!==null&&event.actualCommission!==undefined||event.actualIncrementalCommission!==null&&event.actualIncrementalCommission!==undefined))group.actualObservations.push({actionId:action.id,amount:event.actualCommission,eventId:event.eventId,actualIncrementalCommission:event.actualIncrementalCommission,attributionMethod:event.attributionMethod});
+        if(event&&(event.actualCommission!==null&&event.actualCommission!==undefined||event.actualIncrementalCommission!==null&&event.actualIncrementalCommission!==undefined))group.actualObservations.push({actionId:action.id,amount:event.actualCommission,eventId:event.eventId,verificationStatus:event.verificationStatus,actualIncrementalCommission:event.actualIncrementalCommission,attributionMethod:event.attributionMethod});
       }
       for(const group of groups.values()){
         const amounts=[...new Set(group.actualObservations.map(x=>x.amount).filter(x=>x!==null&&x!==undefined))];
         group.actualCommissionObserved=amounts.length===1?amounts[0]:null;
-        group.actualCommissionStatus=amounts.length===0?'not_recorded':amounts.length===1?'observed':'conflicting_observations';
+        const observations=group.actualObservations.filter(x=>x.amount!==null&&x.amount!==undefined);
+        group.actualCommissionStatus=amounts.length===0?'not_recorded':amounts.length>1?'conflicting_observations':observations.every(x=>x.verificationStatus==='verified')?'verified':'reported_unverified';
         const attributed=[...new Set(group.actualObservations.map(x=>x.actualIncrementalCommission).filter(x=>x!==null&&x!==undefined))];
         group.actualIncrementalCommission=attributed.length===1?attributed[0]:null;
         group.attributionStatus=attributed.length===1?'method_supplied_unverified':attributed.length>1?'conflicting_attribution_records':'unknown';

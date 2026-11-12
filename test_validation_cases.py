@@ -104,6 +104,7 @@ class ValidationCaseTests(unittest.TestCase):
 
     def test_real_agent_case_requires_explicit_consent(self):
         case = json.loads(TEMPLATE.read_text(encoding="utf-8"))
+        case["case_type"] = "anonymized_agent_case"
         case["consent_status"] = "pending"
         self.assertTrue(any("explicit_agent_consent" in e for e in validate_case(case)))
 

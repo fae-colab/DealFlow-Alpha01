@@ -10,7 +10,7 @@ const snapshot=R.captureSnapshot({createdAt:'2026-11-12T10:00:00Z',sequence:1,ca
  evidence:[{id:'e-A-commission',subjectType:'action',subjectId:'A',claimKey:'commission'}],
  incremental:a=>a.commission*(a.pWith-a.pWithout)/100});
 assert.deepEqual(snapshot.selectedActionIds,['A']);
-assert.equal(snapshot.decisions[0].expectedIncrementalCommission,3000);
+assert.equal(snapshot.decisions[0].standaloneExpectedIncrementalCommission,3000);
 assert.equal(snapshot.decisions[0].evidenceRecordIds[0],'e-A-commission');
 assert.equal(snapshot.decisions[0].reasonCode,'selected_by_portfolio_optimizer');
 assert.equal(snapshot.decisions[1].selected,false);
@@ -26,4 +26,8 @@ const restored=R.migrateState({actions:edited,outcomes:[],recommendationSnapshot
 assert.deepEqual(restored.recommendationSnapshots,log);
 assert.throws(()=>R.migrateState({recommendationSnapshots:[{...snapshot,selectedActionIds:['missing']}]}),/selected action is absent/);
 assert.equal(R.migrateState({}).recommendationSnapshots.length,0);
+const oldSnapshot=JSON.parse(JSON.stringify(snapshot));oldSnapshot.decisions[0].expectedIncrementalCommission=3000;delete oldSnapshot.decisions[0].standaloneExpectedIncrementalCommission;
+const upgraded=R.migrateState({recommendationSnapshots:[oldSnapshot]});
+assert.equal(upgraded.recommendationSnapshots[0].decisions[0].standaloneExpectedIncrementalCommission,3000,'older snapshots migrate without losing their original estimate');
+assert.equal(upgraded.recommendationSnapshots[0].decisions[0].valueBasis,'standalone_action_estimate_not_allocated_portfolio_contribution');
 console.log('Immutable recommendation snapshot tests passed.');

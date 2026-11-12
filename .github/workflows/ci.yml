@@ -46,12 +46,14 @@ jobs:
           node test_evidence.js
           node test_outcomes.js
           node test_recommendations.js
+          node test_reconciliation.js
 
       - name: Check JavaScript syntax
         run: |
           node --check evidence.js
           node --check outcomes.js
           node --check recommendations.js
+          node --check reconciliation.js
           node --check app.js
           node --check engine.js
           node --check parity_runner.js

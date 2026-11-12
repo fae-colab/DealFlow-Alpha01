@@ -14,9 +14,11 @@ node test_engine.js
 node test_evidence.js
 node test_outcomes.js
 node test_recommendations.js
+node test_reconciliation.js
 node --check evidence.js
 node --check outcomes.js
 node --check recommendations.js
+node --check reconciliation.js
 node --check app.js
 node --check engine.js
 python python_engine.py
@@ -38,3 +40,8 @@ Outcome submissions are stored as an append-only event log. A subsequent submiss
 ## Immutable recommendation snapshots (P1.3)
 
 Every optimizer run appends a snapshot of all candidate action inputs, captured capacity, selected portfolio, scheduling, expected incremental commission, comparator totals, evidence-record references, and per-action selection rationale. Later edits to actions or evidence do not rewrite prior snapshots. Unselected actions are described as not included in that captured optimal portfolio, not as having no value. Snapshot history is retained in local storage and included in backup export/import.
+
+
+## Outcome reconciliation (P1.4)
+
+Reconciliation links a selected action in an immutable recommendation snapshot to the current outcome event for that action. Associated actual commission is kept distinct from the standalone modeled action estimate. The standalone estimate is not represented as that action's allocated contribution to the total selected portfolio. Association alone never produces an actual incremental commission or prediction delta. An incremental-impact record requires a numeric incremental estimate, an explicit counterfactual method, an evidence reference, and a reviewer. Reconciliation corrections append a new record and preserve the previous record.

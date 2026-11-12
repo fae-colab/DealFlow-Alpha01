@@ -86,7 +86,7 @@
         <label>Action ID<select id="outcomeAction" required></select></label>
         <label>Outcome<select id="outcomeStatus"><option value="completed">Completed</option><option value="not_completed">Not completed</option><option value="lost">Opportunity lost / no close</option><option value="pending">Still pending</option></select></label>
         <label>Actual agent commission received (AED)<input id="actualCommission" type="number" min="0" step="0.01" value="0"></label>
-        <label>Actual time spent (minutes)<input id="actualEffort" type="number" min="0" step="1" value="0"></label>
+        <label>Actual time spent (minutes)<input id="actualEffort" type="number" min="0" step="1" value="0"></label>\n        <label>Correct prior event (optional)<select id="outcomeCorrection"><option value="">New outcome event</option></select></label>\n        <label>Actual incremental commission (optional, AED)<input id="actualIncrementalCommission" type="number" min="0" step="0.01" placeholder="Leave blank unless supported"></label>\n        <label>Attribution method / evidence<input id="attributionMethod" type="text" maxlength="300" placeholder="Required if incremental commission is entered"></label>
         <button class="primary" type="submit">Save outcome</button>
       </form>
       <h3>Immutable outcome event log</h3><div id="outcomeHistory" class="outcome-history"></div><h3>Recommendation snapshot archive</h3><div id="snapshotHistory" class="outcome-history"></div><h3>Opportunity-level reconciliation</h3><div id="reconciliationHistory" class="outcome-history"></div>

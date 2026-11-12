@@ -16,7 +16,7 @@
       "PUB-OBS-002",
       "PUB-OBS-003"
     ],
-    "boundary": "All candidate actions and all numeric business inputs below are synthetic assumptions. They are not claims about a real agent, client, listing, mandate, or commission."
+    "boundary": "All candidate actions are hypothetical. All numeric inputs are synthetic assumptions. They are not claims about a real agent, client, listing, mandate, or commission."
   },
   "candidate_actions": [
     {

@@ -44,10 +44,12 @@ jobs:
         run: |
           node test_engine.js
           node test_evidence.js
+          node test_outcomes.js
 
       - name: Check JavaScript syntax
         run: |
           node --check evidence.js
+          node --check outcomes.js
           node --check app.js
           node --check engine.js
           node --check parity_runner.js

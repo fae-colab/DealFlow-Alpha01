@@ -10,6 +10,7 @@ on:
       - "migration/**"
       - "integration/**"
       - "test/**"
+      - "feature/**"
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
@@ -40,10 +41,13 @@ jobs:
         run: python -m unittest -v test_engine.py test_parity.py
 
       - name: Run JavaScript engine tests
-        run: node test_engine.js
+        run: |
+          node test_engine.js
+          node test_evidence.js
 
       - name: Check JavaScript syntax
         run: |
+          node --check evidence.js
           node --check app.js
           node --check engine.js
           node --check parity_runner.js

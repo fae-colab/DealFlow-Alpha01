@@ -52,3 +52,8 @@ Reconciliation links a selected action in an immutable recommendation snapshot t
 The validation protocol, anonymized case intake checklist, and JSON case template are in `validation/`. Cases must be explicitly labeled as anonymized agent-originated, public reconstructions, or synthetic fixtures. Agent-originated cases require explicit consent and removal of direct identifiers before repository entry. The agent's own priority plan must be captured before DealFlow is revealed. Evaluation compares the agent's plan, simple baselines, and DealFlow under the same frozen inputs and constraints. Observed paid commission is not treated as incremental impact without a defensible counterfactual. No real agent cases are included yet; the eight current demo scenarios remain synthetic.
 
 Run the case-template integrity checks with `python -m unittest -v test_validation_cases.py`.
+
+
+## Alpha 01.5 — Real Agent Blind Replay
+
+The detailed retrospective blind-replay protocol and three separated templates are in `validation/REAL_AGENT_BLIND_REPLAY.md` and `validation/`. The engine input deliberately excludes the agent's original plan; the sealed plan is held separately until DealFlow and baseline outputs are locked. Consent evidence and re-identification keys remain outside the repository. No real-agent data is included by adding these protocol documents. The pilot is exploratory and cannot establish statistical superiority or causal financial impact.

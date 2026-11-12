@@ -38,7 +38,7 @@ jobs:
           node-version: "20"
 
       - name: Run Python engine tests
-        run: python -m unittest -v test_engine.py test_parity.py test_validation_cases.py test_abstention_policy.py test_casebook_benchmark.py
+        run: python -m unittest -v test_engine.py test_parity.py test_validation_cases.py test_abstention_policy.py test_casebook_benchmark.py test_blind_replay_templates.py
 
       - name: Run JavaScript engine tests
         run: |

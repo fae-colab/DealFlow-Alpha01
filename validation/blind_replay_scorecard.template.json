@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0",
+  "case_id": "DF-REAL-PILOT-001",
+  "artifact_type": "blind_replay_scorecard",
+  "locked_at": "YYYY-MM-DDTHH:MM:SS+04:00",
+  "frozen_input_sha256": null,
+  "sealed_agent_plan_sha256": null,
+  "dealflow_snapshot_id": null,
+  "output_labels": {
+    "neutral_labels": [
+      "PLAN_A",
+      "PLAN_B",
+      "PLAN_C",
+      "PLAN_D"
+    ],
+    "unblinding_key_location": "Keep mapping outside repository until independent assessment is complete.",
+    "unblinding_key_sha256": null
+  },
+  "baseline_status": {
+    "agent_plan": "not_scored",
+    "urgency_deadline_first": "not_computable",
+    "commission_per_effort": "not_computable",
+    "commission_only_greedy": "not_computable",
+    "dealflow": "not_run"
+  },
+  "case_level_metrics": {
+    "material_opportunities_identified": null,
+    "material_opportunities_total": null,
+    "useful_overlooked_actions": [],
+    "unsupported_recommendations": [],
+    "false_abstention_reasons": [],
+    "correct_abstention_reasons": [],
+    "missed_opportunities_due_to_abstention": [],
+    "feasible_under_shared_constraints": null,
+    "selected_action_overlap_with_agent_pct": null,
+    "agent_relevance_rating_1_to_5": null,
+    "agent_actionability_rating_1_to_5": null,
+    "agent_trust_rating_1_to_5": null,
+    "review_time_minutes": null
+  },
+  "disagreements_and_failures": [],
+  "reviewer_alias": "REVIEWER-01",
+  "limitations": [
+    "Exploratory retrospective replay; not causal evidence.",
+    "Agent preference and observed outcomes are not proof of correctness."
+  ],
+  "corrections": []
+}

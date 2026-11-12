@@ -52,7 +52,13 @@ function renderResults(){const r=latestRun,b=r.best;document.getElementById('sum
 }
 function compareCard(title,r,featured){return `<div class="compare-card ${featured?'featured':''}"><span>${title}</span><strong>${money(r.value)}</strong><p>${r.items.length} actions · ${(r.minutes/60).toFixed(1)} hours allocated</p></div>`;}
 function renderTable(){document.getElementById('actionRows').innerHTML=state.actions.map(a=>`<tr><td><strong>${safe(a.name)}</strong><small>${safe(a.action)} · ID ${safe(a.id)} · Deal ${safe(a.opportunityId||a.id)}${a.dependency?' · Requires '+safe(a.dependency):''}</small></td><td>${money(a.commission)}</td><td>${a.pWith}% / ${a.pWithout}%</td><td class="${inc(a)>0?'positive':'negative'}">${inc(a)>=0?'+':''}${money(inc(a))}</td><td>${a.effort} min</td><td>${a.deadline} hrs</td><td><small>${safe(a.evidenceStatus||'unverified')} · ${Number(a.confidence??50)}%</small></td><td class="row-actions"><button onclick="editAction('${safe(a.id)}')">Edit</button><button class="delete" onclick="deleteAction('${safe(a.id)}')">Remove</button></td></tr>`).join('');}
-function renderOutcomeSelect(){const s=document.getElementById('outcomeAction'),old=s.value;s.innerHTML=state.actions.map(a=>`<option value="${safe(a.id)}">${safe(a.id)} — ${safe(a.name)}</option>`).join('');if(state.actions.some(a=>a.id===old))s.value=old;}
+function renderOutcomeSelect(){
+ const s=document.getElementById('outcomeAction'),old=s.value;s.innerHTML=state.actions.map(a=>`<option value="${safe(a.id)}">${safe(a.id)} — ${safe(a.name)}</option>`).join('');if(state.actions.some(a=>a.id===old))s.value=old;
+ const correction=document.getElementById('outcomeCorrection'),oldCorrection=correction.value;
+ const current=DealFlowAudit.deriveCurrentOutcomes(state.outcomeEvents||[]);
+ correction.innerHTML='<option value="">New outcome event (not a correction)</option>'+current.map(o=>`<option value="${safe(o.eventId)}">${safe(o.actionId)} · ${safe(o.eventId)} · ${safe(o.status||o.eventType)}</option>`).join('');
+ if(current.some(o=>o.eventId===oldCorrection))correction.value=oldCorrection;
+}
 function renderHistory(){
  const el=document.getElementById('outcomeHistory'),events=state.outcomeEvents||[],current=DealFlowAudit.deriveCurrentOutcomes(events);
  el.innerHTML=events.length?events.slice().reverse().map(o=>`<div class="history-item"><div><strong>${safe(o.actionId)}</strong> · ${safe(o.status||o.eventType)}<br><span>${safe(o.eventType)} · Recorded ${new Date(o.recordedAt).toLocaleString()} · ${o.actualMinutes??'—'} min · ${safe(o.verificationStatus)}</span></div><strong>${o.actualCommission===null?'Not recorded':money(o.actualCommission)}</strong></div>`).join(''):'<p class="muted">No outcome events recorded yet.</p>';
@@ -80,12 +86,19 @@ document.getElementById('outcomeForm').addEventListener('submit',e=>{
  const action=state.actions.find(x=>x.id===document.getElementById('outcomeAction').value);
  const actual=Number(document.getElementById('actualCommission').value),minutes=Number(document.getElementById('actualEffort').value);
  if(!action||!Number.isFinite(actual)||actual<0||!Number.isFinite(minutes)||minutes<0){alert('Select an action and enter valid non-negative commission and time.');return;}
- const now=new Date().toISOString(),event={
+ const now=new Date().toISOString(),correctionId=document.getElementById('outcomeCorrection').value;
+ const prior=correctionId?(state.outcomeEvents||[]).find(x=>x.eventId===correctionId):null;
+ if(correctionId&&(!prior||prior.actionId!==action.id)){alert('A correction must target a current event for the selected action.');return;}
+ const rawIncremental=document.getElementById('actualIncrementalCommission').value.trim();
+ const attributionMethod=document.getElementById('attributionMethod').value.trim();
+ const incremental=rawIncremental===''?null:Number(rawIncremental);
+ if(incremental!==null&&(!Number.isFinite(incremental)||incremental<0||!attributionMethod)){alert('Actual incremental commission requires a non-negative amount and a documented attribution method.');return;}
+ const event={
   eventId:'OUT-'+crypto.randomUUID(),actionId:action.id,opportunityId:action.opportunityId||action.id,
-  eventType:'status_update',status:document.getElementById('outcomeStatus').value,
+  eventType:prior?'correction':'status_update',status:document.getElementById('outcomeStatus').value,
   actualCommission:actual,currency:'AED',actualMinutes:minutes,occurredAt:now,recordedAt:now,
-  sourceType:'user_input',verificationStatus:'unverified',note:'Outcome entered by the user; not independently verified.',
-  supersedesEventId:null,actualIncrementalCommission:null,attributionMethod:null
+  sourceType:'user_input',verificationStatus:'unverified',note:prior?'Correction entered by the user; original event is retained.':'Outcome entered by the user; not independently verified.',
+  supersedesEventId:prior?prior.eventId:null,actualIncrementalCommission:incremental,attributionMethod:attributionMethod||null
  };
  try{state.outcomeEvents=DealFlowAudit.appendOutcomeEvent(state.outcomeEvents,event);save();renderHistory();render();}
  catch(err){alert('Outcome was not saved: '+err.message);}

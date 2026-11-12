@@ -133,7 +133,7 @@ def validate_case(case):
             provenance = {}
         for key, (low, high) in NUMERIC_FIELDS.items():
             value = action.get(key)
-            if value is None and case_type in {"public_reconstruction", "anonymized_agent_case"}:
+            if value is None:
                 if provenance.get(key) != "unknown":
                     errors.append(f"{prefix}.{key} is null but its provenance is not unknown.")
             elif (not isinstance(value, (int, float)) or isinstance(value, bool)

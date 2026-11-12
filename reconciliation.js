@@ -21,7 +21,9 @@
       else{
         if(event.actionId!==r.actionId)errors.push('Reconciliation '+r.reconciliationId+': outcome event belongs to another action.');
         if(!currentEvents.has(r.outcomeEventId))errors.push('Reconciliation '+r.reconciliationId+': outcome event is superseded; link the current event.');
+        if(r.actualCommission!==event.actualCommission)errors.push('Reconciliation '+r.reconciliationId+': actual commission does not match the linked outcome event.');
       }
+      if(snapshot){const decision=snapshot.decisions.find(d=>d.actionId===r.actionId&&d.selected);if(decision&&r.predictedIncrementalCommission!==decision.expectedIncrementalCommission)errors.push('Reconciliation '+r.reconciliationId+': predicted amount does not match the linked recommendation snapshot.');}
       if(r.supersedesReconciliationId!==null&&r.supersedesReconciliationId!==undefined){
         children.set(r.supersedesReconciliationId,(children.get(r.supersedesReconciliationId)||0)+1);
         const prior=records.find(x=>x.reconciliationId===r.supersedesReconciliationId);

@@ -66,6 +66,15 @@ class PublicCasebookBenchmarkTests(unittest.TestCase):
         self.assertIn("all numeric inputs are synthetic assumptions", case["public_context"]["boundary"].lower())
         self.assertEqual(validate_case(case), [])
         self.assertEqual(validate_engine_readiness(case), [])
+        # Public sources are retained for market context only. Synthetic actions
+        # must not carry source refs that could be mistaken for evidence of leads.
+        public_source_ids = {source["source_id"] for source in case["sources"]}
+        for action in case["candidate_actions"]:
+            self.assertNotIn("evidence_refs", action, action["action_id"])
+            self.assertTrue(
+                public_source_ids.isdisjoint(action.get("evidence_refs", [])),
+                f"{action['action_id']} must not claim public-source evidence",
+            )
 
     def test_optimizer_selects_feasible_best_portfolio_without_double_counting(self):
         case = load_case(STRESS_CASE)

@@ -93,15 +93,16 @@
         if(lift<0)group.predictedLift+=lift;
         else group.predictedLift=Math.max(group.predictedLift,lift);
         const event=current.find(x=>x.actionId===action.id);
-        if(event&&event.actualCommission!==null&&event.actualCommission!==undefined)group.actualObservations.push({actionId:action.id,amount:event.actualCommission,eventId:event.eventId});
+        if(event&&event.actualCommission!==null&&event.actualCommission!==undefined)group.actualObservations.push({actionId:action.id,amount:event.actualCommission,eventId:event.eventId,actualIncrementalCommission:event.actualIncrementalCommission,attributionMethod:event.attributionMethod});
       }
       for(const group of groups.values()){
         const amounts=[...new Set(group.actualObservations.map(x=>x.amount))];
         group.actualCommissionObserved=amounts.length===1?amounts[0]:null;
         group.actualCommissionStatus=amounts.length===0?'not_recorded':amounts.length===1?'observed':'conflicting_observations';
-        group.actualIncrementalCommission=null;
-        group.attributionStatus='unknown';
-        group.note='Observed transaction commission is not evidence of incremental commission caused by the action.';
+        const attributed=[...new Set(group.actualObservations.map(x=>x.actualIncrementalCommission).filter(x=>x!==null&&x!==undefined))];
+        group.actualIncrementalCommission=attributed.length===1?attributed[0]:null;
+        group.attributionStatus=attributed.length===1?'documented_method_recorded':attributed.length>1?'conflicting_attribution_records':'unknown';
+        group.note=group.attributionStatus==='documented_method_recorded'?'Incremental commission was explicitly entered with an attribution method; review its supporting basis.':'Observed transaction commission is not evidence of incremental commission caused by the action.';
         rows.push({runId:snapshot.runId,createdAt:snapshot.createdAt,...group});
       }
     }

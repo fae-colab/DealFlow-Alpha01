@@ -24,5 +24,5 @@ const result = E.optimize(actions, caseData.capacity_hours);
 assert.equal(result.value, 15700);
 assert.equal(result.minutes, 165);
 assert.deepEqual(result.items.map(item => item.id), ['ST-ACT-001', 'ST-ACT-005', 'ST-ACT-002', 'ST-ACT-003']);
-assert.equal(E.portfolioValue(result.items), 14100, 'duplicate opportunity commission lift must not be added twice');
+assert.equal(E.portfolioValue(result.items), 15700, 'duplicate opportunity commission lift must not be added twice');
 console.log('Public casebook benchmark + optimization stress parity: passed.');

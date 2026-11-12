@@ -35,6 +35,10 @@ const customEvidence=migrated.evidence.find(x=>x.id==='legacy-evidence:CUSTOM-1'
 assert.equal(customEvidence.kind,'observation');
 assert.equal(customEvidence.sourceType,'user_input');
 assert.equal(customEvidence.isSynthetic,false);
+const customClaims=migrated.evidence.filter(x=>x.subjectId==='CUSTOM-1'&&['commission','pWith','pWithout'].includes(x.claimKey));
+assert.equal(customClaims.length,3,'every action numeric input receives claim-level evidence');
+assert.ok(customClaims.every(x=>x.kind==='assumption'&&x.quality==='none'&&x.sourceType==='user_input'));
+assert.ok(customClaims.every(x=>x.isSynthetic===false));
 assert.equal(migrated.actions[0].evidenceStatus,'verified','legacy action fields remain readable');
 
 const again=E.migrateState(migrated,seeds);

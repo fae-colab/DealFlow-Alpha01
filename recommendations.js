@@ -31,7 +31,8 @@
       const chosen=scheduled.get(action.id),isSelected=Boolean(chosen);
       const evidenceRecords=(input.evidence||[]).filter(e=>e.subjectType==='action'&&e.subjectId===action.id&&['commission','pWith','pWithout'].includes(e.claimKey));
       return {actionId:action.id,selected:isSelected,rank:rank.get(action.id)||null,
-        action:clone(action),expectedIncrementalCommission:input.incremental(action),
+        action:clone(action),standaloneExpectedIncrementalCommission:input.incremental(action),
+        valueBasis:'standalone_action_estimate_not_allocated_portfolio_contribution',
         probabilityLift:action.pWith-action.pWithout,
         scheduledStartMinutes:chosen?chosen.scheduledStartMinutes:null,
         scheduledFinishMinutes:chosen?chosen.scheduledFinishMinutes:null,

@@ -2,7 +2,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const ROOT = path.resolve(__dirname, '../..');
-const cases = require(path.join(ROOT, 'validation/blind_replay_v1_1/cases.json'));
+const cases = require(path.join(ROOT, 'validation/stale_evidence_v1_1/cases_v1_1.json'));
 const Engine = require(path.join(ROOT, 'engine.js'));
 const Desk = require(path.join(ROOT, 'decision_desk.js'));
 

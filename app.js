@@ -26,7 +26,7 @@ function inc(a){return DealFlowEngine.incremental(a);}
 function safe(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function runOptimization(){
  const raw=document.getElementById('capacity').value;const capacity=Number(raw);
- if(!Number.isFinite(capacity)||capacity<=0||capacity>24){alert('Available time must be greater than 0 and no more than 24 hours.');return;}
+ // Invalid or missing capacity is represented as an explicit abstention by the Decision Desk.
  // Action-level missing/unsupported inputs are handled by the Decision Desk as explicit abstentions.
  const gate=DealFlowDecisionDesk.eligibility(state.actions,capacity,DealFlowEngine);
  const candidates=gate.eligibleActions;

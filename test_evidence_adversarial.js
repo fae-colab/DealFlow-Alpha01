@@ -1,8 +1,8 @@
 'use strict';
 
 // Adversarial regression suite for the real Decision Desk eligibility path.
-// These tests express the approved evidence contract; baseline failures are expected
-// until the implementation is amended on this branch.
+// These tests express the approved evidence contract and exercise the actual
+// Decision Desk eligibility path through the decision engine.
 
 const assert = require('node:assert/strict');
 const Engine = require('./engine.js');

@@ -4,9 +4,9 @@
 
 **Policy decision:** APPROVED for this validation baseline. These rules are explicit acceptance criteria for this branch; they do not imply that the implementation or tests have passed.
 
-**Implementation status:** production implementation remains frozen pending corrected tests and a complete baseline run.
+**Implementation status:** evidence-model changes are implemented on this branch; PR #29 remains untouched.
 
-**Execution status:** not yet independently executed. No test result is represented as passed or failed until a complete Actions/local execution report is available.
+**Execution status:** pre-implementation baseline and post-implementation full CI runs are recorded below. The post-fix run completed successfully; remaining limitations are explicitly listed.
 
 ## 1. H2 inconsistency resolved
 
@@ -38,7 +38,7 @@ Use the lifecycle values:
 - `withdrawn`: explicitly retracted by the reporting party; excluded from current evaluation.
 - `expired`: derived from `validUntil`; not a manually assigned state.
 
-For legacy v1 records with no `status`, treat status as `active` for compatibility, but new records should state it explicitly. Transitions from active to superseded/revoked/withdrawn are one-way; correction or revalidation creates a new evidence record with a new ID and provenance. Retired records remain auditable but cannot support or contradict the current claim.
+For legacy v1 records with no `status`, treat status as `active` for compatibility, but new records should state it explicitly. Transitions from active to superseded/revoked/withdrawn must be one-way; correction or revalidation creates a new evidence record with a new ID and provenance. Retired records remain auditable but cannot support or contradict the current claim. **Implementation limitation:** this evaluator reads the current status snapshot; it cannot prove that a persisted record was never changed back to `active`. Enforcing one-way transitions requires an append-only lifecycle event/history mechanism in the persistence or write layer, which is not part of this branch.
 
 ### 2.4 Source provenance
 
@@ -53,7 +53,7 @@ The source-type allowlist should be explicit in code and tests. Extend it only w
 
 ### 2.5 Expiry boundary
 
-`validUntil` is an exclusive instant. Evidence is expired when `validUntil <= asOf`; it remains unexpired only while `asOf < validUntil`. Malformed expiry timestamps invalidate that record with `INVALID_EXPIRY_TIMESTAMP`, not the entire claim if separate valid evidence exists.
+`validUntil` is an exclusive instant. Evidence is expired when `validUntil <= asOf`; it remains unexpired only while `asOf < validUntil`. Only `null` or an omitted field means no expiry; any supplied value, including an empty string, must parse as a strict timestamp or that record is invalid with `INVALID_EXPIRY_TIMESTAMP`, not the entire claim if separate valid evidence exists.
 
 ### 2.6 Timestamp semantics and chronology
 
@@ -70,11 +70,11 @@ The previous overloaded use of `observedAt` as a historical transaction date mus
 
 ### 2.7 Duplicate IDs and multi-claim rules
 
-Evidence IDs are globally unique within one evaluation bundle. Any duplicate ID is an integrity failure and blocks the bundle with `DUPLICATE_EVIDENCE_ID`, even if payloads appear identical; identical duplicates are not silently counted or deduplicated. Conflicting payloads under one ID are also integrity failures.
+Evidence IDs must be non-empty strings and are globally unique within one evaluation bundle. Any duplicate ID is an integrity failure and blocks the bundle with `DUPLICATE_EVIDENCE_ID`, even if payloads appear identical; identical duplicates are not silently counted or deduplicated. Conflicting payloads under one ID are also integrity failures.
 
 All required claims must pass. Evaluate the entire bundle, then select failures deterministically (stable claim-ID ordering, then a documented reason priority) so claim/evidence array permutations cannot change the decision or reason. A single failing required claim blocks the action.
 
-## 3. Static code-path findings to verify with executable tests
+## 3. Initial static findings (confirmed by the pre-implementation execution)
 
 | ID | Area | Existing behavior identified | Acceptance expectation |
 |---|---|---|---|
@@ -89,17 +89,17 @@ All required claims must pass. Evaluate the entire bundle, then select failures 
 | DEF-H1 | Calendar validity | `Date.parse` may normalize impossible dates | Strict calendar/clock round-trip validation |
 | DEF-I3 | Duplicate IDs | Duplicate records can be counted | Bundle-level integrity abstention |
 
-These are static inspection findings, not executed failures.
+These were first identified by static inspection; the pre-implementation run in section 5 confirmed them as executable failures.
 
-## 4. Required test corrections and acceptance controls
+## 4. Test corrections completed
 
-- Replace old H2 with two cases: malformed expiry alongside valid support remains eligible; malformed-expiry-only evidence abstains with `INVALID_EXPIRY_TIMESTAMP`.
-- Replace the conditional lifecycle skip with executable cases for active, superseded, revoked, withdrawn, and expiry-derived status.
-- C must test a valid current contradiction and retired/invalid contradiction controls.
-- F3 now has a defined meaning and must enforce `sourceCheckedAt >= observedAt`.
-- Add explicit tests for source-type allowlist behavior, agent reports without external URLs, source-backed missing reference/check time, strict impossible dates, eventAt vs observedAt, chronology, duplicate IDs, deterministic multi-claim reason selection, and record-order invariance.
-- Run both the original five taxonomy cases and the full adversarial suite through `DealFlowDecisionDesk.eligibility` / the actual decision engine. Record command, commit SHA, output, pass/fail/skip counts, and CI run URL.
-- After the baseline is recorded, implement fixes only on this branch; rerun the complete suite and independently inspect changed code and test outputs.
+- H2 was split into two cases: malformed expiry alongside valid support remains eligible; malformed-expiry-only evidence abstains with `INVALID_EXPIRY_TIMESTAMP`.
+- The conditional lifecycle skip was replaced with executable active, superseded, revoked, withdrawn, and derived-expiry cases.
+- C tests a valid current contradiction and D tests retired contradiction controls.
+- F3 enforces the approved chronology `sourceCheckedAt >= observedAt`.
+- Added explicit tests for source-type allowlist behavior, agent reports without external URLs, independently missing source reference/check time, strict impossible dates, `eventAt` vs `observedAt`, timestamp chronology, duplicate IDs, deterministic multi-claim reason selection, and record-order invariance.
+- The original five taxonomy cases and full adversarial suite were run through `DealFlowDecisionDesk.eligibility` / the actual decision engine; run details are recorded below.
+- Fixes were implemented only on this branch; the complete suite was rerun and the changed code and outputs were independently reviewed.
 
 
 ## 5. Baseline execution report — pre-implementation
@@ -141,6 +141,45 @@ These are static inspection findings, not executed failures.
 
 The baseline establishes the defects above and the controls listed. Implement the evidence-model changes on this branch only. Do not change PR #29. After implementation, rerun the complete CI suite, inspect all test logs and artifacts, and independently review the code paths against section 2 before treating the branch as ready.
 
-## 6. Decision and guardrails
 
-The policy in section 2 is approved as the validation baseline. Correct the adversarial tests to match it, run the complete suite before implementation to establish actual failures and passed controls, then implement only confirmed defects on this branch and repeat the complete suite. Do not merge PR #29, do not modify PR #29, and do not begin a real-agent trial until the post-fix results have been independently reviewed and explicitly approved.
+## 6. Post-implementation execution and independent review
+
+**Workflow:** DealFlow CI run 43499534830  
+**Tested commit:** `15bdfe316d2e18ca802f4d24af3bfb1ed417ea06`  
+**Result:** success; all workflow steps completed.
+
+- Python engine suite: **50 passed**.
+- Existing JavaScript suites: passed.
+- Original evidence taxonomy behavior tests: **5 passed**.
+- Adversarial evidence suite: **41 passed, 0 failed, 0 skipped**.
+- JavaScript syntax checks: passed.
+- Python engine smoke test: passed.
+- Evidence taxonomy contract validator: passed.
+- Post-fix evidence freshness validation: passed.
+- Report artifact: `dealflow-post-fix-evidence-freshness-v1.1` preserved by the run.
+
+### Independent code-path review
+
+The updated `evidence_model.js` was inspected against the approved policy and the execution output:
+- Matching records are evaluated independently; invalid/stale/expired records are quarantined and do not mask valid support.
+- A valid active contradiction takes precedence over support; retired contradictions are excluded; invalid contradictions are quarantined.
+- Expiry is exclusive and malformed supplied expiry values (including empty strings) are rejected.
+- Source requirements are determined by an explicit source-type allowlist; source-backed records require both a reference and a check timestamp.
+- Timestamp parsing validates calendar and clock components, timezone shape/range, future timestamps, and the approved chronology.
+- Historical transactions require a separate `eventAt`.
+- Duplicate evidence IDs block the evaluation bundle; required claims are sorted deterministically before failure selection.
+- Evidence IDs must be non-empty strings; tie-breaking uses stable code-unit ordering rather than locale-dependent comparison.
+
+### Remaining limitations — do not overclaim
+
+1. **Lifecycle immutability:** the evaluator honors the current status but cannot enforce that a retired record was never changed back to active. That needs append-only lifecycle history in the write/storage layer.
+2. **Source-type coverage:** the allowlist is intentionally finite. New source systems require an explicit policy/code/test update; unknown types abstain.
+3. **Freshness calibration:** the claim-linked model uses injected category-specific `maxAgeMinutes`; no Dubai real-estate TTL has been validated.
+4. **Contradiction policy:** any valid active claim-matched `contradicts` record forces abstention. There is no authority hierarchy, recency override, or automated resolution.
+5. **Post-fix freshness report:** the separate 18-case BR-001–BR-018 report is explicitly `COMPLETED_UNSCORED_SYNTHETIC_BEHAVIOR_VALIDATION`. It does not access the answer key, score against expected outcomes, establish real-agent accuracy, validate the 365-day legacy freshness default, or prove revenue uplift.
+
+The 41 adversarial passes establish that this implementation satisfies the approved synthetic contract cases. They do not establish correctness on live agent evidence or business outcomes.
+
+## 7. Decision and guardrails
+
+The policy in section 2 is approved as the validation baseline. The H2 inconsistency is resolved; baseline failures were recorded; implementation fixes were applied only on this branch; and the complete post-fix suite passed with independent code-path review. PR #29 remains open, draft, unmerged, and unchanged. PR #30 remains a draft validation PR and must not be merged without explicit approval. No real-agent trial is authorized by this review.

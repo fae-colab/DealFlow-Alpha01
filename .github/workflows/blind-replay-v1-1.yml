@@ -1,0 +1,38 @@
+name: DealFlow blind replay v1.1
+
+on:
+  push:
+    branches:
+      - validation/alpha-01.5-blind-replay-runner-v1.1
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  blind-replay:
+    name: Frozen-input blind replay (no answer-key access)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact replay branch and history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Verify commitments and execute all 18 cases
+        run: node validation/blind_replay_v1_1/run_blind_replay.js
+
+      - name: Upload frozen unscored raw outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: dealflow-blind-replay-v1.1-raw-outputs
+          path: artifacts/blind_replay_v1_1/
+          if-no-files-found: error
+          retention-days: 90

@@ -39,6 +39,7 @@ class BlindReplayV11IntegrityTests(unittest.TestCase):
             self.assertFalse(forbidden.intersection(case))
 
     def test_sealed_key_is_encrypted_and_version_bound(self):
+        self.assertEqual(hashlib.sha256(self.sealed_raw).hexdigest(), "3cacd2f6158cee5c8d55046c5d37d966d5785ca9eebc00b91b8b0a96ae2d1ff9")
         self.assertEqual(self.sealed["format"], "AES-256-GCM")
         self.assertEqual(self.sealed["compression"], "zlib")
         self.assertEqual(self.sealed["benchmark_id"], self.cases["benchmark_id"])

@@ -11,6 +11,7 @@ on:
       - "integration/**"
       - "test/**"
       - "feature/**"
+      - "validation/**"
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
@@ -38,7 +39,7 @@ jobs:
           node-version: "20"
 
       - name: Run Python engine tests
-        run: python -m unittest -v test_engine.py test_parity.py test_validation_cases.py test_abstention_policy.py test_casebook_benchmark.py test_blind_replay_templates.py test_blind_replay_benchmark_v1.py
+        run: python -m unittest -v test_engine.py test_parity.py test_validation_cases.py test_abstention_policy.py test_casebook_benchmark.py test_blind_replay_templates.py test_blind_replay_benchmark_v1.py test_blind_replay_benchmark_v1_1.py
 
       - name: Run JavaScript engine tests
         run: |

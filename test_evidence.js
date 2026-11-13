@@ -125,5 +125,5 @@ assert.throws(()=>E.reviseClaimEvidence(syntheticEvidence,initial.actions[0],{
 assert.equal(E.validateEvidence([{...verifiedFact,sourceRef:''}]).length,0,'P1.1 verified-fact records remain readable during legacy migration');
 assert.equal(E.validateEvidence([{...verifiedFact,kind:'estimate',quality:'low',sourceRef:'',verifiedAt:null,verifiedBy:null}]).length,0,'legacy non-none evidence remains readable');
 assert.throws(()=>E.reviseClaimEvidence(revisionBase,revisionAction,{claimKey:'commission',kind:'estimate',quality:'low',sourceType:'public_source',sourceRef:'',note:'Missing source reference.'}),/source reference/i);
-assert.ok(E.validateEvidence([{...verifiedFact,quality:'high',isSynthetic:true,sourceType:'synthetic_demo'}]).length,'synthetic evidence cannot be assigned quality');
+assert.ok(E.validateEvidence([{...initial.evidence[0],quality:'high',recordVersion:2}]).length,'new synthetic evidence cannot be assigned quality');
 console.log('Evidence schema, editing, confidence and migration tests passed.');

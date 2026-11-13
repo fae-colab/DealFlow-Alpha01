@@ -97,7 +97,7 @@ These were first identified by static inspection; the pre-implementation run in 
 - The conditional lifecycle skip was replaced with executable active, superseded, revoked, withdrawn, and derived-expiry cases.
 - C tests a valid current contradiction and D tests retired contradiction controls.
 - F3 enforces the approved chronology `sourceCheckedAt >= observedAt`.
-- Added explicit tests for source-type allowlist behavior, agent reports without external URLs, independently missing source reference/check time, strict impossible dates, `eventAt` vs `observedAt`, timestamp chronology, duplicate IDs, deterministic multi-claim reason selection, and record-order invariance.
+- Added explicit tests for source-type allowlist behavior, agent reports without external URLs, independently missing source reference/check time, strict impossible dates, `eventAt` vs `observedAt`, timestamp chronology, malformed/empty expiry, duplicate IDs (including multiple duplicate pairs in different orders), padded IDs, deterministic multi-claim reason selection, and record-order invariance.
 - The original five taxonomy cases and full adversarial suite were run through `DealFlowDecisionDesk.eligibility` / the actual decision engine; run details are recorded below.
 - Fixes were implemented only on this branch; the complete suite was rerun and the changed code and outputs were independently reviewed.
 
@@ -144,14 +144,14 @@ The baseline establishes the defects above and the controls listed. Implement th
 
 ## 6. Post-implementation execution and independent review
 
-**Workflow:** DealFlow CI run 43499534830  
-**Tested commit:** `15bdfe316d2e18ca802f4d24af3bfb1ed417ea06`  
+**Workflow:** DealFlow CI run 43499997893  
+**Tested commit:** `3217f40d4e922d7eba76036d852162ec71d2e359`  
 **Result:** success; all workflow steps completed.
 
 - Python engine suite: **50 passed**.
 - Existing JavaScript suites: passed.
 - Original evidence taxonomy behavior tests: **5 passed**.
-- Adversarial evidence suite: **41 passed, 0 failed, 0 skipped**.
+- Adversarial evidence suite: **43 passed, 0 failed, 0 skipped**.
 - JavaScript syntax checks: passed.
 - Python engine smoke test: passed.
 - Evidence taxonomy contract validator: passed.
@@ -168,7 +168,7 @@ The updated `evidence_model.js` was inspected against the approved policy and th
 - Timestamp parsing validates calendar and clock components, timezone shape/range, future timestamps, and the approved chronology.
 - Historical transactions require a separate `eventAt`.
 - Duplicate evidence IDs block the evaluation bundle; required claims are sorted deterministically before failure selection.
-- Evidence IDs must be non-empty strings; tie-breaking uses stable code-unit ordering rather than locale-dependent comparison.
+- Evidence IDs must be non-empty strings with no surrounding whitespace; duplicate-ID detection reports the lexically first duplicate independent of input order; tie-breaking uses stable code-unit ordering rather than locale-dependent comparison.
 
 ### Remaining limitations — do not overclaim
 

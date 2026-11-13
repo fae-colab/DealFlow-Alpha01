@@ -1,0 +1,164 @@
+{
+  "schemaVersion": "1.0",
+  "contract": "DEALFLOW-EVIDENCE-TAXONOMY-V1",
+  "evaluationDate": "2026-11-13T12:00:00Z",
+  "note": "Contract fixtures only. Test-specific maxAgeMinutes are illustrative injected policies, not validated product TTLs.",
+  "cases": [
+    {
+      "caseId": "EV-001",
+      "name": "stale-user-reported-buyer-intent",
+      "evidenceType": "buyer_intent",
+      "claim": {
+        "claimId": "CLAIM-BUYER-READY",
+        "text": "Buyer still intends to view this property and is ready to proceed."
+      },
+      "evidence": {
+        "evidenceId": "E-BUYER-OLD",
+        "claimId": "CLAIM-BUYER-READY",
+        "sourceType": "agent_report",
+        "sourceReference": null,
+        "observedAt": "2026-10-01T09:00:00Z",
+        "recordedAt": "2026-10-01T09:05:00Z",
+        "sourceCheckedAt": null,
+        "validUntil": null,
+        "supportRelation": "supports",
+        "verificationLevel": "agent_reported",
+        "supportNote": "Agent recorded buyer statement at the time; no later confirmation.",
+        "evidenceType": "buyer_intent"
+      },
+      "policy": {
+        "maxAgeMinutes": 10080
+      },
+      "expected": {
+        "decision": "ABSTAIN",
+        "reasonCode": "STALE_VOLATILE_CLAIM",
+        "nextStep": "reconfirm_buyer_intent"
+      }
+    },
+    {
+      "caseId": "EV-002",
+      "name": "missing-timestamp-on-time-sensitive-listing",
+      "evidenceType": "listing_availability",
+      "claim": {
+        "claimId": "CLAIM-LISTING-AVAILABLE",
+        "text": "The unit is currently available for viewing."
+      },
+      "evidence": {
+        "evidenceId": "E-LISTING-NODATE",
+        "claimId": "CLAIM-LISTING-AVAILABLE",
+        "sourceType": "agent_report",
+        "sourceReference": null,
+        "observedAt": null,
+        "recordedAt": "2026-11-13T11:55:00Z",
+        "sourceCheckedAt": null,
+        "validUntil": null,
+        "supportRelation": "supports",
+        "verificationLevel": "agent_reported",
+        "supportNote": "Agent entered current availability but did not record when it was last confirmed.",
+        "evidenceType": "listing_availability"
+      },
+      "policy": {
+        "maxAgeMinutes": 240
+      },
+      "expected": {
+        "decision": "ABSTAIN",
+        "reasonCode": "MISSING_OBSERVATION_TIMESTAMP",
+        "nextStep": "reconfirm_listing_availability"
+      }
+    },
+    {
+      "caseId": "EV-003",
+      "name": "recently-confirmed-listing-availability",
+      "evidenceType": "listing_availability",
+      "claim": {
+        "claimId": "CLAIM-LISTING-AVAILABLE",
+        "text": "The unit is currently available for viewing."
+      },
+      "evidence": {
+        "evidenceId": "E-LISTING-RECENT",
+        "claimId": "CLAIM-LISTING-AVAILABLE",
+        "sourceType": "listing_portal",
+        "sourceReference": "https://example.invalid/listing/DF-003",
+        "observedAt": "2026-11-13T11:35:00Z",
+        "recordedAt": "2026-11-13T11:36:00Z",
+        "sourceCheckedAt": "2026-11-13T11:35:00Z",
+        "validUntil": null,
+        "supportRelation": "supports",
+        "verificationLevel": "agent_documented",
+        "supportNote": "The checked listing record identifies the same unit and explicitly reports current availability.",
+        "evidenceType": "listing_availability"
+      },
+      "policy": {
+        "maxAgeMinutes": 240
+      },
+      "expected": {
+        "decision": "ELIGIBLE",
+        "reasonCode": "FRESH_CLAIM_MATCHED_EVIDENCE",
+        "nextStep": null
+      }
+    },
+    {
+      "caseId": "EV-004",
+      "name": "old-but-valid-historical-transaction",
+      "evidenceType": "historical_transaction",
+      "claim": {
+        "claimId": "CLAIM-HISTORICAL-SALE",
+        "text": "This unit sold for AED 1,850,000 on 2018-06-12."
+      },
+      "evidence": {
+        "evidenceId": "E-TRANSACTION-2018",
+        "claimId": "CLAIM-HISTORICAL-SALE",
+        "sourceType": "authoritative_transaction_record",
+        "sourceReference": "record://synthetic/transaction/2018-0612-001",
+        "observedAt": "2018-06-12T00:00:00Z",
+        "recordedAt": "2026-11-13T10:00:00Z",
+        "sourceCheckedAt": "2026-11-13T10:00:00Z",
+        "validUntil": null,
+        "supportRelation": "supports",
+        "verificationLevel": "independently_verified",
+        "supportNote": "The record supports the historical sale and date; it is not being used to claim the unit's current asking price or availability.",
+        "evidenceType": "historical_transaction"
+      },
+      "policy": {
+        "maxAgeMinutes": null,
+        "temporalMode": "historical_event"
+      },
+      "expected": {
+        "decision": "ELIGIBLE",
+        "reasonCode": "VALID_HISTORICAL_EVENT",
+        "nextStep": null
+      }
+    },
+    {
+      "caseId": "EV-005",
+      "name": "recent-source-does-not-support-claim",
+      "evidenceType": "buyer_readiness",
+      "claim": {
+        "claimId": "CLAIM-BUYER-FINANCED",
+        "text": "Buyer has current financing approval sufficient for this purchase."
+      },
+      "evidence": {
+        "evidenceId": "E-RECENT-IRRELEVANT",
+        "claimId": "CLAIM-BUYER-FINANCED",
+        "sourceType": "public_market_article",
+        "sourceReference": "https://example.invalid/recent-market-article",
+        "observedAt": "2026-11-13T11:40:00Z",
+        "recordedAt": "2026-11-13T11:41:00Z",
+        "sourceCheckedAt": "2026-11-13T11:40:00Z",
+        "validUntil": null,
+        "supportRelation": "context_only",
+        "verificationLevel": "independently_verified",
+        "supportNote": "The source is recent and authentic but discusses general market lending conditions; it contains no evidence about this buyer's financing approval.",
+        "evidenceType": "buyer_readiness"
+      },
+      "policy": {
+        "maxAgeMinutes": 60
+      },
+      "expected": {
+        "decision": "ABSTAIN",
+        "reasonCode": "SOURCE_DOES_NOT_SUPPORT_CLAIM",
+        "nextStep": "obtain_buyer_specific_financing_evidence"
+      }
+    }
+  ]
+}

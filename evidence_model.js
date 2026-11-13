@@ -4,7 +4,7 @@
   const RELATIONS = new Set(['supports','contradicts','context_only','unassessed']);
   const LEVELS = new Set(['agent_reported','agent_documented','independently_verified','unverified']);
   function timestamp(value){
-    if(typeof value!=='string'||!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$/.test(value)) return null;
+    if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)) return null;
     const n=Date.parse(value); return Number.isFinite(n)?n:null;
   }
   function result(ok,reasonCode,nextStep,detail){return{ok,decision:ok?'ELIGIBLE':'ABSTAIN',reasonCode,nextStep:nextStep||null,detail:detail||''};}

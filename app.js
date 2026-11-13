@@ -27,7 +27,7 @@ function safe(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&
 function runOptimization(){
  const raw=document.getElementById('capacity').value;const capacity=Number(raw);
  if(!Number.isFinite(capacity)||capacity<=0||capacity>24){alert('Available time must be greater than 0 and no more than 24 hours.');return;}
- const errors=DealFlowEngine.validatePortfolio(state.actions,capacity,[]);if(errors.length){alert('Please correct the portfolio first:\n\n'+errors.join('\n'));return;}
+ // Action-level missing/unsupported inputs are handled by the Decision Desk as explicit abstentions.
  const gate=DealFlowDecisionDesk.eligibility(state.actions,capacity,DealFlowEngine);
  const candidates=gate.eligibleActions;
  const best=gate.decision==='READY_FOR_OPTIMIZATION'?DealFlowEngine.optimize(candidates,capacity,[]):{value:0,minutes:0,items:[]};

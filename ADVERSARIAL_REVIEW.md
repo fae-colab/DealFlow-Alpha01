@@ -101,6 +101,46 @@ These are static inspection findings, not executed failures.
 - Run both the original five taxonomy cases and the full adversarial suite through `DealFlowDecisionDesk.eligibility` / the actual decision engine. Record command, commit SHA, output, pass/fail/skip counts, and CI run URL.
 - After the baseline is recorded, implement fixes only on this branch; rerun the complete suite and independently inspect changed code and test outputs.
 
-## 5. Decision and guardrails
+
+## 5. Baseline execution report — pre-implementation
+
+**Workflow:** DealFlow CI run 43498785871  
+**Tested PR head:** `3e7ed84fc2ae1cf583b923a69048cea77a637475`  
+**Result:** failed in `node test_evidence_adversarial.js`; production implementation was unchanged.
+
+- Python suite: **50 passed**.
+- Existing JavaScript suites before the adversarial suite: passed, including engine, evidence schema/migration, outcomes, recommendations, reconciliation, casebook stress, and Decision Desk tests.
+- Original taxonomy suite: **5 passed** (EV-001 through EV-005).
+- Adversarial suite: **21 failed, 9 passed, 0 skipped**.
+- The earlier run 43498581993 did not execute the adversarial cases because of a syntax error in the newly authored test file; it is superseded by the corrected run above and is not counted as behavioral evidence.
+
+### Confirmed failing behavior
+
+| Test(s) | Observed failure | Classification |
+|---|---|---|
+| A1, A2 | Missing-observation record causes abstention despite separate valid support | Confirmed record-iteration defect |
+| B1, B2 | Stale record causes abstention despite separate fresh support | Confirmed record-iteration defect |
+| H2b | Malformed expiry-only evidence returns generic insufficient-evidence reason | Confirmed reason specificity/validation defect |
+| C; D active-conflict control | Active contradiction is ignored; eligible support passes | Confirmed contradiction handling defect |
+| E before/equal boundary | Expired-only record returns generic reason; equality at expiry remains eligible | Confirmed expiry boundary and reason-code defects |
+| F1, F2, F3, F5 | Source type bypass, future source check, incoherent chronology, and unknown source type all pass eligibility | Confirmed provenance defects |
+| G1–G4 | Future recorded/observed/event timestamps and recording-before-observation pass | Confirmed timestamp validation defects |
+| G5 | Historical evidence without distinct `eventAt` passes | Confirmed historical-event schema defect |
+| H1 | Impossible calendar date is normalized and reported as stale rather than invalid | Confirmed strict timestamp parsing defect |
+| I1 | Duplicate evidence IDs pass | Confirmed bundle-integrity defect |
+| I3 | Multiple failing claims produce different reasons when input order is reversed | Confirmed deterministic aggregation defect |
+
+### Passed controls and limitations
+
+- **Meaningful passes:** H2a (malformed record does not poison separate valid support); E one millisecond after expiry; malformed expiry beside valid support; F4 (agent report does not need external URL/source check); I2 (one failed required claim blocks the action).
+- **Conditional/non-probative passes:** D's three retired-contradiction cases pass, but the implementation also ignores active contradictions; C's paired active-conflict failure shows lifecycle filtering is not yet proven. H3 passes, but eventAt validation is not proven because G3 and G5 show that the implementation ignores eventAt.
+- **Permutation cases A2/B2** were strengthened after the first run to require both permutations to be eligible; both then failed, confirming the original tests had been too weak.
+- The workflow's later artifact-upload step also failed because earlier validation steps were skipped and no report artifact had been produced. This is a secondary workflow behavior on a failed run, not an evidence-model result. The complete downstream CI steps were therefore not reached on this baseline.
+
+### Implementation gate
+
+The baseline establishes the defects above and the controls listed. Implement the evidence-model changes on this branch only. Do not change PR #29. After implementation, rerun the complete CI suite, inspect all test logs and artifacts, and independently review the code paths against section 2 before treating the branch as ready.
+
+## 6. Decision and guardrails
 
 The policy in section 2 is approved as the validation baseline. Correct the adversarial tests to match it, run the complete suite before implementation to establish actual failures and passed controls, then implement only confirmed defects on this branch and repeat the complete suite. Do not merge PR #29, do not modify PR #29, and do not begin a real-agent trial until the post-fix results have been independently reviewed and explicitly approved.

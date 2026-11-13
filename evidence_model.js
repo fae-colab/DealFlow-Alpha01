@@ -77,19 +77,20 @@
     return result(false,code,next,detail);
   }
   function duplicateEvidenceId(evidence){
-    const seen=new Set();
+    const counts=new Map();
     for(const e of evidence||[]){
       if(!e||typeof e.evidenceId!=='string'||!e.evidenceId.trim()) continue;
-      if(seen.has(e.evidenceId)) return e.evidenceId;
-      seen.add(e.evidenceId);
+      counts.set(e.evidenceId,(counts.get(e.evidenceId)||0)+1);
     }
-    return null;
+    const duplicates=[...counts.entries()].filter(([,count])=>count>1).map(([id])=>id);
+    duplicates.sort((a,b)=>a===b?0:(a<b?-1:1));
+    return duplicates[0]||null;
   }
   function recordEvaluation(e,claim,policy,now){
     const status=e.status===undefined||e.status===null?'active':e.status;
     if(!STATUSES.has(status)) return {kind:'invalid',code:'INVALID_EVIDENCE_STATUS',detail:'Evidence status must be active, superseded, revoked, or withdrawn.'};
     if(RETIRED.has(status)) return {kind:'retired'};
-    if(typeof e.evidenceId!=='string'||!e.evidenceId.trim()||!e.sourceType||!RELATIONS.has(e.supportRelation)||!LEVELS.has(e.verificationLevel)||typeof e.supportNote!=='string'||!e.supportNote.trim())
+    if(typeof e.evidenceId!=='string'||!e.evidenceId.trim()||e.evidenceId.trim()!==e.evidenceId||!e.sourceType||!RELATIONS.has(e.supportRelation)||!LEVELS.has(e.verificationLevel)||typeof e.supportNote!=='string'||!e.supportNote.trim())
       return {kind:'invalid',code:'INSUFFICIENT_OR_INVALID_EVIDENCE',detail:'Active evidence requires an ID, source type, valid relation and verification level, and a non-empty support note.'};
     if(!SOURCE_TYPES.has(e.sourceType))
       return {kind:'invalid',code:'UNSUPPORTED_SOURCE_TYPE',detail:'Unsupported sourceType: '+e.sourceType+'.'};

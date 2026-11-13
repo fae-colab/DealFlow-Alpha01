@@ -53,8 +53,9 @@ function compareCard(title,r,featured){return `<div class="compare-card ${featur
 function renderTable(){
  document.getElementById('actionRows').innerHTML=state.actions.map(a=>{
    const evidenceSummary=DealFlowEvidence.summarizeActionEvidence(state.evidence,a.id);
-   return '<tr><td><strong>'+safe(a.name)+'</strong><small>'+safe(a.action)+' · ID '+safe(a.id)+' · Deal '+safe(a.opportunityId||a.id)+(a.dependency?' · Requires '+safe(a.dependency):'')+'</small></td><td>'+money(a.commission)+'</td><td>'+a.pWith+'% / '+a.pWithout+'%</td><td class="'+(inc(a)>0?'positive':'negative')+'">'+(inc(a)>=0?'+':'')+money(inc(a))+'</td><td>'+a.effort+' min</td><td>'+a.deadline+' hrs</td><td><small>'+Number(a.confidence??50)+'%</small></td><td><small>'+safe(evidenceSummary.summary)+'</small></td><td class="row-actions"><button onclick="openEvidenceForAction(\''+safe(a.id)+'\')">Evidence</button><button onclick="editAction(\''+safe(a.id)+'\')">Edit</button><button class="delete" onclick="deleteAction(\''+safe(a.id)+'\')">Remove</button></td></tr>';
+   return '<tr><td><strong>'+safe(a.name)+'</strong><small>'+safe(a.action)+' · ID '+safe(a.id)+' · Deal '+safe(a.opportunityId||a.id)+(a.dependency?' · Requires '+safe(a.dependency):'')+'</small></td><td>'+money(a.commission)+'</td><td>'+a.pWith+'% / '+a.pWithout+'%</td><td class="'+(inc(a)>0?'positive':'negative')+'">'+(inc(a)>=0?'+':'')+money(inc(a))+'</td><td>'+a.effort+' min</td><td>'+a.deadline+' hrs</td><td><small>'+Number(a.confidence??50)+'%</small></td><td><small>'+safe(evidenceSummary.summary)+'</small></td><td class="row-actions"><button type="button" data-evidence-action="'+safe(a.id)+'">Evidence</button><button onclick="editAction(\''+safe(a.id)+'\')">Edit</button><button class="delete" onclick="deleteAction(\''+safe(a.id)+'\')">Remove</button></td></tr>';
  }).join('');
+ document.querySelectorAll('[data-evidence-action]').forEach(button=>button.addEventListener('click',()=>openEvidenceForAction(button.getAttribute('data-evidence-action'))));
 }
 function localDateTime(value){
  if(!value)return '';
@@ -85,7 +86,8 @@ function renderConfidenceForm(){
 }
 function syncEvidenceRequirements(){
  const verified=document.getElementById('evidenceKind').value==='verified_fact';
- document.getElementById('evidenceSourceRef').required=verified;
+ const supported=document.getElementById('evidenceQuality').value!=='none';
+ document.getElementById('evidenceSourceRef').required=verified||supported;
  document.getElementById('evidenceVerifiedAt').required=verified;
  document.getElementById('evidenceVerifiedBy').required=verified;
 }
@@ -170,8 +172,9 @@ document.getElementById('addToggle').addEventListener('click',()=>document.getEl
 document.getElementById('closeAdd').addEventListener('click',()=>document.getElementById('addFormWrap').classList.add('hidden'));
 document.getElementById('addForm').addEventListener('submit',e=>{
  e.preventDefault();const f=new FormData(e.target);
- const confidence=Number(f.get('confidence')),confidenceError=DealFlowEvidence.validateConfidence(confidence);
+ const confidenceRaw=f.get('confidence'),confidenceError=DealFlowEvidence.validateConfidence(confidenceRaw);
  if(confidenceError){alert(confidenceError);return;}
+ const confidence=Number(confidenceRaw);
  const name=String(f.get('name')||'').trim(),action=String(f.get('action')||'').trim();
  const a={id:'DF-'+crypto.randomUUID().slice(0,8),opportunityId:String(f.get('opportunityId')||'').trim()||name.toLowerCase().replace(/\s+/g,'-'),
  name,action,commission:Number(f.get('commission')),pWith:Number(f.get('pWith')),pWithout:Number(f.get('pWithout')),
@@ -186,13 +189,15 @@ document.getElementById('confidenceAction').addEventListener('change',renderConf
 document.getElementById('confidenceForm').addEventListener('submit',e=>{
  e.preventDefault();const action=state.actions.find(item=>item.id===document.getElementById('confidenceAction').value);
  if(!action){alert('Select an action first.');return;}
- const confidence=Number(document.getElementById('confidenceValue').value),error=DealFlowEvidence.validateConfidence(confidence);
+ const confidenceRaw=document.getElementById('confidenceValue').value,error=DealFlowEvidence.validateConfidence(confidenceRaw);
  if(error){alert(error);return;}
+ const confidence=Number(confidenceRaw);
  action.confidence=confidence;save();latestRun=null;render();
 });
 document.getElementById('evidenceAction').addEventListener('change',renderEvidenceForm);
 document.getElementById('evidenceClaim').addEventListener('change',renderEvidenceForm);
 document.getElementById('evidenceKind').addEventListener('change',syncEvidenceRequirements);
+document.getElementById('evidenceQuality').addEventListener('change',syncEvidenceRequirements);
 document.getElementById('evidenceForm').addEventListener('submit',e=>{
  e.preventDefault();const action=state.actions.find(item=>item.id===document.getElementById('evidenceAction').value);
  if(!action){alert('Select an action first.');return;}

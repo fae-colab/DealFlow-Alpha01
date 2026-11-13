@@ -52,7 +52,7 @@
     return records.filter(record=>record&&record.subjectType==='action'&&record.subjectId===subjectId&&record.claimKey===claimKey);
   }
   function validateConfidence(value){
-    if(value===null||value===undefined||String(value).trim()===''||!Number.isFinite(Number(value))||Number(value)<0||Number(value)>100)
+    if(value===null||value===undefined||typeof value==='boolean'||String(value).trim()===''||!Number.isFinite(Number(value))||Number(value)<0||Number(value)>100)
       return 'Confidence must be a number from 0 to 100.';
     return null;
   }
@@ -152,6 +152,7 @@
     if(record.verifiedBy!==null && record.verifiedBy!==undefined && typeof record.verifiedBy!=='string')return 'verifiedBy must be text or null';
     if(typeof record.isSynthetic!=='boolean')return 'isSynthetic must be boolean';
     if(record.supersedesId!==null && record.supersedesId!==undefined && typeof record.supersedesId!=='string')return 'supersedesId must be text or null';
+    if(record.quality!=='none'&&!record.sourceRef.trim())return 'non-none evidence quality requires a source reference';
     if(record.kind==='verified_fact' && (!record.sourceRef.trim()||!record.verifiedAt||!record.verifiedBy||!record.verifiedBy.trim()||record.quality==='none'||record.sourceType==='synthetic_demo'))return 'verified_fact requires a source reference, verification timestamp, verifier, non-none evidence quality, and non-synthetic source';
     if(record.isSynthetic && (record.sourceType!=='synthetic_demo'||record.quality!=='none'))return 'synthetic records must use synthetic_demo sourceType and none quality';
     if(record.sourceType==='synthetic_demo' && (!record.isSynthetic||record.quality!=='none'))return 'synthetic_demo sourceType requires isSynthetic=true and none quality';

@@ -84,6 +84,7 @@ assert.ok(E.validateConfidence(-1));
 assert.ok(E.validateConfidence(101));
 assert.ok(E.validateConfidence(''));
 assert.ok(E.validateConfidence(null));
+assert.ok(E.validateConfidence(false));
 
 const revisionAction=migrated.actions[1];
 const revisionBase=JSON.parse(JSON.stringify(migrated.evidence));
@@ -122,5 +123,6 @@ assert.throws(()=>E.reviseClaimEvidence(syntheticEvidence,initial.actions[0],{
  sourceRef:'https://example.com',note:'Attempted to relabel synthetic demo data.'
 }),/Synthetic demo evidence/i);
 assert.ok(E.validateEvidence([{...verifiedFact,sourceRef:''}]).length,'verified facts require a source reference');
+assert.ok(E.validateEvidence([{...verifiedFact,kind:'estimate',quality:'low',sourceRef:'',verifiedAt:null,verifiedBy:null}]).length,'non-none quality requires a source reference');
 assert.ok(E.validateEvidence([{...verifiedFact,quality:'high',isSynthetic:true,sourceType:'synthetic_demo'}]).length,'synthetic evidence cannot be assigned quality');
 console.log('Evidence schema, editing, confidence and migration tests passed.');

@@ -18,5 +18,7 @@ assert.match(app,/DealFlowEvidence\.reviseClaimEvidence/);
 assert.match(app,/DealFlowEvidence\.validateConfidence/);
 assert.match(app,/DealFlowEvidence\.summarizeActionEvidence/);
 assert.match(app,/window\.openEvidenceForAction/);
+assert.match(app,/data-evidence-action/);
+assert.match(app,/evidenceQuality'\)\.addEventListener\('change'/);
 assert.match(app,/evidenceForm'\)\.addEventListener\('submit'/);
 console.log('Evidence UI wiring and markup tests passed.');

@@ -96,7 +96,7 @@
         <label>Evidence kind<select id="evidenceKind" required><option value="assumption">Assumption</option><option value="estimate">Estimate</option><option value="observation">Observation</option><option value="verified_fact">Verified fact</option></select></label>
         <label>Evidence quality<select id="evidenceQuality" required><option value="none">None — no support</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label>
         <label>Source type<select id="evidenceSourceType" required><option value="user_input">User input</option><option value="public_source">Public source</option><option value="document">Document</option><option value="system_record">System record</option><option value="third_party_confirmation">Third-party confirmation</option><option value="synthetic_demo">Synthetic demo</option></select></label>
-        <label>Source reference<input id="evidenceSourceRef" type="text" maxlength="500" placeholder="URL, document name or source reference"></label>
+        <label>Source reference (required for non-none quality)<input id="evidenceSourceRef" type="text" maxlength="500" placeholder="URL, document name or source reference"></label>
         <label>Observed at (optional)<input id="evidenceObservedAt" type="datetime-local"></label>
         <label>Verified at (required for verified fact)<input id="evidenceVerifiedAt" type="datetime-local"></label>
         <label>Verified by (required for verified fact)<input id="evidenceVerifiedBy" type="text" maxlength="100" placeholder="Person or process that checked the source"></label>

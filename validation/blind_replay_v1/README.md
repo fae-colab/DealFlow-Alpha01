@@ -12,18 +12,19 @@ Base: `feature/alpha-01.5-real-agent-blind-replay`
 
 ## Integrity and blindness
 
-This repository is public. The expected-outcome key is therefore deliberately **not** stored here. Its exact UTF-8 JSON bytes are held separately, and this file records a SHA-256 commitment:
+This repository is public. The expected-outcome key is deliberately **not** stored here. Its exact UTF-8 JSON bytes are held separately, and this file records a SHA-256 commitment:
 
-`66243641c1bad4e1d49ca33d88ab4cd364a1f5c580c1dadc52a42ec2d45479d7`
+`08808b14bec0756e8746ef4e99399871bd5fdfacdda52d2c6ecfcbddf1db3aa4`
+
+The input file is frozen at Git blob SHA `6257a301496206c632c0c48303a2442c32eacff7` (commit `b3cc74c8373cc1b2310b365c3e097e1ad9df41cc`). Do not edit it in place; create a v1.1 if a defect is found.
 
 Before any DealFlow run:
-1. Freeze `cases.json` and record its Git commit SHA.
-2. Preserve the expected-key file separately. Do not publish or edit it after observing DealFlow outputs.
-3. Verify its SHA-256 against the commitment above before unsealing.
-4. Run each case against the frozen Decision Desk implementation and save raw outputs.
-5. Only then reveal the key and score exact decision/action matches plus reason quality.
+1. Preserve the expected-key file separately. Do not publish or edit it after observing DealFlow outputs.
+2. Verify its SHA-256 against the commitment above before unsealing.
+3. Run each case against the frozen Decision Desk implementation and save raw outputs.
+4. Only then reveal the key and score exact decision/action matches plus reason quality.
 
-This is a **commitment**, not encryption. Anyone with the separate key can read it; do not place that key in the public repository. If the key is lost, do not reconstruct it from memory after seeing outputs—declare the benchmark compromised and create a newly versioned benchmark.
+This is a **commitment**, not encryption. Anyone with the separate key can read it; do not place that key in the public repository. If the key is lost or disclosed before the blind run, declare the benchmark compromised and create a newly versioned benchmark.
 
 ## Synthetic-data boundary
 
@@ -49,7 +50,7 @@ The `example.invalid` reference in the stale-evidence case is a placeholder only
 | BR-012 | Missing net agent commission |
 | BR-013 | Portfolio time-allocation trade-off |
 | BR-014 | Optimizer ties simple baselines; no superiority claim |
-| BR-015 | Baseline-regression sentinel |
+| BR-015 | Optimizer-baseline parity regression sentinel |
 | BR-016 | All candidates unverified |
 | BR-017 | High-value action misses deadline; feasible alternative |
 | BR-018 | Invalid probability input |
@@ -73,16 +74,15 @@ BR-003 deliberately tests evidence freshness. The current Decision Desk gate che
 
 BR-014 checks baseline ties: a recommendation can be valid, but DealFlow must not claim superiority over a simple baseline that achieves the same result.
 
-BR-015 is a regression sentinel. A correct exact optimizer should not be beaten by a valid baseline using the same inputs and constraints. If no baseline beats it, the expected behavior is a recommendation with no superiority claim. If a baseline does beat it, the correct output is abstention and an optimizer-regression finding. The sealed key records the frozen expected outcome for this fixture.
+BR-015 is a regression sentinel. Both positive-lift actions fit within capacity and deadlines, so the exact optimizer should select both. If a valid baseline beats the optimizer on identical inputs and constraints, record an optimizer-regression failure; do not adjust the key after observing it.
 
 ## Run order
 
-1. Freeze and hash inputs.
-2. Verify expected-key commitment.
-3. Run DealFlow without opening the key.
-4. Save raw outputs and version metadata.
-5. Unseal and score.
-6. Report every false recommendation and false abstention separately.
-7. Do not expose to a real agent on the strength of this synthetic benchmark alone.
+1. Verify the frozen input blob SHA and expected-key commitment.
+2. Run DealFlow without opening the key.
+3. Save raw outputs and version metadata.
+4. Unseal and score.
+5. Report every false recommendation and false abstention separately.
+6. Do not expose to a real agent on the strength of this synthetic benchmark alone.
 
 This benchmark is an engineering gate, not evidence of decision advantage, agent adoption, causal uplift, or realized commission.

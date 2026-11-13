@@ -1,0 +1,665 @@
+{
+  "schema_version": "1.1",
+  "benchmark_id": "DEALFLOW-ALPHA-01.5-BLIND-REPLAY-V1.1",
+  "status": "SEALED_KEY_AND_INPUTS_FROZEN_NOT_RUN",
+  "case_type": "synthetic_fixture",
+  "count": 18,
+  "warning": "All cases are deliberately synthetic. They are not real agent situations, public evidence, market estimates, or financial claims. This benchmark tests engine behavior only.",
+  "run_policy": "Do not execute DealFlow against these inputs until the encrypted independently derived expected-outcome key is present, its ciphertext digest is verified, and the plaintext SHA-256 commitment is recorded. Do not decrypt the key before raw replay outputs are frozen.",
+  "cases": [
+    {
+      "case_id": "BR-001",
+      "case_type": "synthetic_fixture",
+      "theme": "urgent-low-lift-versus-higher-value",
+      "capacity_hours": 2,
+      "actions": [
+        {
+          "id": "A_URGENT",
+          "opportunityId": "OPP-URGENT",
+          "name": "OPP-URGENT",
+          "action": "Complete A_URGENT action",
+          "commission": 8000,
+          "pWith": 60,
+          "pWithout": 50,
+          "effort": 30,
+          "deadline": 0.75,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        },
+        {
+          "id": "B_VALUE",
+          "opportunityId": "OPP-VALUE",
+          "name": "OPP-VALUE",
+          "action": "Complete B_VALUE action",
+          "commission": 24000,
+          "pWith": 70,
+          "pWithout": 35,
+          "effort": 45,
+          "deadline": 2,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        }
+      ]
+    },
+    {
+      "case_id": "BR-002",
+      "case_type": "synthetic_fixture",
+      "theme": "gross-commission-is-not-incremental-value",
+      "capacity_hours": 1,
+      "actions": [
+        {
+          "id": "A_BIG",
+          "opportunityId": "OPP-BIG",
+          "name": "OPP-BIG",
+          "action": "Complete A_BIG action",
+          "commission": 100000,
+          "pWith": 42,
+          "pWithout": 40,
+          "effort": 30,
+          "deadline": 2,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        },
+        {
+          "id": "B_SMALL",
+          "opportunityId": "OPP-SMALL",
+          "name": "OPP-SMALL",
+          "action": "Complete B_SMALL action",
+          "commission": 18000,
+          "pWith": 75,
+          "pWithout": 35,
+          "effort": 45,
+          "deadline": 2,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        }
+      ]
+    },
+    {
+      "case_id": "BR-003",
+      "case_type": "synthetic_fixture",
+      "theme": "stale-evidence",
+      "capacity_hours": 2,
+      "actions": [
+        {
+          "id": "A_STALE",
+          "opportunityId": "OPP-STALE",
+          "name": "OPP-STALE",
+          "action": "Complete A_STALE action",
+          "commission": 30000,
+          "pWith": 80,
+          "pWithout": 40,
+          "effort": 30,
+          "deadline": 2,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "documented",
+          "evidenceUrl": "https://example.invalid/synthetic-fixture",
+          "evidenceUpdatedAt": "2025-01-01",
+          "evidenceNote": "Synthetic fixture. Source is explicitly stale and must not support current ranking."
+        }
+      ]
+    },
+    {
+      "case_id": "BR-004",
+      "case_type": "synthetic_fixture",
+      "theme": "unknown-capacity",
+      "capacity_hours": null,
+      "actions": [
+        {
+          "id": "A1",
+          "opportunityId": "OPP-1",
+          "name": "OPP-1",
+          "action": "Complete A1 action",
+          "commission": 20000,
+          "pWith": 70,
+          "pWithout": 40,
+          "effort": 30,
+          "deadline": 2,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        }
+      ]
+    },
+    {
+      "case_id": "BR-005",
+      "case_type": "synthetic_fixture",
+      "theme": "infeasible-best-action-alternative-feasible",
+      "capacity_hours": 1,
+      "actions": [
+        {
+          "id": "A_TOO_LONG",
+          "opportunityId": "OPP-A",
+          "name": "OPP-A",
+          "action": "Complete A_TOO_LONG action",
+          "commission": 50000,
+          "pWith": 80,
+          "pWithout": 30,
+          "effort": 90,
+          "deadline": 0.5,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        },
+        {
+          "id": "B_FEASIBLE",
+          "opportunityId": "OPP-B",
+          "name": "OPP-B",
+          "action": "Complete B_FEASIBLE action",
+          "commission": 16000,
+          "pWith": 70,
+          "pWithout": 35,
+          "effort": 30,
+          "deadline": 1,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        }
+      ]
+    },
+    {
+      "case_id": "BR-006",
+      "case_type": "synthetic_fixture",
+      "theme": "feasible-prerequisite-chain",
+      "capacity_hours": 2,
+      "actions": [
+        {
+          "id": "A_PRE",
+          "opportunityId": "OPP-PRE",
+          "name": "OPP-PRE",
+          "action": "Complete A_PRE action",
+          "commission": 9000,
+          "pWith": 60,
+          "pWithout": 40,
+          "effort": 20,
+          "deadline": 1.5,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        },
+        {
+          "id": "B_DEP",
+          "opportunityId": "OPP-DEP",
+          "name": "OPP-DEP",
+          "action": "Complete B_DEP action",
+          "commission": 24000,
+          "pWith": 75,
+          "pWithout": 35,
+          "effort": 30,
+          "deadline": 2,
+          "dependency": "A_PRE",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        }
+      ]
+    },
+    {
+      "case_id": "BR-007",
+      "case_type": "synthetic_fixture",
+      "theme": "infeasible-prerequisite-chain",
+      "capacity_hours": 1,
+      "actions": [
+        {
+          "id": "A_PRE",
+          "opportunityId": "OPP-PRE",
+          "name": "OPP-PRE",
+          "action": "Complete A_PRE action",
+          "commission": 9000,
+          "pWith": 60,
+          "pWithout": 40,
+          "effort": 60,
+          "deadline": 0.5,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        },
+        {
+          "id": "B_DEP",
+          "opportunityId": "OPP-DEP",
+          "name": "OPP-DEP",
+          "action": "Complete B_DEP action",
+          "commission": 24000,
+          "pWith": 75,
+          "pWithout": 35,
+          "effort": 15,
+          "deadline": 1,
+          "dependency": "A_PRE",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        }
+      ]
+    },
+    {
+      "case_id": "BR-008",
+      "case_type": "synthetic_fixture",
+      "theme": "duplicate-opportunity-commission",
+      "capacity_hours": 2,
+      "actions": [
+        {
+          "id": "A1",
+          "opportunityId": "SAME-OPP",
+          "name": "SAME-OPP",
+          "action": "Complete A1 action",
+          "commission": 24000,
+          "pWith": 65,
+          "pWithout": 40,
+          "effort": 30,
+          "deadline": 2,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        },
+        {
+          "id": "A2",
+          "opportunityId": "SAME-OPP",
+          "name": "SAME-OPP",
+          "action": "Complete A2 action",
+          "commission": 24000,
+          "pWith": 80,
+          "pWithout": 40,
+          "effort": 45,
+          "deadline": 2,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        }
+      ]
+    },
+    {
+      "case_id": "BR-009",
+      "case_type": "synthetic_fixture",
+      "theme": "supported-agent-reported-inputs",
+      "capacity_hours": 2,
+      "actions": [
+        {
+          "id": "A_REPORTED",
+          "opportunityId": "OPP-REPORTED",
+          "name": "OPP-REPORTED",
+          "action": "Complete A_REPORTED action",
+          "commission": 20000,
+          "pWith": 70,
+          "pWithout": 40,
+          "effort": 30,
+          "deadline": 2,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic agent-reported input path; not an actual agent report or independently verified fact."
+        }
+      ]
+    },
+    {
+      "case_id": "BR-010",
+      "case_type": "synthetic_fixture",
+      "theme": "mixed-supported-and-unverified",
+      "capacity_hours": 2,
+      "actions": [
+        {
+          "id": "A_SUPPORTED",
+          "opportunityId": "OPP-SUPPORTED",
+          "name": "OPP-SUPPORTED",
+          "action": "Complete A_SUPPORTED action",
+          "commission": 18000,
+          "pWith": 70,
+          "pWithout": 35,
+          "effort": 30,
+          "deadline": 2,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        },
+        {
+          "id": "B_UNVERIFIED",
+          "opportunityId": "OPP-UNVERIFIED",
+          "name": "OPP-UNVERIFIED",
+          "action": "Complete B_UNVERIFIED action",
+          "commission": 50000,
+          "pWith": 90,
+          "pWithout": 20,
+          "effort": 30,
+          "deadline": 2,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "unverified",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic but deliberately unsupported candidate."
+        }
+      ]
+    },
+    {
+      "case_id": "BR-011",
+      "case_type": "synthetic_fixture",
+      "theme": "no-incremental-lift",
+      "capacity_hours": 2,
+      "actions": [
+        {
+          "id": "A_NO_LIFT",
+          "opportunityId": "OPP-NO-LIFT",
+          "name": "OPP-NO-LIFT",
+          "action": "Complete A_NO_LIFT action",
+          "commission": 30000,
+          "pWith": 45,
+          "pWithout": 45,
+          "effort": 30,
+          "deadline": 2,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        }
+      ]
+    },
+    {
+      "case_id": "BR-012",
+      "case_type": "synthetic_fixture",
+      "theme": "missing-net-agent-commission",
+      "capacity_hours": 2,
+      "actions": [
+        {
+          "id": "A_MISSING",
+          "opportunityId": "OPP-MISSING",
+          "name": "OPP-MISSING",
+          "action": "Complete A_MISSING action",
+          "commission": null,
+          "pWith": 70,
+          "pWithout": 35,
+          "effort": 30,
+          "deadline": 2,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        }
+      ]
+    },
+    {
+      "case_id": "BR-013",
+      "case_type": "synthetic_fixture",
+      "theme": "portfolio-time-allocation",
+      "capacity_hours": 2,
+      "actions": [
+        {
+          "id": "A1",
+          "opportunityId": "OPP-1",
+          "name": "OPP-1",
+          "action": "Complete A1 action",
+          "commission": 20000,
+          "pWith": 70,
+          "pWithout": 40,
+          "effort": 60,
+          "deadline": 2,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        },
+        {
+          "id": "B1",
+          "opportunityId": "OPP-2",
+          "name": "OPP-2",
+          "action": "Complete B1 action",
+          "commission": 18000,
+          "pWith": 75,
+          "pWithout": 40,
+          "effort": 45,
+          "deadline": 2,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        },
+        {
+          "id": "C1",
+          "opportunityId": "OPP-3",
+          "name": "OPP-3",
+          "action": "Complete C1 action",
+          "commission": 12000,
+          "pWith": 80,
+          "pWithout": 40,
+          "effort": 30,
+          "deadline": 2,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        }
+      ]
+    },
+    {
+      "case_id": "BR-014",
+      "case_type": "synthetic_fixture",
+      "theme": "optimizer-ties-simple-baselines-no-superiority-claim",
+      "capacity_hours": 2,
+      "actions": [
+        {
+          "id": "A_ONLY",
+          "opportunityId": "OPP-ONLY",
+          "name": "OPP-ONLY",
+          "action": "Complete A_ONLY action",
+          "commission": 24000,
+          "pWith": 65,
+          "pWithout": 40,
+          "effort": 30,
+          "deadline": 2,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        }
+      ]
+    },
+    {
+      "case_id": "BR-015",
+      "case_type": "synthetic_fixture",
+      "theme": "baseline-regression-reserved",
+      "capacity_hours": 2,
+      "actions": [
+        {
+          "id": "A1",
+          "opportunityId": "OPP-1",
+          "name": "OPP-1",
+          "action": "Complete A1 action",
+          "commission": 24000,
+          "pWith": 65,
+          "pWithout": 40,
+          "effort": 30,
+          "deadline": 2,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        },
+        {
+          "id": "B1",
+          "opportunityId": "OPP-2",
+          "name": "OPP-2",
+          "action": "Complete B1 action",
+          "commission": 30000,
+          "pWith": 70,
+          "pWithout": 50,
+          "effort": 90,
+          "deadline": 2,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        }
+      ]
+    },
+    {
+      "case_id": "BR-016",
+      "case_type": "synthetic_fixture",
+      "theme": "all-evidence-unverified",
+      "capacity_hours": 2,
+      "actions": [
+        {
+          "id": "A1",
+          "opportunityId": "OPP-1",
+          "name": "OPP-1",
+          "action": "Complete A1 action",
+          "commission": 24000,
+          "pWith": 65,
+          "pWithout": 40,
+          "effort": 30,
+          "deadline": 2,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "unverified",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic unsupported candidate."
+        },
+        {
+          "id": "B1",
+          "opportunityId": "OPP-2",
+          "name": "OPP-2",
+          "action": "Complete B1 action",
+          "commission": 18000,
+          "pWith": 70,
+          "pWithout": 35,
+          "effort": 30,
+          "deadline": 2,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "unverified",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic unsupported candidate."
+        }
+      ]
+    },
+    {
+      "case_id": "BR-017",
+      "case_type": "synthetic_fixture",
+      "theme": "deadline-missed-despite-high-value",
+      "capacity_hours": 1,
+      "actions": [
+        {
+          "id": "A_URGENT",
+          "opportunityId": "OPP-URGENT",
+          "name": "OPP-URGENT",
+          "action": "Complete A_URGENT action",
+          "commission": 50000,
+          "pWith": 85,
+          "pWithout": 35,
+          "effort": 90,
+          "deadline": 0.5,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        },
+        {
+          "id": "B_OTHER",
+          "opportunityId": "OPP-OTHER",
+          "name": "OPP-OTHER",
+          "action": "Complete B_OTHER action",
+          "commission": 14000,
+          "pWith": 70,
+          "pWithout": 40,
+          "effort": 30,
+          "deadline": 1,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        }
+      ]
+    },
+    {
+      "case_id": "BR-018",
+      "case_type": "synthetic_fixture",
+      "theme": "invalid-probability-input",
+      "capacity_hours": 2,
+      "actions": [
+        {
+          "id": "A_BAD",
+          "opportunityId": "OPP-BAD",
+          "name": "OPP-BAD",
+          "action": "Complete A_BAD action",
+          "commission": 25000,
+          "pWith": 120,
+          "pWithout": 30,
+          "effort": 30,
+          "deadline": 2,
+          "dependency": "",
+          "confidence": 75,
+          "evidenceStatus": "user_reported",
+          "evidenceUrl": "",
+          "evidenceUpdatedAt": "",
+          "evidenceNote": "Synthetic fixture input with explicit provenance note; not a real agent report, document, or independently verified fact."
+        }
+      ]
+    }
+  ]
+}

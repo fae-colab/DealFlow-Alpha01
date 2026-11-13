@@ -44,6 +44,7 @@ jobs:
         run: |
           node test_engine.js
           node test_evidence.js
+          node test_evidence_ui.js
           node test_outcomes.js
           node test_recommendations.js
           node test_reconciliation.js

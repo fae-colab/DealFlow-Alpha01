@@ -77,4 +77,53 @@ const fakeSynthetic={...bad.evidence[0],id:'fake-synthetic',sourceType:'user_inp
 assert.ok(E.validateEvidence([{...fakeSynthetic,isSynthetic:true}]).length);
 assert.throws(()=>E.migrateState({actions:[],outcomes:[],evidence:[{bad:true}]},seeds),/Evidence record/);
 assert.throws(()=>E.migrateState({actions:[]},seeds),/actions and outcomes/);
-console.log('Evidence schema and migration tests passed.');
+assert.equal(E.validateConfidence(0),null);
+assert.equal(E.validateConfidence(100),null);
+assert.equal(E.validateConfidence('72'),null);
+assert.ok(E.validateConfidence(-1));
+assert.ok(E.validateConfidence(101));
+assert.ok(E.validateConfidence(''));
+assert.ok(E.validateConfidence(null));
+assert.ok(E.validateConfidence(false));
+
+const revisionAction=migrated.actions[1];
+const revisionBase=JSON.parse(JSON.stringify(migrated.evidence));
+const priorProbability=E.currentClaimEvidence(revisionBase,'CUSTOM-1','pWith');
+const revisedEvidence=E.reviseClaimEvidence(revisionBase,revisionAction,{
+ claimKey:'pWith',kind:'estimate',quality:'medium',sourceType:'public_source',
+ sourceRef:'https://example.com/probability-basis',observedAt:'2026-11-12T08:00:00Z',
+ capturedAt:'2026-11-13T08:00:00Z',note:'Recent public comparable evidence informs this probability estimate.'
+});
+const revisedProbability=E.currentClaimEvidence(revisedEvidence,'CUSTOM-1','pWith');
+assert.equal(revisedProbability.quality,'medium');
+assert.equal(revisedProbability.kind,'estimate');
+assert.equal(revisedProbability.supersedesId,priorProbability.id);
+assert.deepEqual(priorProbability,revisionBase.find(x=>x.id===priorProbability.id),'prior evidence remains immutable');
+assert.equal(revisionAction.confidence,75,'editing evidence quality does not alter confidence');
+assert.equal(E.summarizeActionEvidence(revisedEvidence,'CUSTOM-1').claims.find(x=>x.claimKey==='pWith').quality,'medium');
+assert.throws(()=>E.reviseClaimEvidence(revisionBase,revisionAction,{
+ claimKey:'commission',kind:'verified_fact',quality:'none',sourceType:'public_source',
+ sourceRef:'',note:'Not enough verification details.'
+}),/verified_fact|source reference/i);
+assert.throws(()=>E.reviseClaimEvidence(revisionBase,revisionAction,{
+ claimKey:'commission',kind:'verified_fact',quality:'medium',sourceType:'document',
+ sourceRef:'document:ownership',verifiedAt:null,verifiedBy:'Reviewer',note:'Missing verification time.'
+}),/verified_fact/i);
+
+const syntheticEvidence=JSON.parse(JSON.stringify(initial.evidence));
+const syntheticEdited={...initial.actions[0],commission:26000};
+E.syncActionClaims(syntheticEdited,syntheticEvidence);
+const syntheticCommission=E.currentClaimEvidence(syntheticEvidence,'DF-01','commission');
+assert.equal(syntheticCommission.claimValue,26000);
+assert.equal(syntheticCommission.isSynthetic,true);
+assert.equal(syntheticCommission.sourceType,'synthetic_demo');
+assert.equal(syntheticCommission.quality,'none');
+assert.throws(()=>E.reviseClaimEvidence(syntheticEvidence,initial.actions[0],{
+ claimKey:'pWith',kind:'estimate',quality:'high',sourceType:'public_source',
+ sourceRef:'https://example.com',note:'Attempted to relabel synthetic demo data.'
+}),/Synthetic demo evidence/i);
+assert.equal(E.validateEvidence([{...verifiedFact,sourceRef:''}]).length,0,'P1.1 verified-fact records remain readable during legacy migration');
+assert.equal(E.validateEvidence([{...verifiedFact,kind:'estimate',quality:'low',sourceRef:'',verifiedAt:null,verifiedBy:null}]).length,0,'legacy non-none evidence remains readable');
+assert.throws(()=>E.reviseClaimEvidence(revisionBase,revisionAction,{claimKey:'commission',kind:'estimate',quality:'low',sourceType:'public_source',sourceRef:'',note:'Missing source reference.'}),/source reference/i);
+assert.ok(E.validateEvidence([{...initial.evidence[0],quality:'high',recordVersion:2}]).length,'new synthetic evidence cannot be assigned quality');
+console.log('Evidence schema, editing, confidence and migration tests passed.');

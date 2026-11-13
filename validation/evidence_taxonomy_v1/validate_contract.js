@@ -11,7 +11,8 @@ for (const item of fixture.cases) {
   assert.ok(item.caseId && !ids.has(item.caseId), 'case IDs must be present and unique');
   ids.add(item.caseId);
   assert.ok(item.evidence.claimId === item.claim.claimId, item.caseId + ': evidence must bind to the exact claim');
-  assert.ok(item.evidence.evidenceId && item.evidence.evidenceType === undefined, item.caseId + ': evidence identity must be separate from evidence category');
+  assert.ok(item.evidence.evidenceId, item.caseId + ': evidence identity is required');
+  assert.equal(item.evidence.evidenceType, item.evidenceType, item.caseId + ': evidence record category must match the case claim category');
   assert.ok(['supports', 'contradicts', 'context_only', 'unassessed'].includes(item.evidence.supportRelation));
   assert.ok(['agent_reported', 'agent_documented', 'independently_verified', 'unverified'].includes(item.evidence.verificationLevel));
   assert.ok(['ELIGIBLE', 'ABSTAIN'].includes(item.expected.decision));

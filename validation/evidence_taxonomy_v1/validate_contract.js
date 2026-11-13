@@ -24,7 +24,8 @@ assert.equal(byId['EV-002'].expected.reasonCode, 'MISSING_OBSERVATION_TIMESTAMP'
 assert.equal(byId['EV-003'].expected.decision, 'ELIGIBLE');
 assert.equal(byId['EV-004'].expected.reasonCode, 'VALID_HISTORICAL_EVENT');
 assert.equal(byId['EV-005'].expected.reasonCode, 'SOURCE_DOES_NOT_SUPPORT_CLAIM');
-assert.equal(byId['EV-004'].evidence.observedAt.slice(0, 4), '2018');
+assert.equal(byId['EV-004'].evidence.eventAt.slice(0, 4), '2018');
+assert.equal(byId['EV-004'].evidence.observedAt.slice(0, 4), '2026');
 assert.equal(byId['EV-004'].evidence.sourceCheckedAt.slice(0, 4), '2026');
 assert.equal(byId['EV-005'].evidence.supportRelation, 'context_only');
 console.log('Evidence taxonomy contract fixtures validated: 5 vectors. Decision-engine behavior is intentionally not asserted until the contract is implemented.');

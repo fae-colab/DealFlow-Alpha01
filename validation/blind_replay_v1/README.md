@@ -16,7 +16,7 @@ This repository is public. The expected-outcome key is deliberately **not** stor
 
 `08808b14bec0756e8746ef4e99399871bd5fdfacdda52d2c6ecfcbddf1db3aa4`
 
-The input file is frozen at Git blob SHA `bb30d5de96be0643c4a9a3eadf060832bf95eeca` (commit `b3cc74c8373cc1b2310b365c3e097e1ad9df41cc`). Do not edit it in place; create a v1.1 if a defect is found.
+The input file is frozen at Git blob SHA `bb30d5de96be0643c4a9a3eadf060832bf95eeca`. Do not edit it in place; create a v1.1 if a defect is found.
 
 Before any DealFlow run:
 1. Preserve the expected-key file separately. Do not publish or edit it after observing DealFlow outputs.

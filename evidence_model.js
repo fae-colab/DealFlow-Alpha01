@@ -36,7 +36,7 @@
     }
     if(usable.length)return result(true,claim.evidenceType==='historical_transaction'?'VALID_HISTORICAL_EVENT':'FRESH_CLAIM_MATCHED_EVIDENCE',null,'At least one unexpired, claim-matched supporting evidence record passed temporal policy.');
     const linked=matching.find(e=>e&&e.supportRelation!=='supports');
-    if(linked)return result(false,'SOURCE_DOES_NOT_SUPPORT_CLAIM','obtain_claim_specific_evidence','Evidence relation is '+linked.supportRelation+'; recency and authenticity do not make it supportive.');
+    if(linked)return result(false,'SOURCE_DOES_NOT_SUPPORT_CLAIM',claim.evidenceType==='buyer_readiness'?'obtain_buyer_specific_financing_evidence':'obtain_claim_specific_evidence','Evidence relation is '+linked.supportRelation+'; recency and authenticity do not make it supportive.');
     return result(false,'INSUFFICIENT_OR_INVALID_EVIDENCE','reconfirm_or_verify_evidence','No evidence record satisfied provenance, timestamp, support, and temporal requirements.');
   }
   function evaluateBundle(claims,evidence,policies,asOf){

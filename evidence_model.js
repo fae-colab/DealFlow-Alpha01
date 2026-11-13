@@ -89,7 +89,7 @@
     const status=e.status===undefined||e.status===null?'active':e.status;
     if(!STATUSES.has(status)) return {kind:'invalid',code:'INVALID_EVIDENCE_STATUS',detail:'Evidence status must be active, superseded, revoked, or withdrawn.'};
     if(RETIRED.has(status)) return {kind:'retired'};
-    if(!e.evidenceId||!e.sourceType||!RELATIONS.has(e.supportRelation)||!LEVELS.has(e.verificationLevel)||typeof e.supportNote!=='string'||!e.supportNote.trim())
+    if(typeof e.evidenceId!=='string'||!e.evidenceId.trim()||!e.sourceType||!RELATIONS.has(e.supportRelation)||!LEVELS.has(e.verificationLevel)||typeof e.supportNote!=='string'||!e.supportNote.trim())
       return {kind:'invalid',code:'INSUFFICIENT_OR_INVALID_EVIDENCE',detail:'Active evidence requires an ID, source type, valid relation and verification level, and a non-empty support note.'};
     if(!SOURCE_TYPES.has(e.sourceType))
       return {kind:'invalid',code:'UNSUPPORTED_SOURCE_TYPE',detail:'Unsupported sourceType: '+e.sourceType+'.'};
@@ -107,14 +107,14 @@
     const needsSource=SOURCE_BACKED.has(e.sourceType);
     if(needsSource&&(!e.sourceReference||typeof e.sourceReference!=='string'||!e.sourceReference.trim()||!e.sourceCheckedAt))
       return {kind:'invalid',code:'MISSING_SOURCE_PROVENANCE',detail:'Source-backed evidence requires a non-empty sourceReference and sourceCheckedAt.'};
-    if(e.sourceCheckedAt!==null&&e.sourceCheckedAt!==undefined&&e.sourceCheckedAt!==''){
+    if(e.sourceCheckedAt!==null&&e.sourceCheckedAt!==undefined){
       const checked=timestamp(e.sourceCheckedAt);
       if(checked===null) return {kind:'invalid',code:'INVALID_SOURCE_CHECK_TIMESTAMP',detail:'sourceCheckedAt is not a valid strict ISO 8601 timestamp.'};
       if(checked>now) return {kind:'invalid',code:'FUTURE_SOURCE_CHECK_TIMESTAMP',detail:'Source check is later than evaluation time.'};
       if(checked<observed) return {kind:'invalid',code:'INCOHERENT_PROVENANCE_TIMESTAMPS',detail:'sourceCheckedAt cannot precede observedAt.'};
     }
 
-    if(e.validUntil!==null&&e.validUntil!==undefined&&e.validUntil!==''){
+    if(e.validUntil!==null&&e.validUntil!==undefined){
       const expiry=timestamp(e.validUntil);
       if(expiry===null) return {kind:'invalid',code:'INVALID_EXPIRY_TIMESTAMP',detail:'validUntil is not a valid strict ISO 8601 timestamp.'};
       if(expiry<=now) return {kind:'invalid',code:'EXPIRED_EVIDENCE',detail:'Evidence expired at or before the evaluation instant.'};
@@ -145,7 +145,7 @@
     if(!errors.length) return failure('INSUFFICIENT_OR_INVALID_EVIDENCE','No usable supporting evidence remains.',claim);
     errors.sort((a,b)=>{
       const ai=FAILURE_PRIORITY.indexOf(a.code), bi=FAILURE_PRIORITY.indexOf(b.code);
-      return (ai<0?999:ai)-(bi<0?999:bi)||a.code.localeCompare(b.code)||a.detail.localeCompare(b.detail);
+      const byPriority=(ai<0?999:ai)-(bi<0?999:bi);\n      if(byPriority) return byPriority;\n      const codeA=String(a.code), codeB=String(b.code);\n      if(codeA!==codeB) return codeA<codeB?-1:1;\n      const detailA=String(a.detail), detailB=String(b.detail);\n      return detailA===detailB?0:(detailA<detailB?-1:1);
     });
     return failure(errors[0].code,errors[0].detail,claim);
   }
@@ -181,7 +181,7 @@
     if(!Array.isArray(evidence)) return failure('MISSING_CLAIM_OR_EVIDENCE','Evidence records must be supplied as an array.');
     const duplicate=duplicateEvidenceId(evidence);
     if(duplicate) return failure('DUPLICATE_EVIDENCE_ID','Evidence ID '+duplicate+' appears more than once in the evaluation bundle.');
-    const ordered=claims.slice().sort((a,b)=>String(a&&a.claimId||'').localeCompare(String(b&&b.claimId||'')));
+    const ordered=claims.slice().sort((a,b)=>{const x=String(a&&a.claimId||''),y=String(b&&b.claimId||'');return x===y?0:(x<y?-1:1);});
     const failures=[];
     for(const claim of ordered){
       const r=evaluateClaim(claim,evidence,(policies||{})[claim&&claim.evidenceType],asOf);

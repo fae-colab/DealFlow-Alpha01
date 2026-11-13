@@ -63,3 +63,16 @@ jobs:
 
       - name: Run Python engine smoke test
         run: python python_engine.py
+
+      - name: Run post-fix evidence freshness validation
+        run: node validation/stale_evidence_v1_1/run_validation.js
+
+      - name: Preserve post-fix validation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dealflow-post-fix-evidence-freshness-v1.1
+          path: |
+            validation/stale_evidence_v1_1/POST_FIX_REPORT.json
+            validation/stale_evidence_v1_1/POST_FIX_REPORT.md
+          if-no-files-found: error

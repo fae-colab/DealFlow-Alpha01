@@ -119,6 +119,12 @@ for (const [label, expiry, expected] of [
 }
 check('E malformed expiry beside support does not poison claim', () =>
   expectEligible(runGate([claim()], [valid, record({ evidenceId: 'E-MALFORMED', validUntil: 'not-a-date' })]), 'malformed record is quarantined'));
+check('E expired record is quarantined beside valid support', () => {
+  const expired = record({ evidenceId: 'E-EXPIRED', validUntil: '2026-11-13T11:59:59.999Z' });
+  expectEligible(runGate([claim()], [expired, valid]), 'valid support survives separate expired evidence');
+});
+check('E empty-string expiry is malformed, not an absent expiry', () =>
+  expectAbstain(runGate([claim()], [record({ validUntil: '' })]), 'INVALID_EXPIRY_TIMESTAMP', 'only null or omitted expiry means no expiry'));
 
 // F: provenance follows sourceType, not whether a URL happened to be supplied.
 check('F1 listing portal requires reference and source check', () => {
@@ -126,6 +132,18 @@ check('F1 listing portal requires reference and source check', () => {
   expectAbstain(runGate([claim('CLAIM-1', 'listing_availability')], [
     { ...item, evidenceType: 'listing_availability' }
   ], { listing_availability: POLICY }), 'MISSING_SOURCE_PROVENANCE', 'portal provenance is mandatory');
+});
+check('F1a listing portal requires reference even when check time exists', () => {
+  const item = record({ sourceType: 'listing_portal', sourceReference: null, sourceCheckedAt: '2026-11-13T11:30:00Z' });
+  expectAbstain(runGate([claim()], [item]), 'MISSING_SOURCE_PROVENANCE', 'source reference is independently required');
+});
+check('F1b listing portal requires check time even when reference exists', () => {
+  const item = record({ sourceType: 'listing_portal', sourceReference: 'https://example.invalid/listing/1', sourceCheckedAt: null });
+  expectAbstain(runGate([claim()], [item]), 'MISSING_SOURCE_PROVENANCE', 'source check time is independently required');
+});
+check('F1c agent document requires document reference and inspection time', () => {
+  const item = record({ sourceType: 'agent_document', sourceReference: 'doc://agent/123', sourceCheckedAt: null });
+  expectAbstain(runGate([claim()], [item]), 'MISSING_SOURCE_PROVENANCE', 'document inspection time is required');
 });
 check('F2 future sourceCheckedAt is rejected', () => {
   const item = record({ sourceType: 'listing_portal', sourceReference: 'https://example.invalid/listing/1',
@@ -146,6 +164,20 @@ check('F5 unknown source type abstains', () => {
 });
 
 // G/H: strict timestamps, chronology and distinct historical event time.
+check('G0 missing recordedAt is rejected', () =>
+  expectAbstain(runGate([claim()], [record({ recordedAt: null })]), 'MISSING_RECORDED_TIMESTAMP', 'active evidence requires record time'));
+check('G0b malformed recordedAt is rejected', () =>
+  expectAbstain(runGate([claim()], [record({ recordedAt: 'not-a-date' })]), 'INVALID_RECORDED_TIMESTAMP', 'record time must be a valid timestamp'));
+check('G0c malformed sourceCheckedAt is rejected', () => {
+  const item = record({ sourceType: 'listing_portal', sourceReference: 'https://example.invalid/listing/1', sourceCheckedAt: 'not-a-date' });
+  expectAbstain(runGate([claim()], [item]), 'INVALID_SOURCE_CHECK_TIMESTAMP', 'source check time must be valid');
+});
+check('G0d unsupported timezone offset is rejected', () =>
+  expectAbstain(runGate([claim()], [record({ observedAt: '2026-11-13T11:30:00+14:30' })]), 'INVALID_OBSERVATION_TIMESTAMP', 'timezone offsets beyond fourteen hours are invalid'));
+check('G0e manually assigned expired lifecycle state is rejected', () =>
+  expectAbstain(runGate([claim()], [record({ status: 'expired' })]), 'INVALID_EVIDENCE_STATUS', 'expiry is derived from validUntil'));
+check('G0f whitespace evidence ID is rejected', () =>
+  expectAbstain(runGate([claim()], [record({ evidenceId: '   ' })]), 'INSUFFICIENT_OR_INVALID_EVIDENCE', 'evidence identity must be a non-empty string'));
 check('G1 future recordedAt is rejected', () =>
   expectAbstain(runGate([claim()], [record({ recordedAt: '2026-11-13T12:00:00.001Z' })]), 'FUTURE_RECORDED_TIMESTAMP', 'record cannot be recorded in the future'));
 check('G2 future observation is rejected for nonvolatile evidence', () => {

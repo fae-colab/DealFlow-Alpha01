@@ -136,7 +136,8 @@ check('F4 agent report needs no external URL or source check', () =>
 check('F5 unknown source type abstains', () => {
   const item = record({ sourceType: 'mystery_source', sourceReference: 'record://unknown/1',
     sourceCheckedAt: '2026-11-13T11:30:00Z' });
-  expectAbstain(runGate([claim()], [item]), 'UNSUPPORTED_SOURCE_TYPE', 'unknown source types cannot be silently downgraded'));
+  expectAbstain(runGate([claim()], [item]), 'UNSUPPORTED_SOURCE_TYPE', 'unknown source types cannot be silently downgraded');
+});
 
 // G/H: strict timestamps, chronology and distinct historical event time.
 check('G1 future recordedAt is rejected', () =>

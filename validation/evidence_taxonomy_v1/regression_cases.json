@@ -2,7 +2,7 @@
   "schemaVersion": "1.0",
   "contract": "DEALFLOW-EVIDENCE-TAXONOMY-V1",
   "evaluationDate": "2026-11-13T12:00:00Z",
-  "note": "Contract fixtures only. Test-specific maxAgeMinutes are illustrative injected policies, not validated product TTLs.",
+  "note": "Contract fixtures only. Test-specific maxAgeMinutes are illustrative injected policies, not validated product TTLs. Historical event time is stored separately as eventAt; observedAt is the date the source record was checked/observed.",
   "cases": [
     {
       "caseId": "EV-001",
@@ -110,14 +110,15 @@
         "claimId": "CLAIM-HISTORICAL-SALE",
         "sourceType": "authoritative_transaction_record",
         "sourceReference": "record://synthetic/transaction/2018-0612-001",
-        "observedAt": "2018-06-12T00:00:00Z",
+        "observedAt": "2026-11-13T10:00:00Z",
         "recordedAt": "2026-11-13T10:00:00Z",
         "sourceCheckedAt": "2026-11-13T10:00:00Z",
         "validUntil": null,
         "supportRelation": "supports",
         "verificationLevel": "independently_verified",
         "supportNote": "The record supports the historical sale and date; it is not being used to claim the unit's current asking price or availability.",
-        "evidenceType": "historical_transaction"
+        "evidenceType": "historical_transaction",
+        "eventAt": "2018-06-12T00:00:00Z"
       },
       "policy": {
         "maxAgeMinutes": null,

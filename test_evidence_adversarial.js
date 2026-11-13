@@ -202,7 +202,7 @@ check('I3 deterministic failure selection across claim permutations', () => {
   const x = runGate([cA, cB], [badA, badB], policies);
   const y = runGate([cB, cA], [badB, badA], policies);
   sameOutcome(x, y, 'multiple-failure permutation');
-  assert.ok(x.reason.includes('CLAIM-A'), 'stable claim-ID ordering should select CLAIM-A first');
+  assert.ok(x.reason.includes('reconfirm_listing_availability'), 'stable claim-ID ordering should select CLAIM-A before CLAIM-B');
 });
 
 console.log('\nAdversarial eligibility results: ' + (failures.length === 0 ? 'PASS' : 'FAIL') +

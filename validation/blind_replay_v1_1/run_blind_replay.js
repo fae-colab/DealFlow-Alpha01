@@ -5,7 +5,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { execFileSync } = require('node:child_process');
 
-const ROOT = path.resolve(__dirname, '../../..');
+const ROOT = path.resolve(__dirname, '../..');
 const BENCH = path.join(ROOT, 'validation', 'blind_replay_v1_1');
 const OUTPUT_DIR = path.join(ROOT, 'artifacts', 'blind_replay_v1_1');
 const IMPLEMENTATION_COMMIT = '469992b0f578b285309719cbf490cfaaaea033be';

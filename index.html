@@ -48,14 +48,10 @@
         <label>Effort required (minutes)<input name="effort" type="number" min="1" required></label>
         <label>Deadline in hours<input name="deadline" type="number" min="0.01" max="8760" step="0.5" required></label>
         <label>Prerequisite action ID (optional)<input name="dependency" placeholder="Leave blank if none"><small>Prerequisites must be included or marked completed in the current prototype.</small></label>
-        <label>Evidence status<select name="evidenceStatus"><option value="unverified">Unverified assumption</option><option value="user_reported">User reported</option><option value="documented">Documented</option><option value="verified">Verified</option></select></label>
-        <label>Confidence in assumptions (%)<input name="confidence" type="number" min="0" max="100" value="50" required></label>
-        <label>Evidence source URL (optional)<input name="evidenceUrl" type="url" placeholder="https://..."></label>
-        <label>Evidence updated date (optional)<input name="evidenceUpdatedAt" type="date"></label>
-        <label class="wide">Evidence note (optional)<input name="evidenceNote" maxlength="300" placeholder="What supports this estimate?"></label>
+        <label>Confidence in assumptions (%)<input name="confidence" type="number" min="0" max="100" step="1" value="50" required></label>
         <div class="form-actions"><button class="primary" type="submit">Add to portfolio</button></div>
       </form>
-      <p class="form-hint">Probabilities are assumptions for testing, not AI predictions. Commission means the individual agent's expected net payout after splits and fees.</p>
+      <p class="form-hint">Probabilities are assumptions for testing, not AI predictions. Commission means the individual agent's expected net payout after splits and fees. New inputs begin as assumptions; add their supporting source in Evidence &amp; confidence after creation.</p>
     </section>
 
     <section class="panel results-panel">
@@ -75,8 +71,48 @@
       <div class="row-actions"><button class="secondary small" id="exportBtn">Export backup</button><label class="secondary small" for="importFile">Import backup</label><input id="importFile" type="file" accept="application/json,.json" hidden><button class="secondary small" id="resetBtn">Reset demo data</button></div>
     </section>
     <section class="panel table-panel">
-      <div class="table-scroll"><table><thead><tr><th>Opportunity / action</th><th>Net agent commission</th><th>P(close)<br>with / without</th><th>Incremental<br>commission</th><th>Effort</th><th>Deadline</th><th>Evidence</th><th></th></tr></thead><tbody id="actionRows"></tbody></table></div>
+      <div class="table-scroll"><table><thead><tr><th>Opportunity / action</th><th>Net agent commission</th><th>P(close)<br>with / without</th><th>Incremental<br>commission</th><th>Effort</th><th>Deadline</th><th>Confidence</th><th>Evidence quality</th><th>Actions</th></tr></thead><tbody id="actionRows"></tbody></table></div>
       <p class="table-note">Schedule assumption: one agent, sequential non-preemptive actions; an action must finish by its deadline. The engine searches feasible precedence-respecting schedule prefixes exactly for portfolios of up to 20 actions. Multiple actions on one opportunity are allowed; positive commission lift is credited once per opportunity using the largest positive action lift, while negative prerequisite lift remains included. Expected incremental commission = net agent commission × (P(close with action) − P(close without action)). These are user-entered assumptions, not predictions.</p>
+    </section>
+
+    <section class="section-head compact">
+      <div><p class="eyebrow">CLAIM-LEVEL SUPPORT</p><h2>Evidence &amp; confidence</h2><p class="muted">Record what supports each commission and probability claim. Confidence and evidence quality are separate.</p></div>
+    </section>
+    <section id="evidencePanel" class="panel evidence-panel">
+      <div class="evidence-explainer">
+        <strong>Evidence before claims</strong>
+        <p>Evidence quality describes the strength of support: none = no support recorded; low = weak, indirect or stale; medium = relevant and reasonably current but not independently corroborated; high = direct, current and independently corroborated or authoritative. A URL alone does not make a claim verified.</p>
+      </div>
+      <form id="confidenceForm" class="confidence-form">
+        <label>Action<select id="confidenceAction" required></select></label>
+        <label>Confidence in this estimate (%)<input id="confidenceValue" type="number" min="0" max="100" step="1" required></label>
+        <button class="primary" type="submit">Save confidence</button>
+      </form>
+      <p id="confidenceHelp" class="form-hint">Confidence is subjective confidence in the estimate. It is not evidence quality and does not change the optimizer objective.</p>
+      <div class="evidence-divider"></div>
+      <form id="evidenceForm" class="evidence-form">
+        <label>Action<select id="evidenceAction" required></select></label>
+        <label>Claim<select id="evidenceClaim" required><option value="commission">Net agent commission</option><option value="pWith">Close probability with action</option><option value="pWithout">Close probability without action</option></select></label>
+        <label>Evidence kind<select id="evidenceKind" required><option value="assumption">Assumption</option><option value="estimate">Estimate</option><option value="observation">Observation</option><option value="verified_fact">Verified fact</option></select></label>
+        <label>Evidence quality<select id="evidenceQuality" required><option value="none">None — no support</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label>
+        <label>Source type<select id="evidenceSourceType" required><option value="user_input">User input</option><option value="public_source">Public source</option><option value="document">Document</option><option value="system_record">System record</option><option value="third_party_confirmation">Third-party confirmation</option><option value="synthetic_demo">Synthetic demo</option></select></label>
+        <label>Source reference<input id="evidenceSourceRef" type="text" maxlength="500" placeholder="URL, document name or source reference"></label>
+        <label>Observed at (optional)<input id="evidenceObservedAt" type="datetime-local"></label>
+        <label>Verified at (required for verified fact)<input id="evidenceVerifiedAt" type="datetime-local"></label>
+        <label>Verified by (required for verified fact)<input id="evidenceVerifiedBy" type="text" maxlength="100" placeholder="Person or process that checked the source"></label>
+        <label class="wide">Evidence note<textarea id="evidenceNote" rows="3" maxlength="1000" required placeholder="What exactly does this source support, and what are its limits?"></textarea></label>
+        <div id="evidenceSyntheticNotice" class="synthetic-notice wide hidden">This is synthetic demo data. Its evidence must remain labeled synthetic with none quality; it cannot be promoted to a verified fact.</div>
+        <div class="form-actions"><button class="primary" type="submit">Save evidence revision</button></div>
+      </form>
+      <div class="evidence-display">
+        <h3>Current evidence for this claim</h3>
+        <div id="evidenceCurrent"></div>
+        <h3>Evidence revision history</h3>
+        <div id="evidenceHistory" class="outcome-history"></div>
+        <h3>Imported legacy evidence (read only)</h3>
+        <div id="legacyEvidenceHistory" class="outcome-history"></div>
+      </div>
+      <p class="form-hint">Each numeric claim has one current evidence record. Saving a revision appends a new record and links it to the previous version; earlier records are never overwritten. Legacy status labels and URLs remain visible as legacy metadata, not proof of verification.</p>
     </section>
 
     <section class="section-head compact">

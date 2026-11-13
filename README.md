@@ -52,3 +52,8 @@ Reconciliation links a selected action in an immutable recommendation snapshot t
 The validation protocol, anonymized case intake checklist, and JSON case template are in `validation/`. Cases must be explicitly labeled as anonymized agent-originated, public reconstructions, or synthetic fixtures. Agent-originated cases require explicit consent and removal of direct identifiers before repository entry. The agent's own priority plan must be captured before DealFlow is revealed. Evaluation compares the agent's plan, simple baselines, and DealFlow under the same frozen inputs and constraints. Observed paid commission is not treated as incremental impact without a defensible counterfactual. No real agent cases are included yet; the eight current demo scenarios remain synthetic.
 
 Run the case-template integrity checks with `python -m unittest -v test_validation_cases.py`.
+
+
+## P1.2 follow-up — User-facing evidence and confidence controls
+
+The decision desk now separates subjective confidence (0–100) from claim-level evidence quality (none, low, medium, high). Users can inspect and revise the current support record for net commission and each close-probability assumption, including source type/reference, observation and verification details, and notes. A revision appends a superseding record; earlier evidence remains visible and immutable. A verified fact requires a source reference, non-none quality, verification time, and verifier. Synthetic demo actions remain synthetic with none quality and cannot be promoted to verified facts. Imported Alpha 01.2 evidence labels and URLs remain visible as read-only legacy metadata; they are not promoted to verification.

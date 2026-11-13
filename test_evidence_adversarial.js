@@ -66,13 +66,19 @@ check('A1 valid support survives missing-observation record', () =>
 check('A2 record order does not change result with missing observation', () => {
   const x = runGate([claim()], [valid, record({ evidenceId: 'E-MISSING', observedAt: null })]);
   const y = runGate([claim()], [record({ evidenceId: 'E-MISSING', observedAt: null }), valid]);
+  expectEligible(x, 'valid evidence remains usable in the first order');
+  expectEligible(y, 'valid evidence remains usable in the reversed order');
   sameOutcome(x, y, 'missing-observation permutation');
 });
 check('B1 fresh support survives stale record', () =>
   expectEligible(runGate([claim()], [valid, record({ evidenceId: 'E-STALE', observedAt: '2026-11-13T06:00:00Z' })]), 'fresh record remains usable'));
 check('B2 record order does not change result with stale evidence', () => {
   const stale = record({ evidenceId: 'E-STALE', observedAt: '2026-11-13T06:00:00Z' });
-  sameOutcome(runGate([claim()], [valid, stale]), runGate([claim()], [stale, valid]), 'stale-record permutation');
+  const x = runGate([claim()], [valid, stale]);
+  const y = runGate([claim()], [stale, valid]);
+  expectEligible(x, 'fresh evidence remains usable in the first order');
+  expectEligible(y, 'fresh evidence remains usable in the reversed order');
+  sameOutcome(x, y, 'stale-record permutation');
 });
 check('H2a malformed expiry is quarantined beside valid support', () => {
   const malformed = record({ evidenceId: 'E-BAD-EXPIRY', validUntil: '2026-02-30T12:00:00Z' });

@@ -178,6 +178,8 @@ check('G0e manually assigned expired lifecycle state is rejected', () =>
   expectAbstain(runGate([claim()], [record({ status: 'expired' })]), 'INVALID_EVIDENCE_STATUS', 'expiry is derived from validUntil'));
 check('G0f whitespace evidence ID is rejected', () =>
   expectAbstain(runGate([claim()], [record({ evidenceId: '   ' })]), 'INSUFFICIENT_OR_INVALID_EVIDENCE', 'evidence identity must be a non-empty string'));
+check('G0g padded evidence ID is rejected rather than normalized', () =>
+  expectAbstain(runGate([claim()], [record({ evidenceId: ' E-PADDED ' })]), 'INSUFFICIENT_OR_INVALID_EVIDENCE', 'evidence IDs must not contain surrounding whitespace'));
 check('G1 future recordedAt is rejected', () =>
   expectAbstain(runGate([claim()], [record({ recordedAt: '2026-11-13T12:00:00.001Z' })]), 'FUTURE_RECORDED_TIMESTAMP', 'record cannot be recorded in the future'));
 check('G2 future observation is rejected for nonvolatile evidence', () => {
@@ -218,6 +220,16 @@ check('H3 historical event uses eventAt, not observedAt freshness', () => {
 check('I1 duplicate evidence IDs block the bundle', () => {
   const duplicate = { ...valid, claimId: 'CLAIM-1', evidenceId: valid.evidenceId };
   expectAbstain(runGate([claim()], [valid, duplicate]), 'DUPLICATE_EVIDENCE_ID', 'duplicate IDs are integrity failures');
+});
+check('I1b duplicate-ID reason is stable when multiple duplicate pairs are reordered', () => {
+  const a1 = record({ evidenceId: 'E-A' }), a2 = record({ evidenceId: 'E-A' });
+  const z1 = record({ evidenceId: 'E-Z' }), z2 = record({ evidenceId: 'E-Z' });
+  const x = runGate([claim()], [z1, z2, a1, a2]);
+  const y = runGate([claim()], [a2, a1, z2, z1]);
+  expectAbstain(x, 'DUPLICATE_EVIDENCE_ID', 'duplicate IDs block bundle');
+  expectAbstain(y, 'DUPLICATE_EVIDENCE_ID', 'duplicate IDs block bundle');
+  sameOutcome(x, y, 'multiple duplicate-ID permutation');
+  assert.ok(x.reason.includes('E-A'), 'lexically first duplicate ID should be reported');
 });
 check('I2 all required claims must pass', () => {
   const c1 = claim('CLAIM-GOOD', 'buyer_intent'), c2 = claim('CLAIM-BAD', 'listing_availability');

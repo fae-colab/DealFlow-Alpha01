@@ -50,6 +50,7 @@ jobs:
           node test_casebook_stress.js
           node test_decision_desk.js
           node test_evidence_model.js
+          node test_evidence_adversarial.js
 
       - name: Check JavaScript syntax
         run: |

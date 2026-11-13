@@ -57,7 +57,7 @@ const report = {
   caseResults: results
 };
 const out = path.join(__dirname, 'POST_FIX_REPORT.json');
-fs.writeFileSync(out, JSON.stringify(report, null, 2) + '\\n');
+fs.writeFileSync(out, JSON.stringify(report, null, 2) + '\n');
 const lines = [
   '# DealFlow post-fix evidence-freshness validation v1.1',
   '',
@@ -82,5 +82,5 @@ const lines = [
 ];
 for (const x of results) lines.push('| ' + x.caseId + ' | ' + x.theme + ' | ' + x.decision + ' | ' + (x.selectedActionIds.join(', ') || '—') + ' |');
 lines.push('', '## Interpretation', '', 'This report demonstrates deterministic software behavior on synthetic fixtures only. It is not a scored benchmark result, real-agent validation, evidence that the 365-day default is appropriate for every evidence type, or proof of revenue uplift.', '');
-fs.writeFileSync(path.join(__dirname, 'POST_FIX_REPORT.md'), lines.join('\\n'));
-process.stdout.write(JSON.stringify({ report: out, cases: results.length, br003: br003.decision, scored: false }, null, 2) + '\\n');
+fs.writeFileSync(path.join(__dirname, 'POST_FIX_REPORT.md'), lines.join('\n'));
+process.stdout.write(JSON.stringify({ report: out, cases: results.length, br003: br003.decision, scored: false }, null, 2) + '\n');

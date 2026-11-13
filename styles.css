@@ -5,3 +5,6 @@
 
 .row-actions label.secondary{display:inline-block;cursor:pointer}
 .form-grid .wide{grid-column:1/-1}
+
+/* Issue #22: mandatory five-question Decision Desk output */
+.decision-desk{display:grid;gap:14px;margin-top:14px}.decision-card,.decision-abstain{border:1px solid var(--line,#d9e0e8);border-radius:14px;padding:16px;background:var(--panel,#fff)}.decision-card header{display:grid;gap:5px;margin-bottom:12px}.decision-card header span{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--muted,#64748b)}.decision-card header strong{font-size:17px}.decision-card header small,.decision-card footer,.decision-abstain small{color:var(--muted,#64748b)}.decision-question{border-top:1px solid var(--line,#e2e8f0);padding:10px 0}.decision-question h4{font-size:13px;margin:0 0 6px}.decision-question p{font-size:13px;line-height:1.55;margin:0}.decision-card footer{border-top:1px solid var(--line,#e2e8f0);padding-top:10px;font-size:12px}.decision-abstain{border-color:#d97706;background:#fffaf0}.decision-abstain strong{color:#92400e}.decision-abstain li,.decision-abstain p{font-size:13px;line-height:1.5}

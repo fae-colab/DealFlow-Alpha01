@@ -48,6 +48,7 @@ jobs:
           node test_recommendations.js
           node test_reconciliation.js
           node test_casebook_stress.js
+          node test_decision_desk.js
 
       - name: Check JavaScript syntax
         run: |
@@ -56,6 +57,7 @@ jobs:
           node --check recommendations.js
           node --check reconciliation.js
           node --check app.js
+          node --check decision_desk.js
           node --check engine.js
           node --check parity_runner.js
 

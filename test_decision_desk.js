@@ -7,6 +7,7 @@ function run(actions,capacity=2){const gate=Desk.eligibility(actions,capacity,En
 const p=run([action()]);assert.equal(p.decision,'RECOMMEND');assert.equal(Desk.validateOutput(p).length,0);assert.equal(p.recommendations[0].questions.length,5);assert.equal(p.recommendations[0].commission.grossPotential,24000);assert.equal(p.recommendations[0].commission.expectedWithAction,15600);assert.equal(p.recommendations[0].commission.expectedWithoutAction,9600);assert.equal(p.recommendations[0].commission.incremental,6000);assert.ok(p.recommendations[0].questions.every(q=>q.answer.length>20));assert.ok(p.recommendations[0].questions[3].answer.includes('agent_provided'));
 assert.ok(p.recommendations[0].questions[3].answer.includes('not independently'));
 assert.deepEqual(p.recommendations[0].questions.map(q=>q.question),Desk.REQUIRED_QUESTIONS);assert.ok(p.recommendations[0].questions[4].answer.includes('best feasible portfolio excluding this action'));assert.ok(Desk.renderHTML(p).includes('5. Why is this better'));
+const competition=run([action(),action({id:'B1',opportunityId:'DEAL-2',name:'Downtown seller',action:'Call seller with revised pricing evidence',commission:20000,pWith:65,pWithout:45,effort:90,deadline:4})],1.5);assert.equal(competition.decision,'RECOMMEND');assert.equal(competition.recommendations.length,1);assert.equal(competition.recommendations[0].actionId,'A1');assert.ok(competition.recommendations[0].questions[4].answer.includes('B1 4,000 AED'));assert.ok(competition.recommendations[0].questions[4].answer.includes('modeled difference: 2,000 AED'));
 const cap=run([action()],null);assert.equal(cap.decision,'ABSTAIN');assert.match(cap.abstention.reasons.join(' '),/capacity/i);
 const unv=run([action({evidenceStatus:'unverified',evidenceUrl:'',evidenceUpdatedAt:''})]);assert.equal(unv.decision,'ABSTAIN');assert.match(unv.abstention.reasons.join(' '),/unverified/i);
 const missing=run([action({commission:null})]);assert.equal(missing.decision,'ABSTAIN');assert.match(missing.abstention.reasons.join(' '),/commission/i);
@@ -24,6 +25,7 @@ const publicBest=Engine.optimize(publicGate.eligibleActions,publicCase.capacity_
 const publicAbstention=Desk.createReport({actions:publicActions,gate:publicGate,best:publicBest,commission:{value:0,minutes:0,items:[]},hourly:{value:0,minutes:0,items:[]},engine:Engine,capacityHours:publicCase.capacity_hours,generatedAt:publicCase.as_of});
 assert.equal(publicAbstention.decision,'ABSTAIN','public reconstruction with unknown agent capacity and economics must abstain');
 assert.equal(publicAbstention.recommendations.length,0);
-console.log('SYNTHETIC RECOMMENDATION OUTPUT:',JSON.stringify(p));
+assert.ok(publicAbstention.abstention.rejectedActions.every(x=>x.reason.includes('commission, pWith, pWithout, effort, deadline, confidence')));
+console.log('SYNTHETIC RECOMMENDATION OUTPUT:',JSON.stringify(competition));
 console.log('PUBLIC-CASE ABSTENTION OUTPUT:',JSON.stringify(publicAbstention));
 console.log('Decision Desk schema, recommendation, abstention, alternatives and baseline tests passed.');

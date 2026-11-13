@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "benchmark_id": "DEALFLOW-ALPHA-01.5-BLIND-REPLAY-V1",
-  "status": "FROZEN_INPUTS_PENDING_HASHED_EXPECTED_KEY",
+  "status": "FROZEN_INPUTS_AND_KEY_COMMITTED_NOT_RUN",
   "case_type": "synthetic_fixture",
   "count": 18,
   "warning": "All cases are deliberately synthetic. They are not real agent situations, public evidence, market estimates, or financial claims. This benchmark tests engine behavior only.",

@@ -159,6 +159,14 @@ check('G4 recordedAt cannot precede observedAt', () =>
   expectAbstain(runGate([claim()], [record({ observedAt: '2026-11-13T11:40:00Z', recordedAt: '2026-11-13T11:35:00Z' })]), 'INCOHERENT_PROVENANCE_TIMESTAMPS', 'recording cannot predate observation'));
 check('H1 impossible calendar date is rejected', () =>
   expectAbstain(runGate([claim()], [record({ observedAt: '2026-02-30T11:30:00Z' })]), 'INVALID_OBSERVATION_TIMESTAMP', 'impossible calendar date is invalid'));
+check('G5 historical evidence requires a distinct eventAt', () => {
+  const c = claim('CLAIM-HIST-MISSING', 'historical_transaction');
+  const r = record({ claimId: c.claimId, evidenceType: c.evidenceType,
+    sourceType: 'authoritative_transaction_record', sourceReference: 'record://synthetic/tx/missing-event',
+    observedAt: '2026-11-13T10:00:00Z', recordedAt: '2026-11-13T10:05:00Z',
+    sourceCheckedAt: '2026-11-13T10:00:00Z' });
+  expectAbstain(runGate([c], [r], {}), 'MISSING_HISTORICAL_EVENT_TIMESTAMP', 'historical event date must be explicit');
+});
 check('H3 historical event uses eventAt, not observedAt freshness', () => {
   const c = claim('CLAIM-HIST-OLD', 'historical_transaction');
   const r = record({ claimId: c.claimId, evidenceType: c.evidenceType,

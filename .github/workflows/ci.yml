@@ -64,6 +64,9 @@ jobs:
       - name: Run Python engine smoke test
         run: python python_engine.py
 
+      - name: Validate evidence taxonomy contract fixtures
+        run: node validation/evidence_taxonomy_v1/validate_contract.js
+
       - name: Run post-fix evidence freshness validation
         run: node validation/stale_evidence_v1_1/run_validation.js
 

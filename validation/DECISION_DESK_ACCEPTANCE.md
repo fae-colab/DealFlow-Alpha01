@@ -18,7 +18,7 @@ The machine-readable output is versioned as `schemaVersion: "1.0"` and is valida
 
 For an action with net agent commission (C), close probability with the action (P_w), and close probability without the action (P_0):
 
-- Gross potential commission: (C)
+- Potential agent commission if closed: (C), entered as the agent's net payout after broker splits and fees (not gross brokerage commission).
 - Expected commission with action: (C \times P_w)
 - Expected commission without action: (C \times P_0)
 - Estimated incremental commission: (C \times (P_w-P_0))

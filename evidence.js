@@ -78,7 +78,7 @@
       capturedAt,observedAt:input.observedAt||null,verifiedAt:input.verifiedAt||null,
       verifiedBy:input.verifiedBy?String(input.verifiedBy).trim():null,
       note:String(input.note||'').trim()||(synthetic?'Synthetic demo scenario input; not real-world evidence.':''),
-      isSynthetic:synthetic,supersedesId:current?current.id:null
+      isSynthetic:synthetic,recordVersion:2,supersedesId:current?current.id:null
     };
     const next=[...records,record],errors=validateEvidence(next);
     if(errors.length)throw new Error(errors.join('\n'));
@@ -152,10 +152,12 @@
     if(record.verifiedBy!==null && record.verifiedBy!==undefined && typeof record.verifiedBy!=='string')return 'verifiedBy must be text or null';
     if(typeof record.isSynthetic!=='boolean')return 'isSynthetic must be boolean';
     if(record.supersedesId!==null && record.supersedesId!==undefined && typeof record.supersedesId!=='string')return 'supersedesId must be text or null';
-    if(record.quality!=='none'&&!record.sourceRef.trim())return 'non-none evidence quality requires a source reference';
-    if(record.kind==='verified_fact' && (!record.sourceRef.trim()||!record.verifiedAt||!record.verifiedBy||!record.verifiedBy.trim()||record.quality==='none'||record.sourceType==='synthetic_demo'))return 'verified_fact requires a source reference, verification timestamp, verifier, non-none evidence quality, and non-synthetic source';
-    if(record.isSynthetic && (record.sourceType!=='synthetic_demo'||record.quality!=='none'))return 'synthetic records must use synthetic_demo sourceType and none quality';
-    if(record.sourceType==='synthetic_demo' && (!record.isSynthetic||record.quality!=='none'))return 'synthetic_demo sourceType requires isSynthetic=true and none quality';
+    if(record.recordVersion!==undefined&&record.recordVersion!==2)return 'recordVersion must be 2 when present';
+    if(record.recordVersion===2&&record.quality!=='none'&&!record.sourceRef.trim())return 'non-none evidence quality requires a source reference';
+    if(record.kind==='verified_fact' && (!record.verifiedAt||!record.verifiedBy||!record.verifiedBy.trim()||record.quality==='none'||record.sourceType==='synthetic_demo'||(record.recordVersion===2&&!record.sourceRef.trim())))return 'verified_fact requires a verification timestamp, verifier, non-none evidence quality, and non-synthetic source; new records also require a source reference';
+    if(record.isSynthetic && record.sourceType!=='synthetic_demo')return 'synthetic records must use synthetic_demo sourceType';
+    if(record.sourceType==='synthetic_demo' && !record.isSynthetic)return 'synthetic_demo sourceType requires isSynthetic=true';
+    if(record.recordVersion===2&&record.isSynthetic&&record.quality!=='none')return 'new synthetic records must retain none quality';
     return null;
   }
   function validateEvidence(records){

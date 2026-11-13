@@ -179,13 +179,15 @@ check('H3 historical event uses eventAt, not observedAt freshness', () => {
 // I: integrity and all-claims-must-pass behavior.
 check('I1 duplicate evidence IDs block the bundle', () => {
   const duplicate = { ...valid, claimId: 'CLAIM-1', evidenceId: valid.evidenceId };
-  expectAbstain(runGate([claim()], [valid, duplicate]), 'DUPLICATE_EVIDENCE_ID', 'duplicate IDs are integrity failures'));
+  expectAbstain(runGate([claim()], [valid, duplicate]), 'DUPLICATE_EVIDENCE_ID', 'duplicate IDs are integrity failures');
+});
 check('I2 all required claims must pass', () => {
   const c1 = claim('CLAIM-GOOD', 'buyer_intent'), c2 = claim('CLAIM-BAD', 'listing_availability');
   const good = record({ claimId: c1.claimId, evidenceType: c1.evidenceType });
   const bad = record({ evidenceId: 'E-BAD', claimId: c2.claimId, evidenceType: c2.evidenceType, observedAt: null });
   expectAbstain(runGate([c1, c2], [good, bad], { buyer_intent: POLICY, listing_availability: POLICY }),
-    'MISSING_OBSERVATION_TIMESTAMP', 'one failing required claim blocks action'));
+    'MISSING_OBSERVATION_TIMESTAMP', 'one failing required claim blocks action');
+});
 check('I3 deterministic failure selection across claim permutations', () => {
   const cA = claim('CLAIM-A', 'listing_availability'), cB = claim('CLAIM-B', 'company_profile');
   const badA = record({ evidenceId: 'E-A', claimId: cA.claimId, evidenceType: cA.evidenceType, observedAt: null });

@@ -23,7 +23,8 @@
         "validUntil": null,
         "supportRelation": "supports",
         "verificationLevel": "agent_reported",
-        "supportNote": "Agent recorded buyer statement at the time; no later confirmation."
+        "supportNote": "Agent recorded buyer statement at the time; no later confirmation.",
+        "evidenceType": "buyer_intent"
       },
       "policy": {
         "maxAgeMinutes": 10080
@@ -53,7 +54,8 @@
         "validUntil": null,
         "supportRelation": "supports",
         "verificationLevel": "agent_reported",
-        "supportNote": "Agent entered current availability but did not record when it was last confirmed."
+        "supportNote": "Agent entered current availability but did not record when it was last confirmed.",
+        "evidenceType": "listing_availability"
       },
       "policy": {
         "maxAgeMinutes": 240
@@ -83,7 +85,8 @@
         "validUntil": null,
         "supportRelation": "supports",
         "verificationLevel": "agent_documented",
-        "supportNote": "The checked listing record identifies the same unit and explicitly reports current availability."
+        "supportNote": "The checked listing record identifies the same unit and explicitly reports current availability.",
+        "evidenceType": "listing_availability"
       },
       "policy": {
         "maxAgeMinutes": 240
@@ -113,7 +116,8 @@
         "validUntil": null,
         "supportRelation": "supports",
         "verificationLevel": "independently_verified",
-        "supportNote": "The record supports the historical sale and date; it is not being used to claim the unit's current asking price or availability."
+        "supportNote": "The record supports the historical sale and date; it is not being used to claim the unit's current asking price or availability.",
+        "evidenceType": "historical_transaction"
       },
       "policy": {
         "maxAgeMinutes": null,
@@ -144,7 +148,8 @@
         "validUntil": null,
         "supportRelation": "context_only",
         "verificationLevel": "independently_verified",
-        "supportNote": "The source is recent and authentic but discusses general market lending conditions; it contains no evidence about this buyer's financing approval."
+        "supportNote": "The source is recent and authentic but discusses general market lending conditions; it contains no evidence about this buyer's financing approval.",
+        "evidenceType": "buyer_readiness"
       },
       "policy": {
         "maxAgeMinutes": 60

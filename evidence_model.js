@@ -145,7 +145,12 @@
     if(!errors.length) return failure('INSUFFICIENT_OR_INVALID_EVIDENCE','No usable supporting evidence remains.',claim);
     errors.sort((a,b)=>{
       const ai=FAILURE_PRIORITY.indexOf(a.code), bi=FAILURE_PRIORITY.indexOf(b.code);
-      const byPriority=(ai<0?999:ai)-(bi<0?999:bi);\n      if(byPriority) return byPriority;\n      const codeA=String(a.code), codeB=String(b.code);\n      if(codeA!==codeB) return codeA<codeB?-1:1;\n      const detailA=String(a.detail), detailB=String(b.detail);\n      return detailA===detailB?0:(detailA<detailB?-1:1);
+      const byPriority=(ai<0?999:ai)-(bi<0?999:bi);
+      if(byPriority) return byPriority;
+      const codeA=String(a.code), codeB=String(b.code);
+      if(codeA!==codeB) return codeA<codeB?-1:1;
+      const detailA=String(a.detail), detailB=String(b.detail);
+      return detailA===detailB?0:(detailA<detailB?-1:1);
     });
     return failure(errors[0].code,errors[0].detail,claim);
   }

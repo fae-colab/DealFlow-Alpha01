@@ -289,3 +289,120 @@ Review this design before implementation. In particular, approve or amend:
 5. whether Phase A (local append-only contract) is sufficient for Alpha, or whether SHA-256 chaining/checkpointing is required before any real-agent data is admitted.
 
 No implementation changes are included in this document.
+
+
+---
+
+## 13. Approved design decisions and binding amendments (2026-11-14)
+
+**Decision status:** The owner approved items 1–3 and selected server-side protection for item 5. Item 4 (legacy migration) was approved only subject to the safeguards in this section. This section is authoritative wherever it tightens or supersedes earlier wording in this document.
+
+### 13.1 Lifecycle state is not decision eligibility
+
+The four event types and terminal-state rules in sections 2–3 are approved.
+
+Keep lifecycle projection separate from evidence eligibility:
+- Lifecycle states are `active`, `superseded`, `revoked`, and `withdrawn`.
+- Eligibility is evaluated separately for a specific claim, decision, and evaluation time. An `active` record may still be expired, stale, malformed, contradicted, unverified, or otherwise ineligible.
+- A terminal record is never reactivated. A correction or renewed observation receives a new evidence ID and new provenance. If a prior revocation was erroneous, record a new evidence record and an explanatory reference; do not erase or reverse the revocation.
+- No client, import, or API caller may set lifecycle status directly.
+
+### 13.2 Timestamp provenance and ordering
+
+The timestamp rules in sections 2 and 5 are approved with these additions:
+- Persist all event timestamps as UTC instants in a normalized RFC 3339 representation.
+- `recordedAt` is assigned by the trusted server at commit time. Clients cannot supply or backdate it.
+- `effectiveAt` is a claimed real-world effective time, not an ordering key. Store `effectiveAtBasis` as one of `source_verified`, `actor_reported`, `estimated`, or `unknown`, plus an optional source/reference and uncertainty note.
+- Ledger sequence is the authoritative event order. `recordedAt` is audit metadata; neither client timestamps nor `effectiveAt` may reorder the ledger.
+- Reject malformed timestamps. Future `effectiveAt` values require an explicit reason and must not affect current eligibility before the event is recorded. Preserve the submitted value and the validation decision; do not silently normalize a materially different time.
+- Current decisions use the latest committed ledger watermark. Historical replay uses the exact sequence captured in the decision snapshot. Retrospective evaluation is a distinct operation and must be labelled as such.
+- A later event never silently rewrites an earlier decision snapshot.
+
+### 13.3 Transactional supersession
+
+Supersession remains one logical transaction:
+1. Authenticate and authorize the actor.
+2. Verify the caller's expected ledger sequence/version.
+3. Validate the replacement record, its immutable content hash, and same-claim identity.
+4. Verify the predecessor is active at the transaction's serialization point and has no successor.
+5. Insert the replacement record, its creation event, and the predecessor's supersession event atomically.
+6. Enforce a unique successor constraint on the predecessor and a unique event sequence.
+7. Commit all writes or none. Re-read the committed result and validate its chain before returning success.
+
+A failed transaction must not leave an orphan replacement or a terminal predecessor without its replacement. A retry with the same idempotency key and identical canonical request returns the original committed result; the same key with different content is rejected.
+
+### 13.4 Legacy migration: preserve, classify, dry-run, then commit
+
+The migration rules in section 7 are amended as follows:
+
+**Source preservation**
+- Preserve the original backup as an immutable migration input. Record its cryptographic checksum, byte length, source format/version, and acquisition time.
+- Do not describe a parsed-and-reserialized representation as byte-for-byte preservation.
+- Migration operates on a copy. It never edits or deletes the source backup.
+
+**Historical uncertainty**
+- A migration-created `evidence_created` event uses migration commit time for `recordedAt`. Legacy capture timestamps remain source fields and are not promoted to verified DealFlow recording times without documented proof.
+- A missing legacy status is not evidence of active status.
+- Every migrated record receives a migration classification: `explicit_active`, `explicit_revoked`, `explicit_withdrawn`, `explicit_superseded`, `missing_status`, `unknown_status`, or `conflicting_legacy_data`. Classification is provenance, not a new lifecycle event type.
+- Only explicit, internally consistent legacy statuses may be automatically projected. Missing, unknown, malformed, or conflicting status is quarantined and excluded from decisions until reviewed.
+- For legacy revoked/withdrawn records with missing actor or reason, use a migration actor identity and a reason code such as `LEGACY_STATUS_IMPORT`, while explicitly marking actor/reason provenance as unknown. Never invent a historical person, time, or rationale.
+
+**Supersession graph**
+- Validate the complete graph before writing any migrated lifecycle events.
+- Reject/quarantine dangling references, duplicate IDs, multiple successors, cycles, claim-identity mismatches, self-links, and inconsistent status/link combinations.
+- A graph with unresolved errors is not partially committed. Independent, clean migration batches may proceed only if the migration report clearly isolates them and the batch boundaries are deterministic.
+
+**Operational controls**
+- Migration is a two-phase workflow: (1) dry-run report; (2) separately authorized commit against the exact source checksum and migration plan hash.
+- The report includes totals for accepted, quarantined, rejected, and linked records; all unresolved IDs and reason codes; source checksum; schema/migration versions; and a deterministic mapping from legacy IDs to new IDs.
+- Commit is idempotent for the same migration ID, source checksum, and plan hash. Reusing the migration ID with different inputs is an integrity error.
+- Preserve a protected pre-migration backup and a tested recovery procedure. Recovery restores from the source backup into a new recovery generation; it does not delete already committed audit events or pretend the failed attempt never happened.
+- No quarantined record is eligible for a recommendation. Manual resolution must itself be auditable and must not invent historical facts.
+
+### 13.5 Server-authoritative protection is required for real-agent evidence
+
+The approved target is a server-authoritative ledger, not a localStorage ledger later described as secure.
+
+Required baseline controls:
+- Authenticated actor identities and explicit authorization for each lifecycle operation.
+- Server-assigned timestamps and monotonic ledger sequence.
+- Database-enforced append-only permissions for application roles; no ordinary application role may update or delete committed evidence/event rows.
+- Transactional atomicity for append and supersession.
+- Optimistic concurrency or equivalent serializable transaction protection.
+- Unique idempotency keys bound to canonical request hashes.
+- SHA-256 event hash chain with documented canonical serialization and verification on reads, writes, exports, and restores.
+- Periodic signed checkpoints whose signing key and storage permissions are separated from the primary database's administrative boundary.
+- Protected backups with retention controls and tested restoration.
+- Tenant isolation, least-privilege access, access logging, and operational alerting for integrity failures.
+- No success response until durable commit and post-commit verification succeed.
+
+A hash chain detects unauthorized or accidental alteration when a trusted checkpoint is available; it does not by itself prevent a privileged administrator from rewriting the full chain. Do not claim absolute immutability or non-repudiation. Describe the actual controls and their limits.
+
+### 13.6 Privacy and retention boundary
+
+- Do not place buyer names, phone numbers, email addresses, financial details, or other unnecessary personal data in immutable event metadata, hash-chain metadata, or checkpoint payloads.
+- Store sensitive evidence payloads separately, encrypted at rest and in transit, with narrowly scoped access and auditable access logs. Lifecycle events should reference opaque evidence IDs and minimal reason codes.
+- Define a retention schedule, lawful-erasure workflow, and jurisdiction-specific privacy review before admitting real-agent personal data. Where deletion or cryptographic erasure is legally required, preserve only the minimum legally permissible audit metadata and record the erasure operation without retaining the erased content.
+- Tenant boundaries must be enforced server-side, not by client filtering.
+
+### 13.7 Server/ledger outage behavior
+
+Fail closed:
+- A lifecycle operation is not successful until the server confirms durable commit and verification.
+- Do not fall back to client-supplied status, localStorage, cached unverified events, or an offline queue represented as committed.
+- If a recommendation cannot obtain a valid lifecycle projection and verified watermark, it must abstain or clearly report that a decision cannot be produced.
+- A client may retain an explicitly labelled *pending, uncommitted request* for retry, but it must not display it as an event or use it to change eligibility.
+- Retry only with the same idempotency key and canonical request. Surface conflicts for reload/review; never silently overwrite.
+- Recovery and replay must verify the latest trusted checkpoint and the full event chain before serving decisions.
+
+### 13.8 Revised approval gate
+
+This is a design-only approval record. It authorizes preparation and review of the implementation specification and migration test plan; it does **not** authorize implementation, deployment, migration, merge, or a real-agent pilot.
+
+Implementation may begin only after the owner reviews and explicitly approves:
+1. the server-side implementation specification;
+2. the migration test plan and quarantine policy;
+3. the selected hosting/database/authentication/checkpoint services and their operational responsibilities;
+4. the privacy, retention, and recovery design.
+
+No PR merge is implied.

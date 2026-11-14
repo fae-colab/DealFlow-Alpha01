@@ -2,7 +2,7 @@
 
 **Status:** Revised v4 architecture for independent review. Documentation only; implementation is not authorized.  
 **Decision basis:** D-01 through D-06 individually approved by the user on 14 November 2026. D-02, D-04 and D-06 include mandatory amendments.  
-**Supersedes:** The normative design content of \`EVIDENCE_LIFECYCLE_APPEND_ONLY_DESIGN_v2.md\` where this v3 document differs. The v2 and v3 files remain preserved as historical review material.  
+**Supersedes:** The normative design content of \`EVIDENCE_LIFECYCLE_APPEND_ONLY_DESIGN_v2.md\` where this v4 document differs. The v2 and v3 files remain preserved as historical review material.  
 **Repository baseline:** PR #32 draft, based on the PR #30 adversarial evidence-eligibility work.  
 **Scope:** Authoritative evidence lifecycle, eligibility, atomic supersession, ledger integrity, recovery, historical recommendation accountability, migration boundaries, security and operations.
 
@@ -185,7 +185,7 @@ The ICW is the sole authoritative sequence allocator per tenant/ledger/epoch. It
 
 Every accepted lifecycle mutation has a batch ID, first/last sequence, ordered event count, batch digest, ledger scope and signed ICW receipt. A supersession has two consecutive sequences in one batch. Valid read, decision, checkpoint, export and replay watermarks must identify an ICW receipt and a committed batch ending boundary. An interior sequence is invalid and returns `INVALID_INTERMEDIATE_WATERMARK`.
 
-A reader may use the relational projection only when its cursor/head and batch digests are verified against the ICW through the current accepted head required by policy. It sees the complete state before or after an accepted batch; it never serves an intermediate or lagging projection as current.
+Before any evidence-dependent decision or current-state read is served, the service obtains the current ICW head or a signed freshness token within the approved maximum age, and verifies that the projection cursor/head and batch digests match that head. If the ICW head cannot be established within policy, the service abstains/unavailable; it must not serve a cached prior head or stale database backup as current. Historical snapshot retrieval is a separate operation that verifies the snapshot's fixed receipt/watermark and must not be represented as current state. A reader sees the complete state before or after an accepted batch; it never serves an intermediate or lagging projection as current.
 
 ## 6. D-04 — Independent checkpoints, rollback detection and recovery
 
@@ -421,7 +421,7 @@ This addendum resolves three precision issues identified during cross-document r
 
 ### 15.1 Lifecycle state used by a mutation
 
-The evidence record remains immutable; it does not gain a mutable authoritative status field. To serialize a transition, the mutation procedure locks the immutable predecessor evidence row (which serves as a stable lock target) after locking the ledger head. It then derives/validates the predecessor's lifecycle state from the committed event/batch history at that locked ledger watermark.
+The evidence record remains immutable; it does not gain a mutable authoritative status field. The ICW serializes lifecycle transitions against its accepted receipt history using expected-head CAS and semantic validation. After receipt acceptance, the database projection transaction locks the ledger projection cursor/head, then the immutable predecessor evidence row (stable projection lock target), then graph rows in deterministic order. It validates the projection against the receipt-bound history before applying the batch. No database lock is held across the ICW network call.
 
 A materialized current-state/guard projection may be maintained transactionally to improve lookup performance, but it is rebuildable derived data, never the source of truth. It must be updated in the same transaction as the batch and ledger head, reconciled against the event history before use, and must fail closed if inconsistent. No stale or caller-supplied projection can authorize supersession.
 
@@ -610,3 +610,10 @@ Any v3 statement that treats a database transaction as the sole authoritative co
 3. **Concrete mutation watermark rule.** Every new lifecycle command (`createEvidence`, `supersedeEvidence`, `revokeEvidence`, `withdrawEvidence`) MUST include an expected ICW receipt ID/hash and ending sequence equal to the current ICW head at append time. Missing watermark is a validation error; stale, future, interior-batch or mismatched receipt is a conflict and creates no receipt. An exact same-key/same-digest idempotent replay is resolved to its original receipt after current authorization is rechecked, even if the ledger head has since advanced. A different digest under the same key is an integrity conflict.
 4. **Privacy-preserving payload retention.** The ICW envelope binds all authoritative lifecycle metadata and content digests. Evidence content containing personal or legally erasable data is stored as an encrypted immutable object under a separately controlled per-object or per-subject key. Lawful erasure may destroy the relevant decryption key or remove the content object only under the approved erasure policy; the receipt, permitted non-PII metadata and content digest remain where lawful. Integrity/provenance verification may then remain possible while content reconstruction is explicitly PARTIAL/UNAVAILABLE. The system must never claim the erased payload was reconstructed.
 5. **Checkpoint and tail terminology.** A committed batch is never "unanchored": it has an ICW receipt. The only permitted lag is a projection backlog or a checkpoint that has not yet summarized already witnessed receipts. Thresholds and tests must use those precise terms.
+
+
+## A12. Decision-serving freshness gate
+
+Every current-state evidence read, eligibility evaluation and recommendation must be bound to the latest ICW head established for that request, or to a signed ICW head/freshness token whose age is within the explicitly approved deployment limit. The service verifies that the relational projection cursor and head digest exactly match the established ICW head before serving a current recommendation. A cache may reuse a result only if it also validates the bound ICW head token and freshness expiry.
+
+If the ICW head cannot be read, the token is expired, or the projection is behind/mismatched, current-state reads and recommendations return explicit unavailable/abstain. No cached previous head, stale backup or checkpoint age assumption may stand in for current-head verification. Historical snapshot verification is allowed against its fixed immutable receipt, but it must be labelled historical and cannot assert current evidence state.

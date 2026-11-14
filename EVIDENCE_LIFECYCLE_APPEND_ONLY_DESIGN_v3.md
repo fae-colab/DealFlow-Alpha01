@@ -435,3 +435,42 @@ This document resolves the approved design requirements but does not prove imple
 **Not authorized:** application/engine/UI/database code changes, schema changes, migrations, migration execution, test execution against production systems, PR #30 merge, PR #32 readiness/merge, real-agent evidence intake or evidence ingestion.
 
 PR #30 remains open and unmerged. PR #32 remains a draft for review. A later implementation requires a separate explicit authorization after the design, server specification and migration test plan have all been critically reviewed.
+
+
+## 15. Critical-review closure addendum (normative)
+
+This addendum resolves three precision issues identified during cross-document review. It is normative and must be read as part of this architecture.
+
+### 15.1 Lifecycle state used by a mutation
+
+The evidence record remains immutable; it does not gain a mutable authoritative status field. To serialize a transition, the mutation procedure locks the immutable predecessor evidence row (which serves as a stable lock target) after locking the ledger head. It then derives/validates the predecessor's lifecycle state from the committed event/batch history at that locked ledger watermark.
+
+A materialized current-state/guard projection may be maintained transactionally to improve lookup performance, but it is rebuildable derived data, never the source of truth. It must be updated in the same transaction as the batch and ledger head, reconciled against the event history before use, and must fail closed if inconsistent. No stale or caller-supplied projection can authorize supersession.
+
+### 15.2 Monotonic checkpoint-anchor publication
+
+The independent anchor is not merely an archive of signed checkpoints. It maintains the latest accepted checkpoint pointer per ledger/epoch and enforces monotonic compare-and-swap publication.
+
+A checkpoint publisher must:
+- read the current trusted anchor;
+- verify that the proposed checkpoint is a strict valid extension of the anchored prefix;
+- reject lower sequence, same-sequence/different-head, forked predecessor reference or unknown epoch;
+- atomically advance the anchor pointer only if its expected prior anchor still matches;
+- treat an identical already-anchored checkpoint as an idempotent success;
+- reject a new-epoch publication unless it carries an authorized restore manifest satisfying the recovery rules in §6.5.
+
+The signing service must not sign or anchor a stale database head merely because its local hash chain is internally consistent. If the independent anchor cannot be read or its compare-and-swap cannot be completed, no new checkpoint is considered independently anchored.
+
+### 15.3 Recommendation finalization depends on independent anchoring
+
+A snapshot payload is immutable from its first durable write. Its publication/verification state is recorded separately and append-only.
+
+A recommendation is not represented as finalized, verified or actionable until:
+- the snapshot payload and hash are durably stored;
+- the snapshot hash (or a Merkle root containing it) is signed and independently anchored;
+- the anchor receipt binds the snapshot hash to its exact ledger/epoch/batch watermark and the relevant checkpoint;
+- the checkpoint covers the snapshot's ledger watermark, or the snapshot hash is independently anchored in a receipt that explicitly binds that watermark.
+
+If anchoring is pending or unavailable, the system may retain the immutable snapshot in a pending state for retry, but must return an explicit pending/unavailable result rather than a finalized actionable recommendation. A later successful anchor changes only the separate publication event/status; it does not mutate the snapshot payload. An anchor failure or invalid receipt leaves the recommendation non-final and unavailable.
+
+Corrections follow the same rule: a new correction record must be independently anchored before it is treated as a verified correction. The original snapshot remains unchanged.

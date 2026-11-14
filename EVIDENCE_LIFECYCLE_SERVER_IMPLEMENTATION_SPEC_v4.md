@@ -61,7 +61,8 @@ Tenant and actor IDs are derived from verified authentication context. Client-su
 
 Success is returned only after durable ICW commit and verified projection application; it includes ICW receipt ID/hash, operation/batch ID, batch ending sequence, head hash, event IDs and projection version. If ICW commit exists but projection is pending, return a typed pending response (HTTP 202 or equivalent), not success or rollback.
 
-Typed failures:
+Typed responses/failures:
+- `202`: ICW commit accepted but projection pending; committed, not decision-readable or actionable;
 - \`401\`: unauthenticated/invalid credentials;
 - \`403\`: authenticated but unauthorized, with no cross-tenant existence disclosure;
 - \`404\`: non-disclosing missing/out-of-scope resource;
@@ -158,7 +159,7 @@ Eligibility is a separate versioned evaluation of:
 - canonical claim identity and contradiction policy;
 - applicable evidence taxonomy and policy versions.
 
-If a required ledger prefix/checkpoint cannot be verified, return ABSTAIN/unavailable for dependent decisions. Do not silently remove the problematic evidence and continue with a partial portfolio.
+If the required ICW receipt chain or current-head/freshness token cannot be verified, return ABSTAIN/unavailable for dependent current-state decisions. A stale checkpoint alone triggers full receipt-chain verification and does not invalidate an otherwise verifiable ICW history. Do not silently remove the problematic evidence and continue with a partial portfolio.
 
 ## 7. Checkpoint and recovery service contract (D-04)
 

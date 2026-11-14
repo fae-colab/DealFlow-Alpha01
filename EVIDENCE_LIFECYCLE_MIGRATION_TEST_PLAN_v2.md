@@ -200,3 +200,12 @@ For every failure capture sanitized logs, exact commit/config, database snapshot
 - Dry-run and restore evidence independently checked.
 - Full lifecycle suite passes and protected 18-case regression remains unchanged.
 - Separate explicit user approval to begin implementation; this document itself grants none.
+
+## 10. Additional database-invariant tests
+
+71. Genesis is sequence 0, first event is 1, and the sole ledger counter advances contiguously under concurrent writers; no off-by-one, duplicate, or skipped sequence is possible.
+72. Database partial unique index rejects a second creation event for one evidence ID.
+73. Database partial unique index rejects a second terminal event for one evidence ID, regardless of terminal event type.
+74. Composite foreign keys reject cross-tenant and cross-ledger evidence/event/lineage references.
+75. Snapshot UPDATE/DELETE attempts using the application role are rejected.
+76. A ledger exceeding the configured maximum trusted-checkpoint age or unanchored-tail length becomes unavailable for decisions; a verified independent checkpoint restores availability only after full verification.

@@ -27,12 +27,12 @@ The following are mandatory architecture requirements:
 3. No reactivation, generic status setter, or deletion of authoritative lifecycle history is permitted.
 4. Legacy records are quarantined by default. Mutable legacy status is never proof that an item was never revoked or superseded.
 5. Supersession is one atomic committed batch. Its predecessor transition and replacement creation are never visible separately.
-6. Database-level concurrency controls, uniqueness constraints and durable idempotency enforce the supersession invariant; application checks alone are insufficient.
+6. ICW-enforced lifecycle validation, atomic compare-and-swap and durable idempotency establish authoritative supersession order; database constraints and transactional projection controls provide defense in depth; application checks alone are insufficient.
 7. The authoritative ledger has one sequence authority and valid watermarks are committed batch boundaries only.
-8. A trusted checkpoint must be independently protected from ordinary database rollback and ordinary database-administrator control.
-9. Recovery must reconcile restored state against the latest independently trusted lifecycle position before the ledger can serve decisions.
+8. Every committed batch must have an independently durable ICW receipt and retained batch envelope; checkpoints are independently protected verified-prefix accelerators, not commit proof.
+9. Recovery must reconcile restored database projection against the complete accepted ICW receipt history before the ledger can serve decisions.
 10. Lifecycle state and evidence eligibility are separate evaluations.
-11. Every finalized recommendation has an immutable, content-addressed historical snapshot with independently verifiable integrity and enough retained context to reconstruct the original evaluation.
+11. Every finalized recommendation has an immutable, content-addressed historical snapshot with independently verifiable integrity and a versioned dependency manifest; full recomputation is conditional on lawful retention and availability of every required dependency.
 12. Subsequent evidence revocation, supersession, expiry, policy change or correction never silently rewrites an earlier recommendation snapshot.
 13. Corrections create new linked records/events; they do not mutate the original snapshot.
 14. Any unverifiable lifecycle prefix, checkpoint, snapshot or required dependency results in an explicit unavailable/abstain outcome, not a fallback to mutable status, stale cache or a partial ledger.
@@ -230,7 +230,7 @@ Before production, explicit values must be approved for:
 - clock-skew tolerance;
 - recovery point and recovery time objectives.
 
-No undocumented defaults are permitted. If a configured boundary is exceeded, or the independent anchor is unavailable such that current integrity cannot be established within policy, the affected ledger becomes unavailable for evidence-dependent recommendations. Healthy unrelated tenants/ledgers remain available.
+No undocumented defaults are permitted. Exceeding the projection-lag limit or being unable to verify the ICW receipt chain makes the affected ledger unavailable for evidence-dependent recommendations. Exceeding checkpoint-age/publication targets alone triggers an alert and full receipt-chain verification without a checkpoint shortcut; it does not invalidate otherwise verifiable ICW history. Healthy unrelated tenants/ledgers remain available.
 
 ### 6.4 Restore and reconciliation protocol
 
@@ -595,7 +595,7 @@ For deterministic components, the pass oracle is exact equality of canonical str
 
 ## A9. Deployment parameter register
 
-Before implementation authorization, a signed deployment parameter register must select concrete values for checkpoint interval/age, maximum projection lag, ICW availability behavior, recovery point/time objectives, clock tolerance, receipt/object retention, idempotency tombstone retention, legal hold/erasure, key rotation and service-level objectives. These values are configuration inputs, not undocumented code defaults.
+Before implementation authorization, a signed deployment parameter register must select concrete values for checkpoint interval/age and alert thresholds, maximum projection lag, ICW availability behavior, recovery point/time objectives, clock tolerance, receipt/object retention, idempotency tombstone retention, legal hold/erasure, key rotation and service-level objectives. Checkpoint-age thresholds are operational/verification-mode controls, not substitutes for ICW receipts or automatic integrity failures. These values are configuration inputs, not undocumented code defaults.
 
 Tests MUST load the exact versioned register and exercise below/at/above boundaries. A missing, unsigned, stale or incomplete register makes the corresponding test BLOCKED and prevents implementation authorization. A test cannot pass by choosing its own convenient threshold.
 

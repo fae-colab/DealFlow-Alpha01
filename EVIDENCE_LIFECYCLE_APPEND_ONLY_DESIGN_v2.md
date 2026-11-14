@@ -248,3 +248,14 @@ Non-goals: this lifecycle proves neither truth nor source reliability; it does n
 ## 14. Review decision requested
 
 Review the state machine, quarantine-first migration, relational constraints, transaction contract, authorization model, checkpoint model, privacy/retention policy, and fail-closed behavior. This is a design proposal only. **No implementation is authorized by this document.**
+
+## 15. Normative precision addendum
+
+The following details are normative and resolve ambiguity in the preceding schema/algorithm descriptions:
+
+- Ledger sequence has one counter only: `last_sequence`. Genesis is sequence 0; the first committed event is sequence 1; every later event is exactly the prior committed sequence + 1. Do not maintain independently mutable `next_sequence` and `head_sequence` counters.
+- The event table stores `ledgerEpoch`, `claimIdentityHash`, and, for supersession, `replacementContentHash`. Every foreign key across evidence, event, and lineage rows includes tenant and ledger scope.
+- Database partial unique indexes enforce exactly one `evidence_created` event per evidence ID and at most one terminal event (superseded/revoked/withdrawn) per evidence ID. Lineage uniqueness enforces one predecessor and one successor per edge. These are database constraints, not merely service checks.
+- Hash encoding is byte-exact: UTF-8 domain label, one NUL byte, then the specified canonical fields. Epoch and sequence are unsigned base-10 ASCII with no leading zeros; hash inputs are 32 raw bytes, not their hexadecimal text. Stored hashes are lowercase 64-character hex. Record/event JCS envelopes and excluded fields are defined in the server specification.
+- A decision snapshot and its immutable payload are database-protected against update/delete. Privacy erasure, if legally required, is a separately approved controlled procedure and cannot silently mutate the historical decision record.
+- Production checkpoint policy must set and monitor a maximum trusted-checkpoint age and maximum unanchored tail length. Exceeding either threshold makes the ledger unavailable for decisions until a fresh independently anchored checkpoint is verified.

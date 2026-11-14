@@ -181,13 +181,7 @@ Ledger recovery states:
 - \`RECOVERY_VERIFIED\`: restored prefix and tail reconciled; pending authorized re-enable;
 - \`UNAVAILABLE\`: required checkpoint/anchor/verification dependency unavailable beyond approved policy.
 
-A restored database remains isolated until:
-1. latest trusted anchor and checkpoint signature verify;
-2. restored prefix matches trusted ledger/epoch/batch/head;
-3. missing committed tail is recovered from independently retained source;
-4. complete chain, batch ranges, lineage, counts and dependent snapshots verify;
-5. post-recovery checkpoint is independently anchored;
-6. restore audit record and approvals are complete.
+A restored database remains isolated until the ICW receipt chain and referenced batch envelopes verify; the projection matches/replays through the current ICW head; lineage, counts and dependent snapshots verify; the recovery audit record and approvals are complete. A checkpoint may accelerate this verification but cannot replace ICW receipt coverage.
 
 A shorter backup, same-sequence/different-hash fork, missing event or unverified tail is rejected. If missing history cannot be recovered, keep the ledger quarantined. Never infer that absent revocations did not occur.
 
@@ -195,7 +189,7 @@ A new epoch requires a signed restore manifest linked to the last trusted checkp
 
 ### 7.4 Operational thresholds
 
-Before production, approve numeric values for maximum checkpoint age, maximum database projection lag, checkpoint publication delay, clock skew, recovery point/time objectives and retention. There is no unanchored committed tail because every commit has an ICW receipt. Enforce below/at/above threshold tests. No hidden fallback values.
+Before production, approve numeric values for maximum checkpoint age alert threshold, maximum database projection lag, checkpoint publication delay alert threshold, clock skew, recovery point/time objectives and retention. There is no unanchored committed tail because every commit has an ICW receipt. Enforce below/at/above threshold tests. No hidden fallback values.
 
 ### 7.5 Threat and residual risk
 
@@ -279,7 +273,7 @@ Runbooks are required for key rotation/compromise, checkpoint verification, rest
 
 ## 13. Deployment choices requiring approval
 
-The hosting provider, database/version, authentication provider, tenant/RLS model, KMS/HSM, checkpoint/anchor service, WORM storage, backup/WAL archive, numeric checkpoint thresholds, recovery objectives, retention/privacy policy and operational ownership remain undecided. This specification does not silently choose them.
+The hosting provider, database/version, authentication provider, tenant/RLS model, ICW provider and durability/linearizability guarantees, KMS/HSM, checkpoint/anchor service, WORM storage, backup/projection replay design, numeric checkpoint/projection-lag thresholds, recovery objectives, retention/privacy policy and operational ownership remain undecided. This specification does not silently choose them.
 
 ## 14. Conformance and authorization
 

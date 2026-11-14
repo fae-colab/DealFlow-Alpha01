@@ -112,7 +112,7 @@ The following are mandatory acceptance groups.
 47. Restored database cannot serve recommendations before explicit recovery verification and authorized re-enable.
 
 ### 5.3 Thresholds and dependency outages
-48. Test checkpoint age and unanchored-tail limits below, at and above configured boundaries.
+48. Test checkpoint age and maximum database projection lag below, at and above configured boundaries. There is no unanchored committed tail: every accepted batch must already have an ICW receipt.
 49. Missing/unavailable anchor, KMS, WORM object store or checkpoint publisher causes ledger unavailability when policy cannot verify current integrity.
 50. Checkpoint publication delay beyond policy threshold prevents unsafe fast-path recommendations.
 51. Healthy unrelated tenant/ledger remains available when one ledger is quarantined, unless a broader trust-domain incident is established.
@@ -125,7 +125,7 @@ The following are mandatory acceptance groups.
 54. Per-evidence eligibility assessment records included/excluded status and reason codes.
 55. Snapshot binds tenant, ledger, epoch, committed batch ID, ending sequence, head hash and independently verifiable checkpoint.
 56. Snapshot records decision input values, units, normalization, assumptions, uncertainty, rule/engine/projector/taxonomy versions, evaluation time and replay mode.
-57. Snapshot retains sufficient versioned context/artifacts to independently reconstruct the original evaluation.
+57. Snapshot retains the complete versioned dependency manifest and immutable identifiers/digests for all decision-relevant artifacts; full reconstruction is separately proven by v4 tests 151–157.
 58. Nondeterministic/model-assisted output actually consumed is preserved with model/provider/version metadata, parameters and prompt/template hash; a rerun is not falsely claimed to be deterministic.
 
 ### 6.2 Hash and independent verification
@@ -148,7 +148,7 @@ The following are mandatory acceptance groups.
 
 ### 6.4 Historical reconstruction
 73. Independent reviewer retrieves exact versioned rules/engine/projector/taxonomy artifacts and verifies their digests.
-74. Replaying deterministic evaluation at original time and original committed watermark reproduces the recorded result within the specified deterministic contract.
+74. Replaying deterministic evaluation at the original time and receipt watermark must reproduce canonical decision outputs, eligibility states/reasons, recommendation/abstention result and ordering under the exact deterministic comparison contract in v4 test 152.
 75. Later evidence is excluded from AS_KNOWN_AT_DECISION replay.
 76. RETROSPECTIVE_WITH_LATER_EVIDENCE uses a new watermark and never modifies the original.
 77. Missing artifact, evidence payload or checkpoint is explicitly reported; no current version is substituted.
@@ -393,3 +393,16 @@ Pass/fail semantics:
 - **NOT RUN:** no execution evidence exists. NOT RUN is not PASS.
 
 The signed deployment parameter register must provide exact numeric values for all threshold-dependent tests before implementation authorization. Tests 48 and 21 from the inherited suite, plus all threshold tests, load those values from the same pinned register. Test-local defaults are prohibited.
+
+
+## 20. v4 review-closure acceptance cases
+
+173. **ICW lifecycle-semantic enforcement:** bypass or compromise the ordinary API validator and submit to ICW a second terminal event, duplicate creation, inactive predecessor, claim-identity mismatch, cross-tenant lineage, fork, merge or cycle. PASS only if the ICW rejects each invalid batch without advancing its head or creating a receipt.
+174. **No DB lock across ICW call:** pause the ICW response while concurrent requests execute. PASS only if no database transaction/row lock is held across the network wait, no deadlock is induced by the witness outage, and CAS plus subsequent projection locking preserves order.
+175. **CAS loser revalidation:** race two commands against the same expected head where the first makes the second command semantically invalid. PASS only if the loser reloads the accepted receipt history and returns the correct typed conflict; it must not append its stale prepared batch.
+176. **Concrete command watermark matrix:** for each of create, supersede, revoke and withdraw, exercise exact-current, missing, stale, future, interior and mismatched receipt/sequence. PASS only if outcomes match Architecture A11.3 and Server S11.2, with no receipt for every invalid new request.
+177. **Idempotent replay after head advance:** commit command A, commit command B, then retry A with the same key/digest and current authorization. PASS only if A's original receipt is returned and no new sequence is allocated.
+178. **Privacy key destruction:** erase an approved sensitive payload key while retaining lawful integrity metadata. PASS only if receipt and permitted digest verification remain accurate, payload reconstruction reports PARTIAL/UNAVAILABLE, and no plaintext can be recovered from retained systems.
+179. **Sensitive payload separation:** inspect ICW receipts, operational logs and checkpoint objects. PASS only if prohibited plaintext personal data is absent, ciphertext/object digests and key references are bound, and access is restricted by the approved role matrix.
+180. **Projection lag threshold:** test configured maximum projection lag below, at and above the pinned threshold. PASS only if behavior matches the signed parameter register and no stale projection is served after the limit.
+181. **Reconstruction state separation:** finalize a snapshot whose integrity is verified but whose legally erased dependency prevents full recomputation. PASS only if publication remains FINALIZED_VERIFIED where policy permits, while reconstruction status is independently PARTIAL/UNAVAILABLE; these states are not conflated.

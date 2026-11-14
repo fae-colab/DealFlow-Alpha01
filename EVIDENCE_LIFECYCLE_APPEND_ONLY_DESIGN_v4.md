@@ -80,14 +80,16 @@ Supersession additionally contains the replacement evidence ID and replacement c
 
 The architecture distinguishes:
 - request-serving application/API;
-- authoritative transactional database;
-- independent checkpoint/anchor service and immutable retention store;
-- signing-key service (KMS/HSM or equivalent);
+- separately controlled identity/authorization assertion issuer;
+- Independent Commit Witness (ICW), its linearizable receipt log and immutable batch-envelope/object store;
+- relational database containing only a transactional projection;
+- checkpoint publisher/anchor and immutable checkpoint store;
+- signing-key and verification-key services (KMS/HSM or equivalent);
 - backup and recovery environment;
-- recommendation snapshot store;
+- recommendation snapshot store and separate ICW snapshot-receipt namespace;
 - independent verification tooling.
 
-The database, checkpoint anchor and signing authority must not share a single ordinary administrator or credential boundary. If they do, the design must explicitly document that reduced assurance and must not claim protection against compromise of the shared control plane.
+The ICW, authorization assertion issuer, relational database, checkpoint anchor and signing authority must have separately controlled credentials and administrative boundaries. Ordinary database or application administrators must not be able to administer the ICW or mint authorization assertions. If a deployment cannot maintain these separations, it must document the reduced assurance and must not claim protection against compromise of the shared control plane.
 
 ## 3. Lifecycle state machine and irreversible transitions
 

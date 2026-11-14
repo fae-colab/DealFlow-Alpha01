@@ -272,7 +272,7 @@ PR #30 remains open and unmerged. PR #32 remains a draft for review. All current
 
 ## 15. Inherited v2 acceptance suite — retained
 
-The 115 numbered acceptance cases in \`EVIDENCE_LIFECYCLE_MIGRATION_TEST_PLAN_v2.md\` remain an inherited mandatory baseline. They are not deleted or waived by this v3 plan. The existing v4 cases above strengthen and clarify the following coverage; where both versions address the same behavior, the stricter requirement applies.
+The 115 numbered acceptance cases in \`EVIDENCE_LIFECYCLE_MIGRATION_TEST_PLAN_v2.md\` remain an inherited mandatory baseline. They are not deleted or waived by this v4 plan. The existing v4 cases above strengthen and clarify the following coverage; where both versions address the same behavior, the stricter requirement applies.
 
 | Inherited v2 cases | Coverage retained in v3 |
 |---|---|

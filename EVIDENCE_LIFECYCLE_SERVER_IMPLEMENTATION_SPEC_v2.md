@@ -171,3 +171,12 @@ No UI status wiring or pilot before server-side guarantees pass.
 - No production or real-agent data until all gates pass and separate authorization is given.
 
 **Implementation authorization:** Not granted by this specification. Await independent review and explicit user approval.
+
+## 13. Normative precision addendum
+
+- Use one ledger counter, `last_sequence`; genesis = 0, first event = 1, and each transaction appends a contiguous sequence. No second independently updated sequence counter is permitted.
+- Event rows include `ledger_epoch`, `claim_identity_hash`, and `replacement_content_hash` for supersession. Composite foreign keys bind every referenced record and lineage row to the same tenant and ledger.
+- Required partial unique indexes: one creation event per evidence ID; at most one terminal event per evidence ID. The lineage table separately enforces unique predecessor and unique replacement. A DB-level CHECK restricts event vocabulary.
+- Byte-level hash encoding: UTF-8 domain label + NUL + UTF-8 JCS or explicitly defined canonical fields; epoch/sequence are unsigned base-10 ASCII without leading zeros; previous/event payload hashes are 32 raw bytes; persisted hash text is lowercase 64-character hex. Genesis is sequence 0; first event is sequence 1. Add golden test vectors for each domain-separated hash.
+- Before production, set a maximum trusted-checkpoint age and maximum unanchored tail length as explicit configuration values with alerting. Exceeding either threshold disables decision eligibility for that ledger until a new independently anchored checkpoint is verified.
+- Snapshot payloads are immutable at the database layer. Any privacy erasure exception must be implemented as a separately reviewed controlled procedure with an auditable tombstone/crypto-shredding design; ordinary application roles cannot update or delete snapshots.

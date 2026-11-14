@@ -16,15 +16,16 @@ This document is not executable code, a schema migration, a deployment decision 
 ## 2. Logical components
 
 1. **Authenticated API boundary:** validates credentials and derives tenant, actor and permissions.
-2. **Lifecycle command service:** accepts only typed create, supersede, revoke and withdraw commands.
-3. **Independent Commit Witness (ICW):** validates lifecycle semantics, performs linearizable append/CAS, allocates authoritative sequence, retains complete batch envelopes and issues signed commit receipts.
-4. **Transactional projection boundary:** applies receipt-backed batches atomically with database constraints, locks and projection cursor updates.
-5. **Ledger projector/verifier:** deterministically validates a complete committed prefix and derives lifecycle state.
-6. **Eligibility evaluator:** evaluates evidence separately for a decision and evaluation time.
-7. **Checkpoint publisher/verifier:** signs and anchors committed ledger positions independently.
-8. **Restore/reconciliation controller:** isolated workflow for validating backups and recovering ledger tails.
-9. **Recommendation snapshot service:** records immutable decision-time context, integrity hash and independent anchor.
-10. **Independent verification utility:** verifies records, batches, checkpoints and snapshots without relying solely on production helper functions.
+2. **Authorization assertion issuer:** creates short-lived signed, scoped assertions bound to tenant, actor, operation, resource scope and canonical request digest; its trust root is separate from ordinary application/database administrators.
+3. **Lifecycle command service:** accepts only typed create, supersede, revoke and withdraw commands.
+4. **Independent Commit Witness (ICW):** validates lifecycle semantics, performs linearizable append/CAS, allocates authoritative sequence, retains complete batch envelopes and issues signed commit receipts.
+5. **Transactional projection boundary:** applies receipt-backed batches atomically with database constraints, locks and projection cursor updates.
+6. **Ledger projector/verifier:** deterministically validates a complete committed prefix and derives lifecycle state.
+7. **Eligibility evaluator:** evaluates evidence separately for a decision and evaluation time.
+8. **Checkpoint publisher/verifier:** signs and anchors committed ledger positions independently.
+9. **Restore/reconciliation controller:** isolated workflow for validating backups and recovering ledger tails.
+10. **Recommendation snapshot service:** records immutable decision-time context, integrity hash and independent anchor.
+11. **Independent verification utility:** verifies records, batches, checkpoints and snapshots without relying solely on production helper functions.
 
 No browser or ordinary client receives database credentials or direct lifecycle write access.
 
@@ -107,7 +108,7 @@ A supersession is one ICW append with the two ordered events and replacement pay
 
 ### 4.6 Idempotency and retries
 
-The ICW enforces tenant + authenticated actor/client scope + operation + request ID and canonical request digest. Same key/same digest returns the original receipt after current authorization recheck; same key/different digest is an integrity conflict. Timeout after acceptance returns the original receipt on retry. ICW outage before acceptance blocks all new lifecycle commits. Projection retry is idempotent and cannot create a second row/event/batch.
+The ICW verifies a signed, short-lived authorization assertion from a separately controlled issuer, bound to tenant, actor/client, permitted command/resource scope, request digest, audience, expiry and unique assertion ID. It then enforces tenant + authenticated actor/client scope + operation + request ID and canonical request digest. Same key/same digest returns the original receipt after current authorization recheck; same key/different digest is an integrity conflict. Timeout after acceptance returns the original receipt on retry. ICW outage before acceptance blocks all new lifecycle commits. Projection retry is idempotent and cannot create a second row/event/batch.
 
 ## 5. Persistence responsibilities and privileges
 
@@ -194,7 +195,7 @@ Before production, approve numeric values for maximum checkpoint age alert thres
 
 ### 7.5 Threat and residual risk
 
-The design detects database-only rollback and rewrite relative to the independent ICW receipt log and its trust roots. It does not guarantee integrity if the attacker simultaneously controls the ICW administrative/control plane, signing authority and immutable receipt/object retention roots. Suspected signing-key compromise requires quarantine from the last independently trusted position, key incident response and re-anchoring under a reviewed trust root.
+The design detects database-only rollback and rewrite relative to the independent ICW receipt log and its trust roots, and application-admin misuse that lacks a valid independently issued authorization assertion. It does not guarantee integrity if the attacker simultaneously controls the ICW administrative/control plane, signing authority and immutable receipt/object retention roots. Suspected signing-key compromise requires quarantine from the last independently trusted position, key incident response and re-anchoring under a reviewed trust root.
 
 ## 8. Recommendation snapshot service contract (D-06)
 
@@ -287,13 +288,13 @@ Conformance requires ICW linearizable append and semantic validation, database p
 
 ### 15.1 Stable lock target and lifecycle-state validation
 
-The immutable evidence row is the stable row-lock target; it is not mutated to store lifecycle state. After acquiring the ledger-head lock and predecessor row lock, the procedure validates the predecessor state from the committed event/batch history at the locked watermark. If an internal current-state guard projection is used, it is derived, rebuildable, updated atomically with the event batch, and reconciled against the authoritative event history. It may not independently authorize a transition when stale or inconsistent.
+The immutable evidence row is the stable projection row-lock target; it is not mutated to store lifecycle state. The ICW serializes the authoritative transition against receipt history using expected-head CAS and semantic validation. After receipt acceptance, the projection transaction locks the projection cursor/head and predecessor evidence row, then validates projection consistency before applying the batch. No database lock is held across the ICW network call. If an internal current-state guard projection is used, it is derived, rebuildable, updated atomically with the event batch, and reconciled against the authoritative event history. It may not independently authorize a transition when stale or inconsistent.
 
 All lifecycle writers acquire locks in the same order. The serializable transaction plus explicit locks and database uniqueness constraints are cumulative controls. Tests must prove behavior under the selected database's actual isolation and failover semantics.
 
 ### 15.2 Monotonic external anchor API
 
-The independent anchor must expose an atomic compare-and-swap operation over the current trusted checkpoint pointer. The proposed checkpoint is accepted only if it extends the exact currently anchored checkpoint and its sequence/batch position is strictly monotonic within the epoch.
+The ICW must expose an atomic compare-and-swap operation over the current accepted ledger receipt head. The checkpoint anchor separately exposes atomic compare-and-swap over the latest verified checkpoint pointer. The proposed checkpoint is accepted only if it extends the exact currently anchored checkpoint and its sequence/batch position is strictly monotonic within the epoch.
 
 Reject:
 - lower sequence or batch position;
@@ -303,7 +304,7 @@ Reject:
 - unrecognized epoch;
 - new epoch without an authorized, verified restore manifest.
 
-An identical checkpoint retry is idempotent. Concurrent checkpoint publishers cannot overwrite one another: only one compare-and-swap succeeds; the loser reloads and revalidates. The signing service must verify extension from the latest anchor before signing/anchoring; it must not sign an arbitrary locally valid but stale head. Failure to read or advance the anchor means the checkpoint is not anchored.
+An identical ICW receipt or checkpoint retry is idempotent. Concurrent checkpoint publishers cannot overwrite one another: only one compare-and-swap succeeds; the loser reloads and revalidates. The ICW must validate every new batch against the current accepted receipt head before issuing a receipt. The checkpoint signing service must verify extension from the latest checkpoint anchor before signing/anchoring; it must not sign an arbitrary locally valid but stale head. Failure to read or advance the anchor means the checkpoint is not anchored.
 
 ### 15.3 Snapshot finalization gate
 
@@ -410,7 +411,7 @@ For checkpoints, immutable checkpoint object creation precedes anchor CAS. Crash
 
 The deployment role matrix must enumerate request-serving role, procedure owner, database owner/superuser, application administrator, ICW operator, ICW storage administrator, signing-key administrator, recovery operator and independent auditor. For each, specify credentials, allowed actions, dual-control requirements, audit source and compromise impact.
 
-Ordinary DB administrators, database owners and application administrators must have no ICW write/delete/admin capability. ICW operators cannot rewrite the relational projection and cannot silently alter signing keys. Key rotation is append-only and historical verification keys remain available for the defined retention period. Combined compromise of ICW administrative control and trust roots is a declared residual risk, not a covered scenario.
+Ordinary DB administrators, database owners and application administrators must have no ICW write/delete/admin capability and must not be able to mint or alter authorization assertions. The ICW validates assertion signatures, audience, scope, expiry and request digest independently. ICW operators cannot rewrite the relational projection and cannot silently alter signing keys. Key rotation is append-only and historical verification keys remain available for the defined retention period. Combined compromise of ICW administrative control and trust roots is a declared residual risk, not a covered scenario.
 
 ## S10. Parameterized deployment contract
 
@@ -420,7 +421,7 @@ The signed deployment parameter register is mandatory before implementation auth
 
 ### S11.1 Lifecycle validation and lock protocol
 
-The ICW, not a database preflight query, validates event vocabulary, creation uniqueness, terminal-state irreversibility, active predecessor, exact claim identity, lineage uniqueness, no fork/merge/cycle and tenant/ledger/epoch scope against its accepted receipt history. A CAS loser reloads the new head and revalidates; it must not retry a stale precomputed batch unchanged.
+The ICW first validates a signed, short-lived authorization assertion from the separately controlled issuer, then validates event vocabulary, creation uniqueness, terminal-state irreversibility, active predecessor, exact claim identity, lineage uniqueness, no fork/merge/cycle and tenant/ledger/epoch scope against its accepted receipt history. A CAS loser reloads the new head and revalidates; it must not retry a stale precomputed batch unchanged.
 
 Do not hold a database transaction or row locks across the ICW network call. The order is: authenticate/validate; read current ICW head; prepare request; ICW atomic validation + CAS append; then begin the projection transaction. The projection transaction locks ledger cursor/head, then immutable evidence rows, then graph rows in deterministic order, applies the entire accepted batch and advances the cursor. If the projection is behind, no new mutation or decision is served until reconciliation catches up.
 
@@ -444,3 +445,8 @@ The ICW receipt must bind immutable digests for sensitive evidence payload objec
 ## S12. Current-state read freshness contract
 
 Before any current-state evidence read, eligibility evaluation or recommendation is served, the service obtains the latest ICW head or a signed freshness token whose age is within the approved parameter register. It verifies that the projection cursor/head and batch digests exactly match the established head. If the ICW cannot be contacted and no valid freshness token exists, or if the projection is behind/mismatched, the service returns unavailable/abstain. A cache may be reused only when bound to the same valid head token and its expiry. Historical snapshot verification uses its fixed receipt and must be labelled historical, not current.
+
+
+## S13. Authorization assertion contract
+
+The ICW accepts lifecycle appends only with a signed, short-lived authorization assertion from a separately controlled issuer. The assertion binds tenant, actor/client, permitted command and resource/claim scope, canonical request digest, ICW audience, expiry and unique assertion ID. The ICW verifies signature, issuer, audience, expiry, scope and digest match. Ordinary application administrators cannot mint, broaden or replay assertions. Exact same-key/same-digest retries may resolve the original receipt without creating a second append, subject to current authorization to receive the result.

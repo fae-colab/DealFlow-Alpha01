@@ -80,14 +80,7 @@ Each review item must have an owner, artifact reference, version/digest, reviewe
 
 ### 6.1 Command watermark matrix
 
-Before implementation authorization, publish a versioned table for `createEvidence`, `supersedeEvidence`, `revokeEvidence`, and `withdrawEvidence` specifying:
-- whether expected watermark is required;
-- whether it must equal current ICW head or may be an explicit ancestor;
-- missing/stale/future/interior watermark outcome;
-- whether idempotent replay bypasses fresh-head validation after current authorization;
-- exact typed API code and whether an ICW receipt may be created.
-
-Test 158 must instantiate every cell. No command may be left to implementation interpretation.
+Binding rule already resolved in v4: every new `createEvidence`, `supersedeEvidence`, `revokeEvidence`, and `withdrawEvidence` command requires the exact current ICW head receipt ID/hash and ending sequence. Missing is a validation error; stale, future, interior or mismatched watermark is a conflict with no receipt. An exact same-key/same-digest idempotent replay returns its original receipt after current authorization recheck even if the head advanced; different digest is an integrity conflict. Test 158 and tests 176–177 instantiate every case. No command is left to implementation interpretation.
 
 ### 6.2 Signed deployment parameter register
 
@@ -136,3 +129,14 @@ Implementation authorization is blocked until:
 - a fresh independent review finds no unresolved critical/high contradiction.
 
 This matrix is documentation only. It does not authorize implementation, test execution, migration, data ingestion, PR #30 merge, or PR #32 readiness/merge.
+
+
+## 9. v4 review-closure matrix updates
+
+The following are binding refinements to the tables above:
+- ICW semantic validation is part of AR-03/AR-05/AR-06, not merely application validation (tests 173, 175).
+- No database lock or open transaction may be held across the ICW network call (tests 174–175).
+- All four lifecycle mutation commands require the exact current ICW head watermark (tests 158, 176); same-key replay is resolved against the original receipt after current authorization (tests 159, 177).
+- "Unanchored tail" is retired terminology. The remaining operational lag is the database projection backlog or an ICW receipt not yet summarized by a checkpoint. Tests 48 and 180 exercise projection lag; every committed batch already has an ICW receipt.
+- Sensitive evidence payloads may be encrypted and lawfully erased under the signed privacy policy. Receipt integrity and payload reconstruction are separate outcomes (tests 178–179, 181).
+- Snapshot publication state and reconstruction status are separate dimensions (test 181).

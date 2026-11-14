@@ -180,3 +180,11 @@ No UI status wiring or pilot before server-side guarantees pass.
 - Byte-level hash encoding: UTF-8 domain label + NUL + UTF-8 JCS or explicitly defined canonical fields; epoch/sequence are unsigned base-10 ASCII without leading zeros; previous/event payload hashes are 32 raw bytes; persisted hash text is lowercase 64-character hex. Genesis is sequence 0; first event is sequence 1. Add golden test vectors for each domain-separated hash.
 - Before production, set a maximum trusted-checkpoint age and maximum unanchored tail length as explicit configuration values with alerting. Exceeding either threshold disables decision eligibility for that ledger until a new independently anchored checkpoint is verified.
 - Snapshot payloads are immutable at the database layer. Any privacy erasure exception must be implemented as a separately reviewed controlled procedure with an auditable tombstone/crypto-shredding design; ordinary application roles cannot update or delete snapshots.
+
+## 14. Authorization and recovery clarifications
+
+Unauthorized writes are rejected and security-audited; they do not disable unrelated decisions. A decision request that cannot authenticate/authorize ledger read access or verify the required prefix must return ABSTAIN/unavailable. This is the only authorization failure that blocks decision computation.
+
+A restore never resets sequence inside an existing ledger epoch. If a new epoch is required, create a new ledger namespace with a signed restore manifest binding prior ledger ID/epoch/checkpoint/head, recovered content hash, operator approvals, and reason. The new epoch has a new genesis; it is not an implicit merge. Existing snapshots remain bound to their original epoch.
+
+Checkpoint signing must use an explicit supported asymmetric algorithm (for example, ECDSA P-256 with SHA-256 where supported by the selected KMS), store the algorithm identifier and key ID, and sign UTF-8 bytes consisting of domain label `DF-EVIDENCE-CHECKPOINT-v1`, NUL, and UTF-8 JCS(manifest). Retain verification keys and algorithm metadata for the full audit-retention period. Genesis bytes are exactly: domain label `DF-EVIDENCE-GENESIS-v1`, NUL, ledger ID UTF-8, NUL, epoch as unsigned base-10 ASCII without leading zeros, NUL, schema version UTF-8; hash with SHA-256.

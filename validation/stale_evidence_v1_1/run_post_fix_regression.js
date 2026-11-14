@@ -1,0 +1,40 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const root=path.resolve(__dirname,'../..');
+const casesPath=path.join(__dirname,'cases_v1_1.json');
+const cases=require(casesPath),oracle=require('./expected_outcomes_regression.json');
+const Engine=require(path.join(root,'engine.js')),Desk=require(path.join(root,'decision_desk.js'));
+const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
+const gitBlob=b=>crypto.createHash('sha1').update(Buffer.concat([Buffer.from('blob '+b.length+'\0'),b])).digest('hex');
+const asOf='2026-11-13',maxAge=Desk.DEFAULT_MAX_EVIDENCE_AGE_DAYS,raw=[];
+for(const f of cases.cases){
+ const gate=Desk.eligibility(f.actions,f.capacity_hours,Engine,{asOfDate:asOf,maxEvidenceAgeDays:maxAge});
+ const eligible=gate.eligibleActions||[];
+ const best=gate.decision==='READY_FOR_OPTIMIZATION'?Engine.optimize(eligible,f.capacity_hours,[]):{value:0,minutes:0,items:[]};
+ const commission=Engine.greedy(eligible,f.capacity_hours,a=>a.commission,[]);
+ const hourly=Engine.greedy(eligible,f.capacity_hours,a=>Engine.incremental(a)/(a.effort/60),[]);
+ const report=Desk.createReport({actions:f.actions,gate,best,commission,hourly,engine:Engine,capacityHours:f.capacity_hours,generatedAt:asOf+'T00:00:00.000Z'});
+ const errors=Desk.validateOutput(report);if(errors.length)throw Error(f.case_id+': '+errors.join('; '));
+ raw.push({caseId:f.case_id,theme:f.theme,decision:report.decision,selectedActionIds:report.recommendations.map(x=>x.actionId),executionOrder:report.portfolio?.selectedActionIds||[],incrementalCommissionAED:report.portfolio?.expectedIncrementalCommission??0,excludedActions:report.excludedActions,abstentionReasons:report.abstention?.reasons||[],baselines:report.baselines});
+}
+if(raw.length!==18||cases.count!==18)throw Error('Expected exactly 18 frozen v1.1 cases.');
+const rawBytes=Buffer.from(JSON.stringify(raw,null,2)+'\n');
+fs.writeFileSync(path.join(__dirname,'POST_FIX_REGRESSION_RAW.json'),rawBytes);
+const oracleById=new Map(oracle.cases.map(x=>[x.caseId,x]));
+if(oracleById.size!==18)throw Error('Oracle must contain 18 unique cases.');
+const results=raw.map(a=>{
+ const e=oracleById.get(a.caseId);if(!e)throw Error('Missing oracle case '+a.caseId);
+ const checks={decision:a.decision===e.decision,selectedActionIds:JSON.stringify(a.selectedActionIds)===JSON.stringify(e.selectedActionIds),incrementalCommissionAED:Math.abs(a.incrementalCommissionAED-e.expectedIncrementalCommissionAED)<0.01};
+ return {caseId:a.caseId,expected:e,actual:{decision:a.decision,selectedActionIds:a.selectedActionIds,incrementalCommissionAED:a.incrementalCommissionAED},checks,pass:Object.values(checks).every(Boolean)};
+});
+const br003=raw.find(x=>x.caseId==='BR-003');
+if(br003.decision!=='ABSTAIN'||br003.selectedActionIds.length||!br003.excludedActions.some(x=>x.actionId==='A_STALE'&&/Evidence is stale/i.test(x.reason)))throw Error('BR-003 failed explicit stale-evidence abstention.');
+const failures=results.filter(x=>!x.pass),input=fs.readFileSync(casesPath),oracleBytes=fs.readFileSync(path.join(__dirname,'expected_outcomes_regression.json')),engine=fs.readFileSync(path.join(root,'engine.js')),desk=fs.readFileSync(path.join(root,'decision_desk.js'));
+const summary={reportType:'POST_FIX_REGRESSION_REPLAY',blind:false,oracleAlreadyUnsealed:true,status:failures.length?'FAIL':'COMPLETED_PASS',benchmarkId:cases.benchmark_id,evaluationDate:asOf,implementationCommit:'787729f6e8ab5b9ea79d3fb8d5fa5bae40d397c6',engineGitBlobSha1:gitBlob(engine),decisionDeskGitBlobSha1:gitBlob(desk),inputGitBlobSha1:gitBlob(input),inputSha256:hash(input),oracleSha256:hash(oracleBytes),rawOutputSha256:hash(rawBytes),caseCount:18,passed:18-failures.length,failed:failures.length,falseRecommendations:results.filter(x=>x.expected.decision==='ABSTAIN'&&x.actual.decision==='RECOMMEND').length,falseAbstentions:results.filter(x=>x.expected.decision==='RECOMMEND'&&x.actual.decision==='ABSTAIN').length,br003,results,limitations:'Synthetic fixtures only; oracle is previously unsealed. No real-agent evidence or commercial-value inference.'};
+fs.writeFileSync(path.join(__dirname,'POST_FIX_REGRESSION_REPORT.json'),JSON.stringify(summary,null,2)+'\n');
+const lines=['# DealFlow v1.1 post-fix regression replay','','**Post-fix regression replay — not blind.** The oracle had already been unsealed.','', 'Status: '+summary.status,'Cases: '+summary.passed+'/18','False recommendations: '+summary.falseRecommendations,'False abstentions: '+summary.falseAbstentions,'BR-003: '+br003.decision,'Implementation: '+summary.implementationCommit,'Input SHA-256: '+summary.inputSha256,'Raw output SHA-256: '+summary.rawOutputSha256,'','| Case | Expected | Actual | Expected actions | Actual actions | Expected AED | Actual AED | Result |','|---|---|---|---|---|---:|---:|---|'];
+for(const x of results)lines.push('| '+x.caseId+' | '+x.expected.decision+' | '+x.actual.decision+' | '+(x.expected.selectedActionIds.join(', ')||'—')+' | '+(x.actual.selectedActionIds.join(', ')||'—')+' | '+x.expected.expectedIncrementalCommissionAED+' | '+x.actual.incrementalCommissionAED+' | '+(x.pass?'PASS':'FAIL')+' |');
+lines.push('','All cases are synthetic fixtures. This establishes regression agreement only; it is not independent real-agent validation or proof of commercial value.','');
+fs.writeFileSync(path.join(__dirname,'POST_FIX_REGRESSION_REPORT.md'),lines.join('\n'));
+console.log(JSON.stringify({status:summary.status,cases:18,passed:summary.passed,failed:summary.failed,falseRecommendations:summary.falseRecommendations,falseAbstentions:summary.falseAbstentions,rawOutputSha256:summary.rawOutputSha256},null,2));
+if(failures.length)process.exitCode=1;

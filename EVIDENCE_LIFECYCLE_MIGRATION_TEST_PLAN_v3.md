@@ -249,3 +249,47 @@ Capture sanitized logs, exact build/config, fixture hashes, request IDs, ledger/
 This plan is documentation only. It does not authorize implementation, database/schema changes, migration execution, real-agent evidence intake, PR #30 merge or PR #32 readiness/merge.
 
 PR #30 remains open and unmerged. PR #32 remains a draft for review. All current evidence fixtures remain synthetic.
+
+
+## 14. Critical-review closure tests (additive)
+
+94. Lock-target test: lifecycle mutation locks the immutable evidence row and ledger head, then validates lifecycle state from the committed event history at the locked watermark; no mutable evidence status field is required.
+95. Stale derived-guard test: deliberately corrupt or lag a materialized lifecycle guard projection; mutation detects mismatch against authoritative event history and fails closed without supersession.
+96. Lock-order concurrency test: all mutation procedures follow the documented lock order under concurrent create/revoke/supersede load; deadlocks/serialization failures roll back completely and bounded retries do not duplicate writes.
+97. Monotonic anchor test: publisher rejects a lower checkpoint sequence/batch position even when its signature is valid.
+98. Same-position fork test: publisher rejects same-sequence/different-head or different-batch-hash checkpoint.
+99. Previous-anchor test: publisher rejects a checkpoint whose previous-checkpoint reference does not equal the current trusted anchor.
+100. Anchor compare-and-swap race: concurrent publishers cannot overwrite/regress the anchor; one valid extension wins and the other reloads/revalidates.
+101. Stale restored-head test: after restoring a locally valid but older database backup, checkpoint signing/anchoring refuses to publish it as current.
+102. New-epoch gate test: new epoch publication without a fully verified restore manifest and recovered history is rejected.
+103. Snapshot publication gate: recommendation API does not return a finalized/actionable recommendation before the exact snapshot hash has a valid independent anchor receipt.
+104. Anchor outage test: immutable snapshot may remain pending, but the recommendation is returned as pending/unavailable; no same-database hash fallback is accepted.
+105. Snapshot receipt binding test: receipt binds snapshot hash, tenant, ledger, epoch, batch ID, ending sequence, head hash, checkpoint reference, algorithm and key ID; any field substitution fails verification.
+106. Snapshot anchor retry test: retry after timeout is idempotent and cannot create multiple finalization receipts or alter snapshot bytes.
+107. Correction anchor test: correction record remains non-final until its own hash is independently anchored; original snapshot remains byte-identical.
+108. Snapshot watermark coverage test: a checkpoint that does not cover the snapshot watermark cannot serve as its sole external anchor.
+109. Recovery publisher test: a restored ledger must extend the latest independent anchor before any new checkpoint can be signed/anchored.
+
+## 15. Inherited v2 acceptance suite — retained
+
+The 115 numbered acceptance cases in \`EVIDENCE_LIFECYCLE_MIGRATION_TEST_PLAN_v2.md\` remain an inherited mandatory baseline. They are not deleted or waived by this v3 plan. The v3 cases above strengthen and clarify the following coverage; where both versions address the same behavior, the stricter requirement applies.
+
+| Inherited v2 cases | Coverage retained in v3 |
+|---|---|
+| V2-001–008 | Legacy quarantine, re-attestation and no resurrection: §§3, 7 |
+| V2-009–021 | Event schema, terminal transitions and lineage: §§4.5, 7 |
+| V2-022–030 | Atomic rollback, concurrency, idempotency and retry: §4 |
+| V2-031–038 | Authentication, authorization, tenant isolation and audit: §§7, 11 |
+| V2-039–048 | Hash vectors, checkpoint verification, rollback/fork and restore: §5 |
+| V2-049–057 | Time semantics, replay, expiry and fail-closed eligibility: §§6, 7 |
+| V2-058–064 | PII, privacy, legal hold, erasure and backup retention: §§3, 8, 11 |
+| V2-065–070 | Load, checkpoint-tail, outage, restart and pagination: §§2, 5 |
+| V2-071–080 | Sequence authority, database uniqueness, recovery epoch and key verification: §§4, 5 |
+| V2-081–087 | Atomic batches, reader visibility and valid watermark boundaries: §4 |
+| V2-088–093 | Canonical preimages, independent golden vectors and verifier: §6 |
+| V2-094–097 | Claim identity, contradiction and canonicalizer versioning: §7 |
+| V2-098–101 | Authorization scope, idempotency authorization and epoch recovery: §§4, 5, 7 |
+| V2-102–109 | Quarantine namespace, procedure-only writes, batch completeness and parser safety: §§3, 4, 7 |
+| V2-110–115 | Expiry and historical evaluation-time behavior: §§6, 7 |
+
+The v2 plan's migration acceptance procedure, regression-preservation requirements, stop conditions and implementation authorization gates also remain mandatory unless explicitly replaced by a stricter v3 requirement. The protected 18-case post-fix regression remains unchanged.

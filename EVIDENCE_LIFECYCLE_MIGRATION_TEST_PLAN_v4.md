@@ -411,3 +411,10 @@ The signed deployment parameter register must provide exact numeric values for a
 ## 23. Checkpoint freshness is not commit authenticity
 
 182. **Stale checkpoint with healthy ICW:** make the latest checkpoint older than its configured alert threshold while keeping the full ICW receipt chain and current database projection available and valid. PASS only if the system alerts and verifies the complete receipt chain without treating the stale checkpoint as proof failure or automatically abstaining. A recommendation may proceed only after full receipt-chain and projection verification succeed.
+
+
+## 24. Current-state read freshness tests
+
+183. **Stale projection read denial:** advance the ICW head while leaving the database projection at an older valid head. PASS only if every current-state evidence read, eligibility evaluation, recommendation, cache, export and downstream action is blocked or explicitly unavailable; none may serve the old projection as current.
+184. **Expired head token:** supply a previously valid signed ICW head token older than the approved freshness limit while the ICW is unreachable. PASS only if current-state reads/recommendations abstain; historical snapshot verification may proceed only against its fixed receipt and must be labelled historical.
+185. **Cache head binding:** cache a recommendation at ICW head H, append a new lifecycle batch to H+1, then request the cached recommendation. PASS only if cache reuse is denied unless a current H+1 evaluation/verification is performed.

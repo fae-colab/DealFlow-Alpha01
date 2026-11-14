@@ -446,8 +446,8 @@ A snapshot payload is immutable from its first durable write. Its publication/ve
 A recommendation is not represented as finalized, verified or actionable until:
 - the snapshot payload and hash are durably stored;
 - the snapshot hash (or a Merkle root containing it) is signed and independently anchored;
-- the anchor receipt binds the snapshot hash to its exact ledger/epoch/batch watermark and the relevant checkpoint;
-- the checkpoint covers the snapshot's ledger watermark, or the snapshot hash is independently anchored in a receipt that explicitly binds that watermark.
+- the ICW snapshot-finalization receipt binds the snapshot hash to its exact ledger/epoch/batch watermark and exact accepted ledger receipt; a checkpoint is an optional verification accelerator only;
+- the snapshot hash is independently anchored in an ICW receipt that explicitly binds that watermark and resolves the exact accepted ledger receipt; a checkpoint alone is never a substitute for this snapshot receipt.
 
 If anchoring is pending or unavailable, the system may retain the immutable snapshot in a pending state for retry, but must return an explicit pending/unavailable result rather than a finalized actionable recommendation. A later successful anchor changes only the separate publication event/status; it does not mutate the snapshot payload. An anchor failure or invalid receipt leaves the recommendation non-final and unavailable.
 

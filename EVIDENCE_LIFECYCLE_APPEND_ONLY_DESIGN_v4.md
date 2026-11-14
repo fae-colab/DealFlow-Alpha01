@@ -65,7 +65,7 @@ There is no authoritative mutable \`active\`, \`status\`, \`revoked\`, or \`supe
 ### 2.3 Lifecycle event
 
 Every event contains:
-\`eventId, tenantId, ledgerId, ledgerEpoch, sequence, batchId, eventType, evidenceId, claimIdentityHash, recordedAtServer, effectiveAt, actorId, actorType, reasonCode, reasonText, requestId, payloadHash, previousEventHash, eventHash, schemaVersion\`.
+\`eventId, tenantId, ledgerId, ledgerEpoch, sequence, batchId, eventType, evidenceId, claimIdentityHash, recordedAtServer, effectiveAt, actorId, actorType, authorizationAssertionId, reasonCode, reasonText, requestId, payloadHash, previousEventHash, eventHash, schemaVersion\`.
 
 Supersession additionally contains the replacement evidence ID and replacement content hash. Server-generated fields cannot be supplied or overridden by clients.
 

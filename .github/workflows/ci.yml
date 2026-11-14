@@ -73,6 +73,9 @@ jobs:
       - name: Run post-fix evidence freshness validation
         run: node validation/stale_evidence_v1_1/run_validation.js
 
+      - name: Run scored v1.1 post-fix regression replay
+        run: node validation/stale_evidence_v1_1/run_post_fix_regression.js
+
       - name: Preserve post-fix validation report
         if: always()
         uses: actions/upload-artifact@v4
@@ -81,4 +84,7 @@ jobs:
           path: |
             validation/stale_evidence_v1_1/POST_FIX_REPORT.json
             validation/stale_evidence_v1_1/POST_FIX_REPORT.md
+            validation/stale_evidence_v1_1/POST_FIX_REGRESSION_RAW.json
+            validation/stale_evidence_v1_1/POST_FIX_REGRESSION_REPORT.json
+            validation/stale_evidence_v1_1/POST_FIX_REGRESSION_REPORT.md
           if-no-files-found: error

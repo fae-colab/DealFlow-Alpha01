@@ -209,3 +209,10 @@ For every failure capture sanitized logs, exact commit/config, database snapshot
 74. Composite foreign keys reject cross-tenant and cross-ledger evidence/event/lineage references.
 75. Snapshot UPDATE/DELETE attempts using the application role are rejected.
 76. A ledger exceeding the configured maximum trusted-checkpoint age or unanchored-tail length becomes unavailable for decisions; a verified independent checkpoint restores availability only after full verification.
+
+## 11. Authorization and epoch recovery tests
+
+77. An unauthorized mutation is rejected and audited but does not disable unrelated eligible decisions for an otherwise healthy ledger.
+78. A decision read denied by tenant authorization returns ABSTAIN/unavailable and never leaks cross-tenant existence or payload.
+79. Restore within the same ledger epoch cannot lower/reset sequence; recovery requiring a new epoch creates a signed manifest bound to the prior trusted checkpoint and preserves old snapshots.
+80. Checkpoint signature verification rejects wrong algorithm IDs, unknown key IDs, malformed canonical manifest bytes, and altered signatures; valid retained verification keys continue to validate historical checkpoints.

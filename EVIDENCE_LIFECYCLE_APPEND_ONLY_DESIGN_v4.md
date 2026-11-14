@@ -242,7 +242,7 @@ The checkpoint anchor and immutable checkpoint copy must be protected from ordin
 
 A hash chain stored only in the same database is insufficient. A signature generated and stored only under the same compromised database control plane is also insufficient.
 
-### 6.3 Checkpoint freshness and unanchored tail
+### 6.3 Checkpoint freshness and projection lag
 
 Before production, explicit values must be approved for:
 - maximum age of latest independently anchored checkpoint;
@@ -434,7 +434,7 @@ This document resolves the approved design requirements but does not prove imple
 **Authorized now:** documentation, architecture analysis, specification drafting and review.  
 **Not authorized:** application/engine/UI/database code changes, schema changes, migrations, migration execution, test execution against production systems, PR #30 merge, PR #32 readiness/merge, real-agent evidence intake or evidence ingestion.
 
-PR #30 remains open and unmerged. PR #32 remains a draft for review. A later implementation requires a separate explicit authorization after the design, server specification and migration test plan have all been critically reviewed.
+PR #30 remains open and unmerged. PR #32 remains a draft for review; the v4 contract is maintained on a separate documentation branch pending review. A later implementation requires a separate explicit authorization after the design, server specification and migration test plan have all been critically reviewed.
 
 
 ## 15. Critical-review closure addendum (normative)

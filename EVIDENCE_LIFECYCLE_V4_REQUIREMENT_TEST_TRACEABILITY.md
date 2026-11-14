@@ -85,7 +85,7 @@ Binding rule already resolved in v4: every new `createEvidence`, `supersedeEvide
 ### 6.2 Signed deployment parameter register
 
 The register must specify concrete values and units for:
-- maximum ICW read/append outage tolerance;
+- maximum ICW read/append outage tolerance and maximum age of signed current-head/freshness tokens;
 - maximum projection lag and reconciliation timeout;
 - checkpoint interval and maximum checkpoint age (operational alert/verification-mode thresholds, not automatic integrity failure);
 - receipt/envelope/object retention and WORM/legal-hold behavior;
@@ -137,6 +137,6 @@ The following are binding refinements to the tables above:
 - ICW semantic validation is part of AR-03/AR-05/AR-06, not merely application validation (tests 173, 175).
 - No database lock or open transaction may be held across the ICW network call (tests 174–175).
 - All four lifecycle mutation commands require the exact current ICW head watermark (tests 158, 176); same-key replay is resolved against the original receipt after current authorization (tests 159, 177).
-- "Unanchored tail" is retired terminology. The remaining operational lag is the database projection backlog or an ICW receipt not yet summarized by a checkpoint. Tests 48, 50, 180 and 182 exercise checkpoint alerting/verification mode and projection lag; every committed batch already has an ICW receipt.
+- "Unanchored tail" is retired terminology. The remaining operational lag is the database projection backlog or an ICW receipt not yet summarized by a checkpoint. Tests 48, 50, 180 and 182 exercise checkpoint alerting/verification mode and projection lag; tests 183–185 enforce current-head freshness; every committed batch already has an ICW receipt.
 - Sensitive evidence payloads may be encrypted and lawfully erased under the signed privacy policy. Receipt integrity and payload reconstruction are separate outcomes (tests 178–179, 181).
 - Snapshot publication state and reconstruction status are separate dimensions (test 181).

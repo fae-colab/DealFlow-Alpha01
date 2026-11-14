@@ -418,3 +418,9 @@ The signed deployment parameter register must provide exact numeric values for a
 183. **Stale projection read denial:** advance the ICW head while leaving the database projection at an older valid head. PASS only if every current-state evidence read, eligibility evaluation, recommendation, cache, export and downstream action is blocked or explicitly unavailable; none may serve the old projection as current.
 184. **Expired head token:** supply a previously valid signed ICW head token older than the approved freshness limit while the ICW is unreachable. PASS only if current-state reads/recommendations abstain; historical snapshot verification may proceed only against its fixed receipt and must be labelled historical.
 185. **Cache head binding:** cache a recommendation at ICW head H, append a new lifecycle batch to H+1, then request the cached recommendation. PASS only if cache reuse is denied unless a current H+1 evaluation/verification is performed.
+
+
+## 25. Authorization assertion tests
+
+186. **Unsigned/forged authorization assertion:** submit an otherwise valid batch with missing, unsigned, altered, wrong-audience, expired or wrong-scope assertion. PASS only if ICW rejects each request without receipt/head advancement.
+187. **Application administrator cannot mint assertion:** compromise ordinary application-administrator credentials and attempt to issue or broaden an assertion for another actor/tenant/operation. PASS only if the separately controlled issuer denies it and ICW accepts no batch.

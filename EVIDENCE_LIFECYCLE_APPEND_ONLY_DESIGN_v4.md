@@ -2,7 +2,7 @@
 
 **Status:** Revised v4 architecture for independent review. Documentation only; implementation is not authorized.  
 **Decision basis:** D-01 through D-06 individually approved by the user on 14 November 2026. D-02, D-04 and D-06 include mandatory amendments.  
-**Supersedes:** The normative design content of \`EVIDENCE_LIFECYCLE_APPEND_ONLY_DESIGN_v2.md\` where this v4 document differs. The v2 and v3 files remain preserved as historical review material.  
+**Supersedes:** The normative design content of the v2 and v3 architecture documents where this v4 document differs. The v2 and v3 files remain preserved as historical review artifacts.
 **Repository baseline:** PR #32 draft, based on the PR #30 adversarial evidence-eligibility work.  
 **Scope:** Authoritative evidence lifecycle, eligibility, atomic supersession, ledger integrity, recovery, historical recommendation accountability, migration boundaries, security and operations.
 
@@ -42,7 +42,7 @@ The following are mandatory architecture requirements:
 
 ### 2.1 Evidence ledger
 
-Each tenant has one or more explicitly identified ledgers. A ledger is scoped by immutable \`tenantId\`, \`ledgerId\`, and \`ledgerEpoch\`. It has a genesis hash, schema version, one monotonic \`lastSequence\`, a head hash and committed batch boundaries.
+Each tenant has one or more explicitly identified ledgers. A ledger is scoped by immutable tenantId, ledgerId and ledgerEpoch. The ICW maintains the authoritative genesis, receipt sequence, receipt head and committed batch boundaries. The relational database maintains only a projection cursor (last_sequence) and projected head that must match the ICW.
 
 Every event, evidence record, lineage edge, checkpoint, projection, snapshot reference, unique constraint and read query is scoped to the tenant and ledger. Tenant identity is derived from authenticated server context and is never trusted from request JSON.
 
@@ -252,15 +252,15 @@ A locally valid database tail without matching ICW receipts is rejected, even if
 
 ### 6.5 Epoch transition
 
-A new epoch is a controlled recovery boundary, not a way to discard unknown history. Its signed restore manifest must identify the prior ledger/epoch, last trusted checkpoint, recovered sequence/head, recovery sources, missing-range disposition, operator approvals and reason.
+A new epoch is a controlled recovery boundary, not a way to discard unknown history. Its signed restore manifest must identify the prior ledger/epoch, latest trusted ICW receipt/head, any relevant checkpoint, recovered sequence/head, recovery sources, missing-range disposition, operator approvals and reason.
 
-A new epoch may be opened only after the prior trusted prefix and all required intervening committed batches are recovered and reconciled, or the ledger remains explicitly quarantined/unavailable. The new epoch must not silently claim continuity across an unrecovered gap. Historical snapshots remain bound to their original epoch and checkpoint.
+A new epoch may be opened only after the prior ICW receipt history and all required batch envelopes are verified and reconciled, or the prior ledger remains explicitly quarantined/unavailable. The new epoch must not silently claim continuity across an unrecovered receipt or payload gap. Historical snapshots remain bound to their original epoch and ICW receipt.
 
 ### 6.6 Threat boundary and residual risk
 
-This design is intended to detect accidental rollback, stale backup restoration, database-only tampering, sequence regression, fork substitution and compromise of ordinary database administrator credentials.
+This design is intended to detect accidental rollback, stale backup restoration, database-only tampering, sequence regression, fork substitution and compromise of ordinary database and application administrator credentials, assuming the ICW, authorization assertion issuer and cryptographic trust roots remain uncompromised.
 
-It cannot honestly claim protection if an attacker simultaneously controls the database, independent anchor, signing authority and immutable backup administration, or compromises the trust root before checkpoints are anchored. Such incidents require key-compromise response, quarantine from the last independently trusted position, forensic review and explicit re-establishment of trust. The architecture must disclose this residual risk rather than claim absolute immutability.
+It cannot honestly claim protection if an attacker simultaneously controls the ICW administrative/control plane, authorization assertion issuer/trust root, signing authority and immutable receipt/object retention roots. Such incidents require quarantine from the last independently verified ICW receipt, forensic review and explicit re-establishment of trust. The architecture must disclose this residual risk rather than claim absolute immutability.
 
 ## 7. D-05 — Lifecycle state and eligibility are separate
 
@@ -282,7 +282,7 @@ An active but expired record is lifecycle-active and currently ineligible. Expir
 
 Material contradictions remain unresolved/ineligible unless a separately designed, versioned adjudication process is approved. Recency alone is not adjudication.
 
-If required lifecycle, checkpoint, provenance or eligibility data cannot be verified, DealFlow must abstain for decisions depending on that evidence. It must not silently drop a problematic record and continue with a misleading partial portfolio.
+If required ICW receipt history, payload provenance or eligibility data cannot be verified, DealFlow must abstain for decisions depending on that evidence. It must not silently drop a problematic record and continue with a misleading partial portfolio.
 
 ## 8. D-06 — Immutable, independently verifiable recommendation snapshots
 

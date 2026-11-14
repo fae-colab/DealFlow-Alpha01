@@ -112,9 +112,9 @@ The following are mandatory acceptance groups.
 47. Restored database cannot serve recommendations before explicit recovery verification and authorized re-enable.
 
 ### 5.3 Thresholds and dependency outages
-48. Test checkpoint age and maximum database projection lag below, at and above configured boundaries. There is no unanchored committed tail: every accepted batch must already have an ICW receipt.
+48. Test checkpoint age and maximum database projection lag below, at and above configured boundaries. PASS only if stale checkpoints trigger alert/full ICW receipt-chain verification but do not invalidate a complete verifiable chain; projection lag beyond its configured boundary blocks evidence-dependent reads/mutations. There is no unanchored committed tail.
 49. Missing/unavailable anchor, KMS, WORM object store or checkpoint publisher causes ledger unavailability when policy cannot verify current integrity.
-50. Checkpoint publication delay beyond policy threshold prevents unsafe fast-path recommendations.
+50. Checkpoint publication delay beyond its operational target triggers an alert and full ICW receipt-chain verification; it does not block a recommendation if the ICW chain is verifiable and the projection is current.
 51. Healthy unrelated tenant/ledger remains available when one ledger is quarantined, unless a broader trust-domain incident is established.
 52. Database backup alone never passes lifecycle-integrity acceptance.
 
@@ -406,3 +406,8 @@ The signed deployment parameter register must provide exact numeric values for a
 179. **Sensitive payload separation:** inspect ICW receipts, operational logs and checkpoint objects. PASS only if prohibited plaintext personal data is absent, ciphertext/object digests and key references are bound, and access is restricted by the approved role matrix.
 180. **Projection lag threshold:** test configured maximum projection lag below, at and above the pinned threshold. PASS only if behavior matches the signed parameter register and no stale projection is served after the limit.
 181. **Reconstruction state separation:** finalize a snapshot whose integrity is verified but whose legally erased dependency prevents full recomputation. PASS only if publication remains FINALIZED_VERIFIED where policy permits, while reconstruction status is independently PARTIAL/UNAVAILABLE; these states are not conflated.
+
+
+## 23. Checkpoint freshness is not commit authenticity
+
+182. **Stale checkpoint with healthy ICW:** make the latest checkpoint older than its configured alert threshold while keeping the full ICW receipt chain and current database projection available and valid. PASS only if the system alerts and verifies the complete receipt chain without treating the stale checkpoint as proof failure or automatically abstaining. A recommendation may proceed only after full receipt-chain and projection verification succeed.

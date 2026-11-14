@@ -69,78 +69,44 @@ Typed failures:
 
 A timeout after commit is resolved by retrying the same key. A failure response must never imply that a partial transaction committed.
 
-## 4. Transaction and concurrency contract (D-02)
+## 4. Transaction, ICW append and projection contract (D-02)
 
-### 4.1 Isolation and lock order
+### 4.1 Authority and lock order
 
-Reference implementation uses a serializable transaction and explicit row-level locks. A database using a different isolation model must demonstrate equivalent serializable behavior for all lifecycle invariants.
+The ICW is the authoritative sequence allocator, idempotency authority and lifecycle commit point. Do not hold a database transaction or row locks across the ICW network call.
 
-Mandatory lock order:
-1. idempotency key reservation/lookup under unique constraint;
-2. tenant/ledger/epoch head row;
-3. predecessor evidence/lifecycle row;
-4. any additional lineage/claim rows in deterministic sorted identifier order.
+The request path is: authenticate and validate; read current ICW head; verify projection is caught up; prepare canonical batch; ICW validates semantics and performs expected-head CAS; after receipt acceptance, apply the batch to the database projection in one transaction.
 
-Every mutation procedure uses the same lock order. Locks remain held through commit/rollback. The procedure rechecks actor authorization, tenant, predecessor state, claim identity, expected watermark and lineage after locks are acquired.
+Projection lock order is fixed:
+1. ledger projection cursor/head row;
+2. immutable predecessor evidence row, where the command has a predecessor;
+3. additional claim/lineage graph rows in deterministic sorted identifier order.
+
+A stale ICW CAS loser reloads the accepted receipt history and revalidates. It never blindly retries a stale prepared batch.
 
 ### 4.2 Sequence and batch allocation
 
-There is one authoritative \`last_sequence\` per ledger epoch. Under the ledger-head lock, allocate the next contiguous sequence range. Never maintain parallel \`next_sequence\` and \`head_sequence\` counters.
+The ICW assigns the next contiguous sequence range atomically and returns it in a signed receipt. The database `last_sequence` is only the last successfully applied ICW sequence. It is not an allocator. No database-only sequence or batch can become authoritative.
 
-Create/revoke/withdraw normally produce a one-event batch. Supersession produces exactly two ordered events:
-1. replacement creation;
-2. predecessor supersession.
+Create/revoke/withdraw normally produce one-event batches. Supersession produces exactly two ordered events: replacement creation then predecessor supersession. The complete canonical batch envelope, including evidence and lineage payloads, is retained in the ICW trust domain or immutable object storage referenced by the receipt.
 
-A batch record binds batch ID, first/last sequence, event count, batch hash and ledger scope. The transaction inserts all dependent rows, validates exact coverage, updates \`last_sequence\` and head hash, stores idempotency result, then commits. Batch rows are not published as valid watermarks before commit.
+### 4.3 ICW semantic validation
 
-### 4.3 Database constraints
+Before receipt acceptance, the ICW validates closed event vocabulary, evidence creation uniqueness, terminal transition uniqueness, predecessor active state, exact claim identity, tenant/ledger/epoch scope, unique predecessor/replacement lineage, no fork/merge/cycle, contiguous sequence and complete batch digest. Invalid batches do not advance the ICW head or create receipts.
 
-Required constraints/indexes:
-- primary/unique key on tenant + ledger + epoch + sequence;
-- unique event ID in tenant/ledger/epoch;
-- one creation event per evidence ID;
-- at most one terminal event per evidence ID across superseded/revoked/withdrawn;
-- unique predecessor and unique replacement in supersession lineage;
-- composite foreign keys for tenant/ledger/epoch consistency;
-- unique idempotency scope key;
-- batch ranges contiguous, non-overlapping and complete;
-- snapshots and lifecycle rows protected from ordinary UPDATE/DELETE;
-- no snapshot/checkpoint at an interior batch sequence.
+### 4.4 Projection constraints
 
-Use partial unique indexes where supported. Use deferred constraints or final validation inside the append procedure for invariants that depend on all rows in a batch. A service-side precheck is never sufficient.
+The relational database applies only receipt-backed batches. Its projection transaction verifies receipt signature, envelope digest, previous receipt/head, assigned sequence range and batch digest before writing. It inserts all dependent records/events/lineage/batch metadata and advances the projection cursor in one transaction.
 
-### 4.4 Atomic supersession algorithm
+Database uniqueness, composite foreign keys, terminal-event constraints, lineage constraints and batch completeness remain mandatory defense in depth. The request-serving role has no direct DML. A projection mismatch causes ledger isolation; the DB cannot override the ICW.
 
-Within one transaction:
-1. reserve/check idempotency key and digest;
-2. lock ledger head;
-3. lock predecessor and re-check it is active at current locked projection;
-4. verify actor may supersede this record;
-5. validate replacement ID is new, claim identity matches exactly, tenant/ledger/epoch match, no cycle/fork/merge exists;
-6. allocate two consecutive sequence numbers;
-7. insert replacement immutable evidence envelope;
-8. insert batch header;
-9. insert replacement creation event at first sequence;
-10. insert lineage edge;
-11. insert predecessor supersession event at second sequence;
-12. compute and validate event and batch hashes;
-13. verify event count, range and graph constraints;
-14. update ledger last_sequence/head_hash;
-15. persist idempotency response;
-16. commit.
+### 4.5 Supersession and failure handling
 
-If any statement, constraint, deferred validation, hash check or commit fails, the whole transaction rolls back. No predecessor terminal event, replacement record, lineage edge, sequence advancement, batch or idempotency success response may remain partially committed.
+A supersession is one ICW append with the two ordered events and replacement payload. ICW acceptance is the logical commit. The subsequent database transaction applies the entire batch or none of it. If projection fails after receipt acceptance, the operation is committed-but-pending; recovery replays the same envelope. The server must not report rollback, allocate another sequence or serve the stale projection.
 
-### 4.5 Concurrent requests and retries
+### 4.6 Idempotency and retries
 
-- Concurrent supersessions of one predecessor: one transaction may commit; the other must observe terminal state/unique conflict and fail without side effects.
-- Concurrent revoke versus supersede: one serialized terminal transition wins; the loser returns a typed conflict.
-- Same idempotency key and same digest: one logical operation; retries return original committed response only after current authorization recheck.
-- Same key and different digest: 409 integrity conflict; no second write.
-- Deadlock/serialization failure: rollback complete transaction; bounded retry using same idempotency key.
-- Network timeout after commit: same-key retry returns original result.
-- Retry exhaustion: typed retryable unavailable response; no partial state.
-- Expired key: retained digest tombstone prevents silent reuse for the approved recovery horizon.
+The ICW enforces tenant + authenticated actor/client scope + operation + request ID and canonical request digest. Same key/same digest returns the original receipt after current authorization recheck; same key/different digest is an integrity conflict. Timeout after acceptance returns the original receipt on retry. ICW outage before acceptance blocks all new lifecycle commits. Projection retry is idempotent and cannot create a second row/event/batch.
 
 ## 5. Persistence responsibilities and privileges
 

@@ -477,13 +477,13 @@ For every accepted lifecycle batch, the ICW MUST atomically retain:
 - the previous accepted witness receipt ID/hash and previous ledger position;
 - the resulting batch digest and resulting ledger head digest;
 - idempotency scope and canonical request digest (never a reusable raw secret);
-- authenticated actor/client identity reference and authorization-decision reference;
+- authenticated actor/client identity reference and a signed, scoped authorization assertion (tenant, actor, permitted operation/resource scope, request digest, audience, expiry and unique assertion ID);
 - schema, canonicalization and digest-algorithm versions;
 - witness acceptance time, unique witness transaction/receipt ID and signed receipt.
 
 A hash-only receipt is insufficient. The independent trust domain must preserve the complete event and batch content, or a durable immutable object reference whose bytes, retention, access controls and availability are independently verified. An object is written and confirmed immutable before the ICW publishes a receipt that commits to it. Orphan objects without a receipt are uncommitted garbage and cannot become lifecycle history.
 
-The ICW MUST validate the proposed batch against its authoritative lifecycle state before accepting it, including closed event vocabulary, exactly one creation event per evidence ID, no second terminal transition, active predecessor requirement, exact claim-identity match, unique predecessor/replacement lineage, no fork/merge/cycle and tenant/ledger/epoch consistency. It MUST enforce a per-tenant/ledger/epoch atomic compare-and-swap append:
+The ICW MUST cryptographically validate the authorization assertion against a trust key/issuer not controlled by ordinary application administrators, and bind it to the canonical request digest. It then validates the proposed batch against its authoritative lifecycle state before accepting it, including closed event vocabulary, exactly one creation event per evidence ID, no second terminal transition, active predecessor requirement, exact claim-identity match, unique predecessor/replacement lineage, no fork/merge/cycle and tenant/ledger/epoch consistency. It MUST enforce a per-tenant/ledger/epoch atomic compare-and-swap append:
 - supplied expected previous receipt/head must equal the current ICW head;
 - the next sequence range must be exactly contiguous;
 - the batch must be complete and internally valid;
@@ -617,3 +617,10 @@ Any v3 statement that treats a database transaction as the sole authoritative co
 Every current-state evidence read, eligibility evaluation and recommendation must be bound to the latest ICW head established for that request, or to a signed ICW head/freshness token whose age is within the explicitly approved deployment limit. The service verifies that the relational projection cursor and head digest exactly match the established ICW head before serving a current recommendation. A cache may reuse a result only if it also validates the bound ICW head token and freshness expiry.
 
 If the ICW head cannot be read, the token is expired, or the projection is behind/mismatched, current-state reads and recommendations return explicit unavailable/abstain. No cached previous head, stale backup or checkpoint age assumption may stand in for current-head verification. Historical snapshot verification is allowed against its fixed immutable receipt, but it must be labelled historical and cannot assert current evidence state.
+
+
+## A13. Authorization assertion at the commit witness
+
+The ICW MUST NOT trust a plain actor ID, role name, authorization-decision reference or unsigned application claim. Each append request carries a signed, short-lived authorization assertion issued by a separately controlled identity/authorization authority. It binds tenant, actor/client, permitted lifecycle command and resource/claim scope, canonical request digest, ICW audience, expiry and unique assertion ID. The ICW verifies issuer, signature, audience, expiry, scope and request-digest match before accepting the batch. Assertion IDs are replay-protected except for exact idempotent retries bound to the same request digest and original receipt.
+
+The signing/issuance authority and its administrative credentials are outside ordinary application-administrator and database-administrator control. If a deployment cannot provide this separation, it must disclose the reduced threat boundary and cannot claim that application-administrator compromise is resisted.

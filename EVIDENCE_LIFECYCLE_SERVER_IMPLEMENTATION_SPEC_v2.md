@@ -188,3 +188,56 @@ Unauthorized writes are rejected and security-audited; they do not disable unrel
 A restore never resets sequence inside an existing ledger epoch. If a new epoch is required, create a new ledger namespace with a signed restore manifest binding prior ledger ID/epoch/checkpoint/head, recovered content hash, operator approvals, and reason. The new epoch has a new genesis; it is not an implicit merge. Existing snapshots remain bound to their original epoch.
 
 Checkpoint signing must use an explicit supported asymmetric algorithm (for example, ECDSA P-256 with SHA-256 where supported by the selected KMS), store the algorithm identifier and key ID, and sign UTF-8 bytes consisting of domain label `DF-EVIDENCE-CHECKPOINT-v1`, NUL, and UTF-8 JCS(manifest). Retain verification keys and algorithm metadata for the full audit-retention period. Genesis bytes are exactly: domain label `DF-EVIDENCE-GENESIS-v1`, NUL, ledger ID UTF-8, NUL, epoch as unsigned base-10 ASCII without leading zeros, NUL, schema version UTF-8; hash with SHA-256.
+
+
+## 15. Independent-review closure addendum (normative; supersedes conflicting earlier wording)
+
+### 15.1 Required batch schema and watermark semantics
+
+Add ledger_batches:
+- tenant_id, ledger_id, ledger_epoch, batch_id (composite primary/unique key);
+- first_sequence, last_sequence, event_count, batch_hash, recorded_at_server, schema_version;
+- unique (tenant_id, ledger_id, ledger_epoch, batch_id);
+- unique (tenant_id, ledger_id, ledger_epoch, first_sequence) and (tenant_id, ledger_id, ledger_epoch, last_sequence);
+- enforce contiguous non-overlapping ranges and exact event_count = last_sequence - first_sequence + 1 in the append transaction/stored procedure;
+- every event has a non-null composite FK to exactly one batch and its sequence lies within that batch range.
+
+The evidence_ledgers table has one and only one sequence counter, last_sequence, plus head_hash. Remove the earlier next_sequence / head_sequence pair from the schema. Lock the ledger row, compute the next sequence from last_sequence + 1, and update last_sequence and head_hash once per committed batch in the same transaction.
+
+All decision, snapshot, checkpoint, export, and replay watermarks MUST reference a batch end. A read at a sequence strictly inside a batch returns 409 INVALID_INTERMEDIATE_WATERMARK; it cannot return a partial projection. Supersession creates one batch with exactly two events, replacement evidence_created first and predecessor evidence_superseded second. The batch, both records/events, lineage, idempotency response, and ledger head commit atomically. A fault at any point rolls back the entire batch.
+
+### 15.2 Exact hash construction
+
+Use these byte encodings without platform-dependent string coercion:
+- Record digest: SHA-256 of UTF-8 DF-EVIDENCE-RECORD-v1 + NUL + UTF-8 JCS(validated immutable record envelope).
+- Event payload digest: SHA-256 of UTF-8 DF-EVIDENCE-EVENT-PAYLOAD-v1 + NUL + UTF-8 JCS(event envelope omitting payloadHash, previousEventHash, and eventHash).
+- Event digest: SHA-256 of UTF-8 DF-EVIDENCE-EVENT-v1 + NUL + ledger ID UTF-8 + NUL + epoch decimal ASCII + NUL + sequence decimal ASCII + NUL + previous hash raw 32 bytes + NUL + payload hash raw 32 bytes.
+- Batch digest: SHA-256 of UTF-8 DF-EVIDENCE-BATCH-v1 + NUL + batch ID UTF-8 + NUL + first sequence decimal ASCII + NUL + last sequence decimal ASCII + ordered event hashes as raw 32-byte values.
+
+Decimal epoch/sequence encodings are unsigned base-10 ASCII without leading zeros. Hash values are decoded from validated lowercase 64-character hex before concatenation. JCS rejects duplicate keys, invalid Unicode, NaN/Infinity, and unsupported numeric representations. Check in independently calculated golden vectors for record, payload, event, batch, genesis, and signed checkpoint preimages. The implementation PR must include an independent verifier, not only tests that call the same production helper twice.
+
+### 15.3 Canonical claim identity and conflicts
+
+Define a versioned claim-identity schema and canonicalizer before implementation. It must specify Unicode normalization, jurisdiction, identifier normalization, units/currency, relevant time interval, and semantic version. Do not fuzzy-match identities or silently convert units/currencies. Persist canonicalization version and identity hash with each record.
+
+The projection must detect contradictory support/refutation for the same canonical claim. Recency alone is not a resolution rule. Until a versioned adjudication policy resolves material contradiction, mark the claim CONFLICTED and exclude it from recommendations. Preserve all underlying records and adjudication provenance.
+
+### 15.4 Transaction, authorization, and idempotency details
+
+The authenticated tenant and actor are resolved before any tenant-scoped lookup. The transaction re-checks the authorization-relevant record state after locking; authorization cannot rely on a stale pre-transaction read. A matching idempotency replay is returned only after confirming the same authenticated tenant/actor scope remains authorized to receive that response. Same key/different digest remains a 409 integrity conflict and security audit.
+
+recordedAtServer is a trusted database/service acceptance timestamp assigned within the successful transaction, not an asserted exact commit timestamp. Batch commit is the durability boundary. Retain idempotency tombstone/digest for at least the maximum retry, backup-restore, and incident-recovery horizon; never silently recycle an expired key.
+
+### 15.5 Database privilege and projection controls
+
+The application role MUST NOT directly write ledger_batches, event sequence values, or ledger head values. Expose a narrowly scoped stored procedure or service-owned transaction role that validates all invariants under row locks; revoke public execute and direct table privileges. The procedure must derive tenant from trusted session context and verify it against RLS context. Migration/restore uses a separate short-lived role with dual authorization and full audit.
+
+A materialized projection/cache is never authoritative. It must be keyed by ledger ID, epoch, batch-end sequence, batch hash, and projector version; verify against the trusted prefix before use. A partial or stale cache returns unavailable, not a reduced eligible set.
+
+### 15.6 Error and failure semantics
+
+Add stable code INVALID_INTERMEDIATE_WATERMARK (409). An integrity failure quarantines only the affected ledger/epoch; unrelated tenants/ledgers continue. An unauthorized write is rejected and audited but does not globally disable healthy decisions. A decision read denied for its own tenant or unable to verify its required prefix returns ABSTAIN/unavailable. This scope rule supersedes any broader interpretation of “authorization failure causes abstention.”
+
+### 15.7 Deployment policy values
+
+Before production, configure and approve numeric values for checkpoint maximum age, maximum unanchored tail length, clock-skew tolerance, projection consistency bound, backup retention, and recovery objectives. Include alerting and tests at below/at/above boundaries. No undocumented hard-coded fallback is permitted.

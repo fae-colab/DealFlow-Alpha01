@@ -266,3 +266,46 @@ The following details are normative and resolve ambiguity in the preceding schem
 - A restore must never reset sequence within the same ledger epoch. If recovery requires a new epoch, create a new ledger epoch/namespace with a signed restore manifest that names the prior ledger ID, epoch, trusted checkpoint, recovered sequence/head, operator approvals, and reason. The new epoch begins at its own genesis and is not an implicit continuation or merge. Historical snapshots remain bound to the original epoch.
 - Checkpoint signatures must identify an explicit supported asymmetric algorithm and key ID. The signed bytes are the UTF-8 domain label `DF-EVIDENCE-CHECKPOINT-v1`, one NUL byte, and UTF-8 JCS of the manifest. Verification keys and algorithm identifiers are retained for the full audit-retention period.
 - Genesis hash bytes are exact: UTF-8 `DF-EVIDENCE-GENESIS-v1`, NUL, UTF-8 ledger ID, NUL, unsigned base-10 epoch ASCII without leading zeros, NUL, UTF-8 schema version. SHA-256 result is stored as lowercase hex.
+
+
+## 17. Independent-review closure addendum (normative; supersedes conflicting earlier wording)
+
+This addendum is part of v2 and takes precedence over any inconsistent statement above.
+
+### 17.1 Atomic event batches and valid watermarks
+
+A database transaction is the indivisible lifecycle unit. Every committed mutation is represented by one ledger batch with batchId, firstSequence, lastSequence, batchHash, and server acceptance time. Every event belongs to exactly one batch. A single-event mutation has a one-sequence batch. Supersession has one batch containing exactly two ordered events: replacement creation followed by predecessor supersession.
+
+Although the two supersession events have consecutive sequence numbers, a valid decision watermark MUST be a committed batch boundary (lastSequence), never an interior sequence. The projector MUST reject an explicit sequence that falls inside a batch with INVALID_INTERMEDIATE_WATERMARK; it must not project that prefix. Decision snapshots, checkpoints, exports, and replay references identify both the batch ID and its ending sequence. A reader sees either the complete committed batch or none of it. This prevents an intermediate state in which predecessor and replacement are both eligible. Batch rows, events, records, lineage, idempotency result, and ledger head update commit or roll back together.
+
+### 17.2 Single sequence authority and schema correction
+
+There is exactly one mutable ledger sequence field: last_sequence. The earlier illustrative schema fields next_sequence and head_sequence are superseded and MUST NOT both be implemented. head_hash is the hash at last_sequence; it is not a second sequence counter. Batch boundaries are stored in ledger_batches and are constrained to contiguous, non-overlapping ranges ending at or below last_sequence.
+
+### 17.3 Exact canonical hash preimages
+
+All hash input bytes are normative:
+- Record: UTF-8 domain label DF-EVIDENCE-RECORD-v1, one NUL byte, then UTF-8 RFC 8785 JCS of the validated immutable record envelope.
+- Event payload: UTF-8 domain label DF-EVIDENCE-EVENT-PAYLOAD-v1, one NUL byte, then UTF-8 JCS of the event envelope with payloadHash, previousEventHash, and eventHash omitted. This avoids self-reference.
+- Event hash: UTF-8 DF-EVIDENCE-EVENT-v1, NUL, ledger ID UTF-8, NUL, epoch as unsigned base-10 ASCII without leading zeros, NUL, sequence in the same form, NUL, previous hash as 32 raw bytes, NUL, payload hash as 32 raw bytes.
+- Batch hash: UTF-8 DF-EVIDENCE-BATCH-v1, NUL, batch ID UTF-8, NUL, first and last sequence as unsigned base-10 ASCII separated by NUL, then the ordered event hashes as 32 raw bytes in sequence order.
+
+Genesis and checkpoint byte encodings are defined in the server specification addendum. Persisted digest display form is lowercase 64-character hex. JCS input rejects duplicate keys, invalid Unicode, non-finite values, and numeric values outside the schema's exact representation. Money and quantities use integer minor units or canonical decimal strings. Golden vectors MUST cover each preimage, not just the resulting digest.
+
+### 17.4 Claim identity and contradiction policy
+
+Claim identity canonicalization is versioned and deterministic. It defines required fields, Unicode normalization, case rules by identifier type, jurisdiction codes, unit/currency normalization, interval boundaries, and semantic-version behavior. No fuzzy matching or implicit currency/unit conversion is allowed in the eligibility path. A changed canonicalization rule creates a new version and requires explicit compatibility/reindex review.
+
+Evidence that materially contradicts another currently eligible record for the same canonical claim is not resolved by recency alone. The policy must classify contradiction types and required resolution authority. Until a versioned policy resolves the conflict, the claim is marked CONFLICTED and is ineligible for recommendation. Every resolution is a new auditable event or adjudication record; it never mutates evidence payloads.
+
+### 17.5 Authorization wording and failure scope
+
+An unauthorized mutation is rejected and security-audited; it does not disable otherwise healthy, unrelated decisions. A decision request whose own tenant authorization, ledger-read authorization, or required integrity verification fails returns ABSTAIN/unavailable and reveals no cross-tenant information. This replaces the overly broad earlier invariant wording that could be read to make any denied write disable the whole ledger.
+
+### 17.6 Time and persistence semantics
+
+recordedAtServer means the trusted database/service acceptance timestamp assigned inside the successful transaction; it is not represented as an exact physical commit timestamp. Ledger sequence and committed batch boundary define durable ordering. effectiveAt never changes ledger order. A revocation becomes effective for decisions at the committed batch watermark; previous snapshots remain unchanged.
+
+### 17.7 Operational policy values
+
+Before any production eligibility, operators must approve explicit maximum checkpoint age, maximum unanchored event/batch tail, clock-skew tolerance, projection consistency bound, and recovery objectives. These are deployment controls, not values to be guessed in code. Missing or exceeded controls make the affected ledger unavailable for decisions.

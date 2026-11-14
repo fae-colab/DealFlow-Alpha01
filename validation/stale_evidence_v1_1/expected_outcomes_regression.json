@@ -1,0 +1,140 @@
+{
+  "oracleId": "DEALFLOW-ALPHA-01.5-V1.1-UNSEALED-SCORING-WORKBOOK",
+  "source": "DealFlow_v1_1_Blind_Replay_Scoring_Report.xlsx / Case results",
+  "cases": [
+    {
+      "caseId": "BR-001",
+      "decision": "RECOMMEND",
+      "selectedActionIds": [
+        "A_URGENT",
+        "B_VALUE"
+      ],
+      "expectedIncrementalCommissionAED": 9200
+    },
+    {
+      "caseId": "BR-002",
+      "decision": "RECOMMEND",
+      "selectedActionIds": [
+        "B_SMALL"
+      ],
+      "expectedIncrementalCommissionAED": 7200
+    },
+    {
+      "caseId": "BR-003",
+      "decision": "ABSTAIN",
+      "selectedActionIds": [],
+      "expectedIncrementalCommissionAED": 0
+    },
+    {
+      "caseId": "BR-004",
+      "decision": "ABSTAIN",
+      "selectedActionIds": [],
+      "expectedIncrementalCommissionAED": 0
+    },
+    {
+      "caseId": "BR-005",
+      "decision": "RECOMMEND",
+      "selectedActionIds": [
+        "B_FEASIBLE"
+      ],
+      "expectedIncrementalCommissionAED": 5600
+    },
+    {
+      "caseId": "BR-006",
+      "decision": "RECOMMEND",
+      "selectedActionIds": [
+        "A_PRE",
+        "B_DEP"
+      ],
+      "expectedIncrementalCommissionAED": 11400
+    },
+    {
+      "caseId": "BR-007",
+      "decision": "ABSTAIN",
+      "selectedActionIds": [],
+      "expectedIncrementalCommissionAED": 0
+    },
+    {
+      "caseId": "BR-008",
+      "decision": "RECOMMEND",
+      "selectedActionIds": [
+        "A2"
+      ],
+      "expectedIncrementalCommissionAED": 9600
+    },
+    {
+      "caseId": "BR-009",
+      "decision": "RECOMMEND",
+      "selectedActionIds": [
+        "A_REPORTED"
+      ],
+      "expectedIncrementalCommissionAED": 6000
+    },
+    {
+      "caseId": "BR-010",
+      "decision": "RECOMMEND",
+      "selectedActionIds": [
+        "A_SUPPORTED"
+      ],
+      "expectedIncrementalCommissionAED": 6300
+    },
+    {
+      "caseId": "BR-011",
+      "decision": "ABSTAIN",
+      "selectedActionIds": [],
+      "expectedIncrementalCommissionAED": 0
+    },
+    {
+      "caseId": "BR-012",
+      "decision": "ABSTAIN",
+      "selectedActionIds": [],
+      "expectedIncrementalCommissionAED": 0
+    },
+    {
+      "caseId": "BR-013",
+      "decision": "RECOMMEND",
+      "selectedActionIds": [
+        "A1",
+        "B1"
+      ],
+      "expectedIncrementalCommissionAED": 12300
+    },
+    {
+      "caseId": "BR-014",
+      "decision": "RECOMMEND",
+      "selectedActionIds": [
+        "A_ONLY"
+      ],
+      "expectedIncrementalCommissionAED": 6000
+    },
+    {
+      "caseId": "BR-015",
+      "decision": "RECOMMEND",
+      "selectedActionIds": [
+        "A1",
+        "B1"
+      ],
+      "expectedIncrementalCommissionAED": 12000
+    },
+    {
+      "caseId": "BR-016",
+      "decision": "ABSTAIN",
+      "selectedActionIds": [],
+      "expectedIncrementalCommissionAED": 0
+    },
+    {
+      "caseId": "BR-017",
+      "decision": "RECOMMEND",
+      "selectedActionIds": [
+        "B_OTHER"
+      ],
+      "expectedIncrementalCommissionAED": 4200
+    },
+    {
+      "caseId": "BR-018",
+      "decision": "ABSTAIN",
+      "selectedActionIds": [],
+      "expectedIncrementalCommissionAED": 0
+    }
+  ]
+}

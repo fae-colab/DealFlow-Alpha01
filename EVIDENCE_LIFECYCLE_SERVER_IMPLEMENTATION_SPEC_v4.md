@@ -9,7 +9,7 @@
 
 This specification translates the v4 lifecycle architecture into server/database responsibilities, transaction boundaries, API outcomes, persistence invariants, cryptographic contracts, checkpoint recovery and historical snapshot behavior.
 
-A conforming implementation MUST satisfy the architecture invariants. A service that performs application-level prechecks but lacks database-enforced constraints, durable idempotency, independent checkpointing or immutable snapshot protection is non-conforming.
+A conforming implementation MUST satisfy the architecture invariants. A service that performs application-level prechecks but lacks ICW-enforced append/idempotency, database-enforced projection constraints, independent checkpointing or immutable snapshot protection is non-conforming.
 
 This document is not executable code, a schema migration, a deployment decision or implementation authorization.
 
@@ -17,13 +17,14 @@ This document is not executable code, a schema migration, a deployment decision 
 
 1. **Authenticated API boundary:** validates credentials and derives tenant, actor and permissions.
 2. **Lifecycle command service:** accepts only typed create, supersede, revoke and withdraw commands.
-3. **Transactional persistence boundary:** executes append procedures, locking, constraints, sequence allocation, batch publication and idempotency.
-4. **Ledger projector/verifier:** deterministically validates a complete committed prefix and derives lifecycle state.
-5. **Eligibility evaluator:** evaluates evidence separately for a decision and evaluation time.
-6. **Checkpoint publisher/verifier:** signs and anchors committed ledger positions independently.
-7. **Restore/reconciliation controller:** isolated workflow for validating backups and recovering ledger tails.
-8. **Recommendation snapshot service:** records immutable decision-time context, integrity hash and independent anchor.
-9. **Independent verification utility:** verifies records, batches, checkpoints and snapshots without relying solely on production helper functions.
+3. **Independent Commit Witness (ICW):** validates lifecycle semantics, performs linearizable append/CAS, allocates authoritative sequence, retains complete batch envelopes and issues signed commit receipts.
+4. **Transactional projection boundary:** applies receipt-backed batches atomically with database constraints, locks and projection cursor updates.
+5. **Ledger projector/verifier:** deterministically validates a complete committed prefix and derives lifecycle state.
+6. **Eligibility evaluator:** evaluates evidence separately for a decision and evaluation time.
+7. **Checkpoint publisher/verifier:** signs and anchors committed ledger positions independently.
+8. **Restore/reconciliation controller:** isolated workflow for validating backups and recovering ledger tails.
+9. **Recommendation snapshot service:** records immutable decision-time context, integrity hash and independent anchor.
+10. **Independent verification utility:** verifies records, batches, checkpoints and snapshots without relying solely on production helper functions.
 
 No browser or ordinary client receives database credentials or direct lifecycle write access.
 
@@ -185,7 +186,7 @@ A restored database remains isolated until the ICW receipt chain and referenced 
 
 A shorter backup, same-sequence/different-hash fork, missing event or unverified tail is rejected. If missing history cannot be recovered, keep the ledger quarantined. Never infer that absent revocations did not occur.
 
-A new epoch requires a signed restore manifest linked to the last trusted checkpoint and a fully reconciled history. It cannot erase or bypass an unrecovered gap.
+A new epoch requires a signed restore manifest linked to the latest trusted ICW head and any relevant checkpoint, plus a fully reconciled history. It cannot erase or bypass an unrecovered gap.
 
 ### 7.4 Operational thresholds
 
@@ -193,7 +194,7 @@ Before production, approve numeric values for maximum checkpoint age alert thres
 
 ### 7.5 Threat and residual risk
 
-The design detects database-only rollback and rewrite relative to an independent anchor. It does not guarantee integrity if the attacker controls database, anchor, signing authority and immutable backups together. Suspected signing-key compromise requires quarantine from the last independently trusted position, key incident response and re-anchoring under a reviewed trust root.
+The design detects database-only rollback and rewrite relative to the independent ICW receipt log and its trust roots. It does not guarantee integrity if the attacker simultaneously controls the ICW administrative/control plane, signing authority and immutable receipt/object retention roots. Suspected signing-key compromise requires quarantine from the last independently trusted position, key incident response and re-anchoring under a reviewed trust root.
 
 ## 8. Recommendation snapshot service contract (D-06)
 
@@ -277,7 +278,7 @@ The hosting provider, database/version, authentication provider, tenant/RLS mode
 
 ## 14. Conformance and authorization
 
-Conformance requires database constraints and concurrency behavior, fault-injected atomic rollback, independently verified checkpoint recovery, independent snapshot verification, legacy namespace isolation, privacy review and the complete migration/regression plan.
+Conformance requires ICW linearizable append and semantic validation, database projection constraints and concurrency behavior, fault-injected commit/projection recovery, independently verified checkpoint/receipt recovery, independent snapshot provenance and verification, legacy namespace isolation, privacy review and the complete migration/regression plan.
 
 **Documentation only.** No implementation, schema change, migration, migration execution, PR #30 merge, PR #32 readiness/merge or real-agent evidence acceptance is authorized.
 

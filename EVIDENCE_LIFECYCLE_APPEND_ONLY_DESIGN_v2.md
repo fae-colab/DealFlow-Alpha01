@@ -309,3 +309,12 @@ recordedAtServer means the trusted database/service acceptance timestamp assigne
 ### 17.7 Operational policy values
 
 Before any production eligibility, operators must approve explicit maximum checkpoint age, maximum unanchored event/batch tail, clock-skew tolerance, projection consistency bound, and recovery objectives. These are deployment controls, not values to be guessed in code. Missing or exceeded controls make the affected ledger unavailable for decisions.
+
+
+## 18. Additional closure rules: batch publication, conflict scope, and legacy isolation
+
+- A ledger batch is not considered a valid watermark until the complete batch, all referenced records/events/lineage, its final batch hash, idempotency result, and ledger head are committed together. The append procedure validates exact event count and sequence coverage before commit. No incomplete batch may be visible to readers.
+- Record canonicalization has a fixed envelope: schema version, tenant ID, ledger ID and epoch, evidence ID, claim-identity schema version and canonical identity, immutable evidence/provenance payload, validity interval, and server acceptance timestamp. The contentHash field itself is excluded from the record-hash preimage. Event canonicalization includes every required event field except payloadHash, previousEventHash, and eventHash; the exact hash preimages in section 17 remain authoritative.
+- The current lifecycle event vocabulary does not include a claim-adjudication event. Therefore unresolved material contradictions remain CONFLICTED and ineligible. No UI or operator may manually clear the conflict or use recency as an override. Any future adjudication capability requires a separately reviewed append-only event/schema extension, explicit authority rules, and replay tests before implementation.
+- Legacy quarantine envelopes live outside the eligible evidence-record/event namespace. A migration process cannot create an evidence_created event for a legacy evidence ID. Re-attestation must allocate a new evidence ID and pass the normal authenticated create flow; the legacy ID remains a non-eligible audit reference.
+- Database append/restore procedures must be the only permitted write path. Ordinary API runtime credentials have no direct INSERT/UPDATE/DELETE on lifecycle records, events, batches, lineage, snapshots, or checkpoints. Privileged procedures use a narrowly scoped owner role, fixed search_path, tenant context validation, and audited execute permissions.

@@ -27,7 +27,7 @@ Required environments after implementation authorization:
 - production-equivalent relational database version/configuration for transactions, constraints, RLS and privileges;
 - concurrent integration tests with separate database sessions;
 - fault injection for process termination, connection loss, serialization failure and ambiguous network responses;
-- isolated restore lab with signed backup, independent checkpoint anchor and immutable checkpoint objects;
+- isolated restore lab with the ICW, signed receipt/envelope store, independent checkpoint anchor and immutable checkpoint objects;
 - independent verifier environment that does not reuse production hash/canonicalization helpers.
 
 Every run records commit SHA, schema/provider version, DB isolation configuration, fixture/source hashes, checkpoint and signing-key test IDs, test-run ID, runner version, configuration and artifact digests. Use synthetic fixtures only. Do not use real-agent evidence.
@@ -104,8 +104,8 @@ The following are mandatory acceptance groups.
 39. Restore shorter sequence: reject rollback.
 40. Restore with missing sequence, batch, record, lineage row or hash: reject/quarantine.
 41. Restore exact verified prefix and strict extension: accept only after independent verification.
-42. Missing tail is recovered from independently retained event archive/replica; every recovered batch verifies.
-43. Missing tail cannot be recovered: ledger remains quarantined; no eligibility is inferred from backup.
+42. Missing database projection batches are replayed exclusively from contiguous ICW receipts and retained full batch envelopes; every recovered batch verifies against its receipt.
+43. A referenced ICW receipt/envelope cannot be retrieved or verified: ledger remains quarantined; no database backup or locally reconstructed tail is promoted.
 44. Different ledger/epoch import is isolated; no automatic merge.
 45. Recovery process cannot reset sequence within the same epoch.
 46. New epoch manifest binds previous trusted checkpoint, recovered head, recovery source, approvals and reason; it cannot bypass an unrecovered gap.
@@ -272,7 +272,7 @@ PR #30 remains open and unmerged. PR #32 remains a draft for review. All current
 
 ## 15. Inherited v2 acceptance suite — retained
 
-The 115 numbered acceptance cases in \`EVIDENCE_LIFECYCLE_MIGRATION_TEST_PLAN_v2.md\` remain an inherited mandatory baseline. They are not deleted or waived by this v3 plan. The v3 cases above strengthen and clarify the following coverage; where both versions address the same behavior, the stricter requirement applies.
+The 115 numbered acceptance cases in \`EVIDENCE_LIFECYCLE_MIGRATION_TEST_PLAN_v2.md\` remain an inherited mandatory baseline. They are not deleted or waived by this v3 plan. The existing v4 cases above strengthen and clarify the following coverage; where both versions address the same behavior, the stricter requirement applies.
 
 | Inherited v2 cases | Coverage retained in v3 |
 |---|---|
@@ -292,7 +292,7 @@ The 115 numbered acceptance cases in \`EVIDENCE_LIFECYCLE_MIGRATION_TEST_PLAN_v2
 | V2-102–109 | Quarantine namespace, procedure-only writes, batch completeness and parser safety: §§3, 4, 7 |
 | V2-110–115 | Expiry and historical evaluation-time behavior: §§6, 7 |
 
-The v2 plan's migration acceptance procedure, regression-preservation requirements, stop conditions and implementation authorization gates also remain mandatory unless explicitly replaced by a stricter v3 requirement. The protected 18-case post-fix regression remains unchanged.
+The v2 plan's migration acceptance procedure, regression-preservation requirements, stop conditions and implementation authorization gates also remain mandatory unless explicitly replaced by a stricter v4 requirement. The protected 18-case post-fix regression remains unchanged.
 
 
 
@@ -302,7 +302,7 @@ The v2 plan's migration acceptance procedure, regression-preservation requiremen
 
 **Precedence:** These tests are additive and mandatory. They supersede any v3 test interpretation that permits a database-only tail, checkpoint-only commit proof, or snapshot receipt without ledger provenance. All tests run in an isolated disposable environment using synthetic data and a pinned signed deployment parameter register.
 
-## 14. ICW commit authenticity and unanchored-tail elimination
+## 16. ICW commit authenticity and unanchored-tail elimination
 
 For every case, the oracle is the independently retained ICW receipt/envelope, not the database's own hash chain.
 
@@ -326,7 +326,7 @@ For every case, the oracle is the independently retained ICW receipt/envelope, n
 127. **Witness durable acknowledgement:** crash/restart witness nodes/storage immediately after a reported durable acceptance. PASS only if acknowledged receipt and complete envelope remain retrievable under the documented durability contract; otherwise the witness durability claim fails.
 128. **No offline downgrade:** disconnect ICW and attempt every mutation pathway, including administrative, migration and restore. PASS only if none creates an authoritative lifecycle batch outside ICW.
 
-## 15. Checkpoint and recovery protocol tests
+## 17. Checkpoint and recovery protocol tests
 
 129. **Checkpoint object before CAS:** crash after immutable object write but before anchor CAS. PASS only if no trusted checkpoint is reported; retry is idempotent and may publish the same verified object.
 130. **Crash after anchor CAS:** crash after successful CAS but before local metadata update. PASS only if retry discovers the exact accepted anchor receipt and repairs metadata without duplicate/regressed checkpoint.
@@ -339,7 +339,7 @@ For every case, the oracle is the independently retained ICW receipt/envelope, n
 137. **New epoch gate:** attempt epoch transition with missing ICW receipt/object or unresolved prior history. PASS only if rejected and old epoch remains quarantined.
 138. **ICW unavailable during recovery:** PASS only if recovery remains isolated; database backup alone cannot authorize re-enable.
 
-## 16. Snapshot provenance, finalization and reconstruction tests
+## 18. Snapshot provenance, finalization and reconstruction tests
 
 139. **Snapshot binds accepted receipt:** finalize snapshot at watermark W. PASS only if ICW receipt binds snapshot digest and immutable object digest to exact ledger receipt ID/hash, tenant, ledger, epoch, batch, sequence and head.
 140. **Snapshot nonexistent watermark:** request finalization against a sequence/head without an accepted ICW receipt. PASS only if rejected.
@@ -361,7 +361,7 @@ For every case, the oracle is the independently retained ICW receipt/envelope, n
 156. **Later evidence exclusion:** add events after original watermark. PASS only if AS_KNOWN_AT_DECISION replay excludes them and original snapshot remains unchanged.
 157. **Retrospective mode:** run later-evidence evaluation. PASS only if new snapshot has new ID, later receipt/watermark and explicit retrospective mode; original remains byte-identical.
 
-## 17. API precondition and lifecycle lock tests
+## 19. API precondition and lifecycle lock tests
 
 158. **Command watermark matrix:** for create, supersede, revoke and withdraw, test missing, exact-current, stale, interior-batch and future watermarks against the approved command matrix. PASS only if each yields the specified typed result and no unintended receipt.
 159. **Idempotent replay after later writes:** retry an already committed command with its original key after ledger head advances. PASS only if original receipt is returned after current authorization check; no new sequence is allocated.
@@ -372,7 +372,7 @@ For every case, the oracle is the independently retained ICW receipt/envelope, n
 164. **Incomplete authoritative history:** omit an event from database projection while receipt exists. PASS only if no transition is authorized until replay repairs the projection.
 165. **Lock-order stress:** concurrently create/revoke/supersede overlapping claim graphs. PASS only if all procedures follow the single documented lock order, ICW CAS prevents forks, and bounded retries leave no partial projection.
 
-## 18. Privileged-role and threat-model tests
+## 20. Privileged-role and threat-model tests
 
 166. **Role capability matrix:** attempt each prohibited action under request API, procedure owner, database owner, application administrator, ICW operator, ICW storage administrator, key administrator, recovery operator and auditor identities. PASS only if observed permissions exactly match the approved role matrix.
 167. **DB owner cannot alter ICW:** database owner/superuser rewrites all local rows, sequences and hashes. PASS only if ICW receipts/envelopes remain unchanged and tampering is detected.
@@ -382,7 +382,7 @@ For every case, the oracle is the independently retained ICW receipt/envelope, n
 171. **Key rotation history:** rotate signing key and verify all historical receipts/checkpoints/snapshots using retained public verification history. PASS only if all valid historic artifacts still verify.
 172. **Key compromise response:** simulate compromised signing key. PASS only if affected trust range is quarantined according to policy and a new trust root is established without silently rewriting history.
 
-## 19. Deterministic test oracle and deployment parameter register
+## 21. Deterministic test oracle and deployment parameter register
 
 Every test record MUST contain: requirement ID; exact document/section; fixture digest; initial ICW and projection heads; actor/role; operation/request bytes; expected typed API result; expected ICW receipt delta; expected database row/cursor delta; expected ledger availability state; exact negative assertions; runner/build/database/ICW versions; signed parameter-register version/digest; observed output and artifact digest.
 
@@ -395,7 +395,7 @@ Pass/fail semantics:
 The signed deployment parameter register must provide exact numeric values for all threshold-dependent tests before implementation authorization. Tests 48 and 21 from the inherited suite, plus all threshold tests, load those values from the same pinned register. Test-local defaults are prohibited.
 
 
-## 20. v4 review-closure acceptance cases
+## 22. v4 review-closure acceptance cases
 
 173. **ICW lifecycle-semantic enforcement:** bypass or compromise the ordinary API validator and submit to ICW a second terminal event, duplicate creation, inactive predecessor, claim-identity mismatch, cross-tenant lineage, fork, merge or cycle. PASS only if the ICW rejects each invalid batch without advancing its head or creating a receipt.
 174. **No DB lock across ICW call:** pause the ICW response while concurrent requests execute. PASS only if no database transaction/row lock is held across the network wait, no deadlock is induced by the witness outage, and CAS plus subsequent projection locking preserves order.

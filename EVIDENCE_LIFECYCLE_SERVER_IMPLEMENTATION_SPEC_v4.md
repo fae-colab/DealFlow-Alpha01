@@ -47,10 +47,10 @@ There is no generic status setter, reactivation command, direct event insert end
 
 ### 3.1 Required request controls
 
-Every mutation request includes:
+Every new mutation request includes:
 - request ID/idempotency key;
 - typed operation payload;
-- expected committed watermark where optimistic concurrency is required;
+- expected ICW receipt ID/hash and ending sequence equal to the current ICW head at append time. Missing, stale, future, interior-batch or mismatched watermarks are rejected. An exact same-key/same-digest replay is resolved to its original receipt after current authorization is rechecked, even if the head has advanced.
 - authenticated credentials supplied outside request JSON.
 
 Tenant and actor IDs are derived from verified authentication context. Client-supplied tenant, actor, sequence, hash, recordedAtServer or lifecycle status values are rejected or ignored with explicit validation errors; they are never authoritative.
@@ -229,7 +229,7 @@ A new epoch requires a signed restore manifest linked to the last trusted checkp
 
 ### 7.4 Operational thresholds
 
-Before production, approve numeric values for maximum checkpoint age, maximum unanchored tail, checkpoint publication delay, clock skew, recovery point/time objectives and retention. Enforce below/at/above threshold tests. No hidden fallback values.
+Before production, approve numeric values for maximum checkpoint age, maximum database projection lag, checkpoint publication delay, clock skew, recovery point/time objectives and retention. There is no unanchored committed tail because every commit has an ICW receipt. Enforce below/at/above threshold tests. No hidden fallback values.
 
 ### 7.5 Threat and residual risk
 
@@ -307,7 +307,7 @@ No production data intake is authorized by this specification.
 
 ## 12. Observability and incident response
 
-Alert on sequence gaps, batch mismatch, hash/checkpoint mismatch, anchor regression, signature failure, stale checkpoint, excessive unanchored tail, cross-tenant attempts, unauthorized DML, idempotency digest conflict, repeated serialization failure, restore/fork events and unexpected abstention changes.
+Alert on sequence gaps, batch mismatch, hash/checkpoint mismatch, anchor regression, signature failure, stale checkpoint, excessive projection lag, cross-tenant attempts, unauthorized DML, idempotency digest conflict, repeated serialization failure, restore/fork events and unexpected abstention changes.
 
 Runbooks are required for key rotation/compromise, checkpoint verification, restore, fork quarantine, ledger unavailability, tenant offboarding, privacy erasure, schema upgrade and incident response.
 
@@ -419,7 +419,7 @@ The projection's `last_sequence` is the last successfully applied ICW sequence, 
 
 The snapshot payload is stored immutably before finalization. The ICW finalization operation must bind snapshot digest and immutable object digest to the exact accepted ledger receipt ID/hash and watermark. The ICW verifies that the ledger receipt belongs to its contiguous accepted chain. A checkpoint may accelerate verification only if it covers the exact watermark and its receipt inclusion proof verifies.
 
-A snapshot publication state is append-only: `DRAFT`, `ANCHOR_PENDING`, `FINALIZED_VERIFIED`, `FINALIZATION_FAILED`, `RECONSTRUCTION_LIMITED`. A snapshot is actionable only in `FINALIZED_VERIFIED` and only if its ledger projection remains verified at least through its bound watermark. Pending/failed states return no actionable recommendation, ranking or executable action through API, cache, export, notification or downstream integration. A read-only audit endpoint may expose status and non-actionable metadata.
+A snapshot publication state is append-only: `DRAFT`, `ANCHOR_PENDING`, `FINALIZED_VERIFIED`, `FINALIZATION_FAILED`. Reconstruction status is a separate field (`FULL`, `PARTIAL`, `UNAVAILABLE`) and is never a publication state. A snapshot is actionable only in `FINALIZED_VERIFIED` and only if its ledger projection remains verified at least through its bound watermark. Pending/failed states return no actionable recommendation, ranking or executable action through API, cache, export, notification or downstream integration. A read-only audit endpoint may expose status and non-actionable metadata.
 
 A retry after timeout uses the same snapshot ID, digest and idempotency identity. A conflicting payload under that identity is rejected. Corrections use the same protocol and cannot alter the original snapshot or its receipt.
 
@@ -454,3 +454,27 @@ Ordinary DB administrators, database owners and application administrators must 
 ## S10. Parameterized deployment contract
 
 The signed deployment parameter register is mandatory before implementation authorization. It must specify exact numerical thresholds and retention values, owner, approval date, version and digest. Every test reads this immutable register; no default or test-local substitute is allowed.
+
+## S11. v4 review-closure clarifications
+
+### S11.1 Lifecycle validation and lock protocol
+
+The ICW, not a database preflight query, validates event vocabulary, creation uniqueness, terminal-state irreversibility, active predecessor, exact claim identity, lineage uniqueness, no fork/merge/cycle and tenant/ledger/epoch scope against its accepted receipt history. A CAS loser reloads the new head and revalidates; it must not retry a stale precomputed batch unchanged.
+
+Do not hold a database transaction or row locks across the ICW network call. The order is: authenticate/validate; read current ICW head; prepare request; ICW atomic validation + CAS append; then begin the projection transaction. The projection transaction locks ledger cursor/head, then immutable evidence rows, then graph rows in deterministic order, applies the entire accepted batch and advances the cursor. If the projection is behind, no new mutation or decision is served until reconciliation catches up.
+
+### S11.2 Command watermark matrix — binding rule
+
+All four new mutation commands require an expected ICW head receipt ID/hash and ending sequence:
+- exact current head: eligible for ICW validation and CAS;
+- missing: typed validation error, no receipt;
+- stale ancestor: typed conflict, no receipt; caller must reload and intentionally resubmit with a new request identity if the business intent is still valid;
+- future, interior-batch or mismatched receipt/sequence: typed conflict, no receipt;
+- same idempotency key and same digest already accepted: return original receipt after current authorization recheck, irrespective of later head advancement;
+- same idempotency key and different digest: integrity conflict, no receipt.
+
+The command contract applies equally to create, supersede, revoke and withdraw. The expected watermark is not optional for any new mutation.
+
+### S11.3 Privacy and retention semantics
+
+The ICW receipt must bind immutable digests for sensitive evidence payload objects, but plaintext personal data need not be duplicated in the witness log. Sensitive payloads are encrypted before immutable storage; the independent receipt binds ciphertext/object digest, canonical plaintext digest where permitted, key/object identity and retention policy version. Legal erasure may destroy the decryption key or remove content only under the approved policy, leaving permitted integrity metadata. Verification and reconstruction results remain separate; a destroyed key makes payload reconstruction PARTIAL/UNAVAILABLE, never FULL.

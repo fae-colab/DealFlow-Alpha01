@@ -216,3 +216,43 @@ For every failure capture sanitized logs, exact commit/config, database snapshot
 78. A decision read denied by tenant authorization returns ABSTAIN/unavailable and never leaks cross-tenant existence or payload.
 79. Restore within the same ledger epoch cannot lower/reset sequence; recovery requiring a new epoch creates a signed manifest bound to the prior trusted checkpoint and preserves old snapshots.
 80. Checkpoint signature verification rejects wrong algorithm IDs, unknown key IDs, malformed canonical manifest bytes, and altered signatures; valid retained verification keys continue to validate historical checkpoints.
+
+
+## 12. Independent-review closure addendum (normative test additions)
+
+### 12.1 Atomic batch and watermark boundary tests
+
+81. A normal single-event mutation creates one committed batch whose first and last sequence are equal.
+82. Supersession creates one committed batch containing exactly two ordered events: replacement creation, then predecessor supersession; both become visible together.
+83. A requested watermark at the first sequence of a two-event supersession batch (an interior sequence) is rejected with INVALID_INTERMEDIATE_WATERMARK; it never produces a projection where both predecessor and replacement are active.
+84. A concurrent reader during supersession sees either the pre-transaction projection or the complete post-transaction projection, never a partial batch.
+85. Inject process termination, DB connection loss, and serialization failure after each batch write (batch row, replacement record, creation event, lineage, predecessor event, idempotency result, ledger-head update); all effects roll back or are wholly committed, and retry with the same idempotency key returns the one committed result.
+86. Batch ranges are contiguous, non-overlapping, and complete; duplicate, missing, overlapping, or incorrectly counted batch ranges quarantine the ledger.
+87. Decision snapshots and checkpoints cannot be created at an interior batch sequence; all watermarks bind batch ID, ending sequence, and batch hash.
+
+### 12.2 Canonicalization and cryptographic test vectors
+
+88. Independently generated golden vectors verify exact UTF-8/NUL/domain-separated record, event-payload, event, batch, genesis, and checkpoint preimages.
+89. Event-payload hashing excludes payloadHash, previousEventHash, and eventHash; tests prove there is no self-referential digest.
+90. Hexadecimal hash strings are decoded to exactly 32 raw bytes before concatenation; uppercase, malformed, truncated, or non-hex forms are rejected.
+91. Epoch and sequence encodings reject signs, whitespace, leading zeros (except zero), non-ASCII digits, overflow, and negative values.
+92. JCS tests cover duplicate JSON keys, invalid Unicode, escaping, key order, Unicode normalization policy, decimal-string money, arrays, null, and non-finite numbers.
+93. The independent verifier implementation must calculate expected bytes/digests without calling the production canonicalization/hash helper.
+
+### 12.3 Claim identity and contradiction policy
+
+94. Canonical identity golden cases cover jurisdiction, entity identifiers, Unicode, currency/units, time intervals, and semantic-version changes; no fuzzy match is accepted.
+95. Two materially contradictory records for one canonical claim produce CONFLICTED and no recommendation until an authorized, versioned adjudication resolves them.
+96. Newer-but-unsupported evidence does not automatically override older supported evidence; chronology alone cannot resolve contradiction.
+97. Claim canonicalizer version mismatch or unavailable migration mapping makes the claim ineligible pending explicit compatibility review.
+
+### 12.4 Authorization and recovery clarifications
+
+98. Unauthorized mutation is rejected and audited while unrelated healthy tenant/ledger decisions remain available.
+99. A read authorization failure for the requesting tenant returns ABSTAIN/unavailable without revealing cross-tenant existence or content.
+100. Idempotency replay after role revocation does not disclose a stored response to an actor who is no longer authorized.
+101. Restore/epoch transition preserves the old ledger and snapshots, creates a new signed epoch manifest, and cannot reset or fork sequence silently.
+
+## 13. Review status and implementation boundary
+
+These additions close design-review findings only if the corresponding schema, transaction, projector, and tests are implemented exactly as specified. They do not demonstrate that implementation exists or works. This plan remains a proposal; no migration, implementation, PR #30 merge, or real-agent intake is authorized.

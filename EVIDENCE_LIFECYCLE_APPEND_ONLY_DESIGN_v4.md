@@ -124,89 +124,68 @@ A later supersession of the replacement extends the chain. A revoked or withdraw
 
 ## 4. D-02 — Atomic supersession, concurrency and idempotency
 
-**Approved with amendment.** The following controls are cumulative; no one control substitutes for the others.
+**Approved with amendment.** Lifecycle commit authority is the Independent Commit Witness (ICW), defined in the v4 normative amendment A2–A4. The relational database is a transactional projection, not the commit authority.
 
-### 4.1 Single transactional unit
+### 4.1 Single authoritative batch
 
-A supersession is one database transaction and one committed ledger batch containing exactly two ordered lifecycle events:
-1. replacement \`evidence_created\`;
-2. predecessor \`evidence_superseded\`.
+A supersession is one ICW-accepted batch containing exactly two ordered lifecycle events:
+1. replacement `evidence_created`;
+2. predecessor `evidence_superseded`.
 
-The batch includes the replacement record, both events, lineage row, batch manifest/hash, ledger-head update and idempotency result. All components commit or roll back together.
+The ICW batch envelope includes the replacement evidence envelope, both events, lineage edge, idempotency identity, canonical request digest, prior receipt reference and complete batch digest. The ICW accepts or rejects the entire batch atomically. After receipt acceptance, the relational projection applies every dependent row and advances its cursor in one database transaction. The projection is wholly before or wholly after the batch.
 
-A committed supersession must never leave:
-- the predecessor terminal without a valid replacement;
-- both predecessor and replacement eligible because only one side committed;
-- two valid replacements for one predecessor;
-- a lineage edge without its corresponding events;
-- a visible partial batch.
+A committed supersession must never leave the predecessor terminal without its valid replacement, both items eligible, duplicate successors, an orphan lineage edge or a visible partial projection. If ICW acceptance succeeds but projection application fails, the operation is committed-but-pending and the ledger is unavailable until exact replay completes.
 
-### 4.2 Concurrency protocol
+### 4.2 Concurrency and serialization
 
-The reference relational design uses a serializable transaction plus explicit row-level locks (or a demonstrated equivalent):
+The ICW performs the authoritative expected-head compare-and-swap and validates lifecycle semantics against its accepted history. Competing appends from the same previous receipt cannot both succeed. A loser reloads the accepted receipt history and revalidates its intent; it must not blindly retry a stale precomputed batch.
 
-1. Authenticate actor and derive tenant before tenant-scoped access.
-2. Validate request shape and compute canonical request digest.
-3. Acquire or resolve the durable idempotency key under its unique constraint.
-4. Lock the ledger-head row for the tenant/ledger/epoch.
-5. Lock the predecessor evidence/lifecycle projection row.
-6. Lock any additional graph rows in deterministic sorted identifier order.
-7. Re-check authorization, expected watermark, predecessor state, claim identity and graph constraints under the locks.
-8. Allocate the next sequence range from the sole \`lastSequence\` value.
-9. Insert the replacement, ordered events, lineage and batch.
-10. Validate batch completeness and hash.
-11. Advance the ledger head and store the idempotency result in the same transaction.
-12. Commit before returning success.
+Do not hold a database transaction or row locks across the ICW network call. Before append, database reads are advisory only. After receipt acceptance, the projection transaction uses one deterministic lock order:
+1. ledger projection cursor/head;
+2. immutable predecessor evidence row, where applicable;
+3. additional claim/lineage graph rows in sorted identifier order.
 
-The lock order must be consistent across all mutation procedures to reduce deadlocks. A database deadlock or serialization failure aborts the complete transaction; retry is bounded and reuses the same idempotency key and canonical request. No sequence or partial row may survive a rolled-back attempt.
+The projection transaction verifies the ICW receipt and applies the entire batch atomically. Database locks protect projection consistency; the ICW CAS protects authoritative cross-instance serialization.
 
-### 4.3 Database-enforced invariants
+### 4.3 Database and ICW invariants
 
-At minimum:
-- unique \`(tenantId, ledgerId, epoch, sequence)\`;
-- unique event ID within tenant/ledger/epoch;
-- exactly one creation event per evidence ID;
-- at most one terminal event per evidence ID across superseded/revoked/withdrawn;
-- unique predecessor in lineage;
-- unique replacement in lineage;
-- composite foreign keys enforce tenant/ledger/epoch consistency;
-- batch ranges are contiguous, non-overlapping and complete;
-- deferred constraints or a narrowly scoped append procedure verify that all batch components exist before commit;
-- no valid projection watermark may point inside a multi-event batch.
+The ICW enforces event vocabulary, creation uniqueness, terminal-transition uniqueness, active predecessor, exact claim identity, lineage uniqueness, no fork/merge/cycle, tenant/ledger/epoch consistency, contiguous sequence allocation and idempotency.
 
-Where a declarative constraint cannot express a cross-row invariant, one narrowly scoped database procedure must enforce it under the locks above. It must be backed by concurrent integration tests. A preflight application query is not an invariant.
+The relational projection additionally enforces:
+- unique tenant/ledger/epoch/sequence;
+- unique event ID;
+- one creation event per evidence ID;
+- at most one terminal event per evidence ID;
+- unique predecessor and replacement lineage;
+- composite foreign keys for tenant/ledger/epoch;
+- contiguous, non-overlapping, complete batch ranges;
+- no projection cursor at an interior batch sequence;
+- no request-serving direct DML over authoritative projection tables.
+
+Declarative constraints and narrowly scoped procedures are defense in depth. They do not replace ICW validation.
 
 ### 4.4 Idempotency and retries
 
-Idempotency scope: tenant + authenticated actor/client scope + operation + request ID.
+Idempotency scope is tenant + authenticated actor/client scope + operation + request ID. The ICW is authoritative for idempotency and stores the canonical request digest and original receipt identity.
 
-The request digest is computed from a validated, canonical typed request. The idempotency record and committed result are stored in the same transaction as the batch.
+- Same key + same digest: return the original receipt after current authorization recheck.
+- Same key + different digest: integrity conflict; no second receipt.
+- Concurrent duplicates: exactly one accepted ICW receipt.
+- Timeout after ICW acceptance: retry discovers the original receipt.
+- ICW accepted but projection failed: operation remains committed/projection-pending; replay applies the original envelope.
+- Failure before ICW acceptance: no authoritative commit exists; retry may append once.
+- ICW outage or retry exhaustion: typed unavailable; no database-only fallback.
+- Expired keys retain compact digest tombstones for the approved recovery/incident horizon.
 
-- Same key + same digest: return the original committed result after re-checking that the current authenticated actor remains authorized to receive it.
-- Same key + different digest: reject with an integrity conflict; do not write.
-- Concurrent duplicate requests: one logical operation commits; others receive the same committed result or a bounded retryable response.
-- Timeout after commit: retry returns the original result.
-- Failure before commit: no operation is recorded; retry may execute once.
-- Expired idempotency keys are not silently recycled. Retain a compact key/digest tombstone for at least the maximum retry, backup-restore and incident-recovery horizon.
-- Retry exhaustion returns a typed retryable failure and leaves no partial state.
-
-Stale expected watermark, terminal predecessor, graph conflict and authorization failure have distinct typed outcomes. Error responses must not reveal cross-tenant existence.
+Missing/stale/future/interior expected watermark, terminal predecessor and graph conflict have distinct typed outcomes. Error responses do not disclose cross-tenant existence.
 
 ## 5. Batch boundaries and authoritative sequence
 
-There is exactly one mutable ledger sequence field: \`lastSequence\`. Earlier illustrative names such as \`next_sequence\` and \`head_sequence\` must not be implemented as parallel counters.
+The ICW is the sole authoritative sequence allocator per tenant/ledger/epoch. It assigns contiguous sequence ranges as part of its atomic append and binds them to the previous accepted receipt. The relational database stores only a projection cursor (`last_sequence`) representing the last ICW sequence successfully applied; it is never an allocator or independent authority.
 
-Each committed mutation has a batch:
-- batch ID;
-- first and last sequence;
-- ordered event count;
-- batch hash;
-- server acceptance time;
-- ledger ID and epoch.
+Every accepted lifecycle mutation has a batch ID, first/last sequence, ordered event count, batch digest, ledger scope and signed ICW receipt. A supersession has two consecutive sequences in one batch. Valid read, decision, checkpoint, export and replay watermarks must identify an ICW receipt and a committed batch ending boundary. An interior sequence is invalid and returns `INVALID_INTERMEDIATE_WATERMARK`.
 
-Single-event operations have a one-sequence batch. Supersession has two consecutive sequences in one batch. A decision snapshot, checkpoint, export or replay watermark must identify the batch ID and ending sequence.
-
-An interior sequence is invalid and returns \`INVALID_INTERMEDIATE_WATERMARK\`. A reader sees either the pre-transaction state or the complete committed batch, never an intermediate state.
+A reader may use the relational projection only when its cursor/head and batch digests are verified against the ICW through the current accepted head required by policy. It sees the complete state before or after an accepted batch; it never serves an intermediate or lagging projection as current.
 
 ## 6. D-04 — Independent checkpoints, rollback detection and recovery
 
@@ -255,20 +234,19 @@ No undocumented defaults are permitted. If a configured boundary is exceeded, or
 
 ### 6.4 Restore and reconciliation protocol
 
-Restoration is not complete merely because the database starts and its local hash chain validates.
+A database backup is a projection recovery accelerator, never the source of lifecycle truth.
 
-1. Isolate the restored environment from decision-serving traffic.
-2. Load the latest independently trusted checkpoint and monotonic anchor.
-3. Verify signature, algorithm, key ID, manifest hash and anchor position.
-4. Compare restored ledger ID, epoch, batch boundary, sequence, head hash, counts and prefix against the trusted checkpoint.
-5. Reject shorter history, sequence regression, same-sequence/different-hash, missing batches, gaps, forks or mismatched prefixes.
-6. Recover missing committed batches from independently retained event archives/replicas where available.
-7. Verify every recovered batch and the complete prefix from genesis through the latest trusted checkpoint and recovered tail.
-8. Verify all affected evidence projections, supersession lineage, snapshots and checkpoint references.
-9. Create a new independently anchored checkpoint only after verification.
-10. Record an immutable restore/reconciliation audit record and require authorized, preferably dual-controlled approval before re-enabling the ledger.
+1. Isolate the restored environment from decision-serving and mutation traffic.
+2. Authenticate to the ICW using recovery credentials independent of database credentials.
+3. Retrieve the latest trusted ICW head, contiguous receipt chain and complete retained batch envelopes.
+4. Verify receipt signatures, receipt-chain continuity, assigned sequences, object digests, idempotency identities and checkpoint references.
+5. Compare the restored projection against ICW receipts at every batch boundary; reject any altered, missing, extra, forked or substituted batch.
+6. Replay missing accepted ICW envelopes into the projection in receipt order, atomically and idempotently.
+7. Verify evidence payloads, lifecycle events, lineage, batch digests, projections, snapshots and snapshot provenance.
+8. Confirm the rebuilt projection cursor/head exactly matches the current ICW head.
+9. Record an immutable recovery report and require approved authorization before re-enabling the ledger.
 
-If the restored database predates the latest trusted checkpoint, it must not serve decisions until the missing tail is recovered and verified. If missing history cannot be recovered, quarantine the affected ledger. Do not infer that absent events never occurred; do not reconstruct eligibility from the backup's older state.
+A locally valid database tail without matching ICW receipts is rejected, even if it extends a trusted checkpoint. A missing/altered ICW object or receipt makes the affected history unverifiable; quarantine the ledger. Recovery must never create or sign an ICW receipt from database contents. There is no unanchored committed tail to reconstruct: every committed batch already has an ICW receipt.
 
 ### 6.5 Epoch transition
 

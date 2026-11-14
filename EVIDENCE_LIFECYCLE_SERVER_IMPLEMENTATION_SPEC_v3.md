@@ -320,3 +320,43 @@ The hosting provider, database/version, authentication provider, tenant/RLS mode
 Conformance requires database constraints and concurrency behavior, fault-injected atomic rollback, independently verified checkpoint recovery, independent snapshot verification, legacy namespace isolation, privacy review and the complete migration/regression plan.
 
 **Documentation only.** No implementation, schema change, migration, migration execution, PR #30 merge, PR #32 readiness/merge or real-agent evidence acceptance is authorized.
+
+
+## 15. Critical-review closure addendum (normative)
+
+### 15.1 Stable lock target and lifecycle-state validation
+
+The immutable evidence row is the stable row-lock target; it is not mutated to store lifecycle state. After acquiring the ledger-head lock and predecessor row lock, the procedure validates the predecessor state from the committed event/batch history at the locked watermark. If an internal current-state guard projection is used, it is derived, rebuildable, updated atomically with the event batch, and reconciled against the authoritative event history. It may not independently authorize a transition when stale or inconsistent.
+
+All lifecycle writers acquire locks in the same order. The serializable transaction plus explicit locks and database uniqueness constraints are cumulative controls. Tests must prove behavior under the selected database's actual isolation and failover semantics.
+
+### 15.2 Monotonic external anchor API
+
+The independent anchor must expose an atomic compare-and-swap operation over the current trusted checkpoint pointer. The proposed checkpoint is accepted only if it extends the exact currently anchored checkpoint and its sequence/batch position is strictly monotonic within the epoch.
+
+Reject:
+- lower sequence or batch position;
+- same sequence with a different head or batch hash;
+- mismatched previous-checkpoint reference;
+- forked or non-contiguous extension;
+- unrecognized epoch;
+- new epoch without an authorized, verified restore manifest.
+
+An identical checkpoint retry is idempotent. Concurrent checkpoint publishers cannot overwrite one another: only one compare-and-swap succeeds; the loser reloads and revalidates. The signing service must verify extension from the latest anchor before signing/anchoring; it must not sign an arbitrary locally valid but stale head. Failure to read or advance the anchor means the checkpoint is not anchored.
+
+### 15.3 Snapshot finalization gate
+
+Snapshot payload insertion is immutable. Store publication state separately as append-only events, for example \`snapshot_anchor_pending\`, \`snapshot_anchor_confirmed\`, and \`snapshot_anchor_failed\`.
+
+The recommendation API must not return a finalized/actionable recommendation until a signed independent receipt confirms the exact snapshot hash and binds it to:
+- snapshot ID and schema version;
+- tenant, ledger and epoch;
+- committed batch ID, ending sequence and head hash;
+- checkpoint ID/hash covering that watermark, or a separately anchored snapshot receipt;
+- signing algorithm and key ID.
+
+If the anchor is pending/unavailable, persist the immutable snapshot as pending and return explicit pending/unavailable status. Do not silently downgrade to a same-database hash or issue an actionable recommendation. Retrying anchor publication is idempotent. Confirmation appends a publication event; it never edits the snapshot payload. A failed/invalid receipt leaves the recommendation non-final and triggers review.
+
+### 15.4 Recovery cannot republish a stale checkpoint
+
+After restore, the checkpoint publisher must compare the restored head to the independent anchor before it can issue any new signature or anchor update. A locally valid hash chain that is shorter than, equal-but-divergent-from, or otherwise not a strict extension of the latest trusted checkpoint is rejected. Missing events must be recovered and verified first; a new epoch cannot be used to bypass the gap.

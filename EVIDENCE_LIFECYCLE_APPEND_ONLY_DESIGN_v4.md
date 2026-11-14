@@ -246,7 +246,7 @@ A hash chain stored only in the same database is insufficient. A signature gener
 
 Before production, explicit values must be approved for:
 - maximum age of latest independently anchored checkpoint;
-- maximum unanchored event/batch tail;
+- maximum permitted projection lag measured against the ICW head (there is no unanchored committed event/batch tail);
 - maximum checkpoint publication delay;
 - clock-skew tolerance;
 - recovery point and recovery time objectives.
@@ -420,7 +420,7 @@ This architecture deliberately does not invent production infrastructure choices
 - checkpoint anchor and immutable/WORM storage trust domain;
 - checkpoint signing algorithm, key rotation and compromise process;
 - backup, WAL/event archive and disaster-recovery design;
-- checkpoint-age and unanchored-tail limits;
+- checkpoint-age and maximum projection-lag limits; ICW receipt coverage is continuous at commit time;
 - recovery objectives and operational ownership;
 - retention, legal hold, privacy erasure and audit-retention policy;
 - outage behavior and service-level objectives.
@@ -505,7 +505,7 @@ For every accepted lifecycle batch, the ICW MUST atomically retain:
 
 A hash-only receipt is insufficient. The independent trust domain must preserve the complete event and batch content, or a durable immutable object reference whose bytes, retention, access controls and availability are independently verified. An object is written and confirmed immutable before the ICW publishes a receipt that commits to it. Orphan objects without a receipt are uncommitted garbage and cannot become lifecycle history.
 
-The ICW MUST enforce a per-tenant/ledger/epoch atomic compare-and-swap append:
+The ICW MUST validate the proposed batch against its authoritative lifecycle state before accepting it, including closed event vocabulary, exactly one creation event per evidence ID, no second terminal transition, active predecessor requirement, exact claim-identity match, unique predecessor/replacement lineage, no fork/merge/cycle and tenant/ledger/epoch consistency. It MUST enforce a per-tenant/ledger/epoch atomic compare-and-swap append:
 - supplied expected previous receipt/head must equal the current ICW head;
 - the next sequence range must be exactly contiguous;
 - the batch must be complete and internally valid;
@@ -525,8 +525,8 @@ For each mutation:
 1. Authenticate and authorize the actor; derive tenant and actor only from trusted server context.
 2. Canonicalize and validate the typed request; calculate its request digest.
 3. Read the current ICW head and verify the local database projection is exactly caught up to that head. If not, reconcile before accepting another mutation.
-4. Prepare the complete proposed batch against the ICW head, including all event and evidence bytes. Enforce stable database lock order while preparing; do not publish a database-only sequence allocation.
-5. Ask the ICW to atomically append the complete batch using expected previous receipt/head and idempotency scope.
+4. Prepare the complete proposed batch against the ICW head, including all event and evidence bytes. Do not hold a database transaction or row locks across the external ICW network call. A preflight read is advisory only; the ICW revalidates lifecycle semantics and expected-head CAS atomically.
+5. Ask the ICW to atomically append the complete batch using expected previous receipt/head and idempotency scope. The ICW is the serialization authority; a stale-head loser reloads the new receipt history and revalidates.
 6. Only after receiving and verifying the ICW receipt, apply the complete batch to the relational projection in one database transaction. The projection transaction inserts all records/events/lineage/batch data, advances its cursor to the receipt position and commits atomically.
 7. Verify the resulting projection head and batch digest against the ICW receipt.
 8. Return success only when the receipt is durable and the database projection is caught up and verified.
@@ -549,7 +549,7 @@ A supersession is one ICW append containing exactly two ordered lifecycle events
 
 The database projection applies that accepted batch in one transaction. A crash can leave the projection wholly before or wholly after the batch, never halfway through. While projection-pending, the ledger is unavailable; neither predecessor nor replacement may be served from a partially updated projection.
 
-The stable database lock targets remain the ledger projection cursor/head row and immutable predecessor evidence row, with all other graph locks in deterministic order. The ICW CAS is the final cross-instance serialization authority. Database locks alone cannot authorize a batch whose ICW expected-head CAS fails.
+After ICW acceptance, the projection transaction locks the ledger projection cursor/head row, then the immutable predecessor evidence row, then other graph rows in deterministic sorted order. It applies the complete receipt-bound batch and advances the projection cursor atomically. No database lock is held while waiting for ICW. The ICW CAS is the cross-instance serialization authority; database locks alone cannot authorize a batch whose ICW expected-head CAS fails.
 
 ## A5. Checkpoints become verified-prefix accelerators
 
@@ -624,3 +624,11 @@ Tests MUST load the exact versioned register and exercise below/at/above boundar
 ## A10. Normative consequence
 
 Any v3 statement that treats a database transaction as the sole authoritative commit, the database as sequence authority, a periodic checkpoint as the only proof of later commits, or a database tail as recoverable without ICW receipts is superseded. The ICW receipt is the sole authoritative commit proof for lifecycle batches; the relational database is a verified projection.
+
+## A11. v4 review-closure clarifications
+
+1. **Lifecycle validation at the commit authority.** The ICW validates event vocabulary, creation uniqueness, terminal-state irreversibility, predecessor activity, claim identity, lineage uniqueness and graph acyclicity against its accepted history. It does not accept a semantically invalid batch merely because the application server proposed it. The relational constraints remain defense in depth.
+2. **No database locks across witness network calls.** Database preflight reads do not reserve sequence or authorize a transition. The ICW expected-head CAS and lifecycle-state validation resolve races. The database projection transaction starts only after receipt acceptance, locks projection cursor/head then evidence and graph rows in the documented deterministic order, and applies the complete batch.
+3. **Concrete mutation watermark rule.** Every new lifecycle command (`createEvidence`, `supersedeEvidence`, `revokeEvidence`, `withdrawEvidence`) MUST include an expected ICW receipt ID/hash and ending sequence equal to the current ICW head at append time. Missing watermark is a validation error; stale, future, interior-batch or mismatched receipt is a conflict and creates no receipt. An exact same-key/same-digest idempotent replay is resolved to its original receipt after current authorization is rechecked, even if the ledger head has since advanced. A different digest under the same key is an integrity conflict.
+4. **Privacy-preserving payload retention.** The ICW envelope binds all authoritative lifecycle metadata and content digests. Evidence content containing personal or legally erasable data is stored as an encrypted immutable object under a separately controlled per-object or per-subject key. Lawful erasure may destroy the relevant decryption key or remove the content object only under the approved erasure policy; the receipt, permitted non-PII metadata and content digest remain where lawful. Integrity/provenance verification may then remain possible while content reconstruction is explicitly PARTIAL/UNAVAILABLE. The system must never claim the erased payload was reconstructed.
+5. **Checkpoint and tail terminology.** A committed batch is never "unanchored": it has an ICW receipt. The only permitted lag is a projection backlog or a checkpoint that has not yet summarized already witnessed receipts. Thresholds and tests must use those precise terms.

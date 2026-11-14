@@ -42,7 +42,7 @@ A test is PASS only when all stated positive and negative assertions match. FAIL
 | F-06 expected-watermark semantics | Command-by-command precondition matrix and idempotent replay behavior | 158–160 | API contract and command matrix fixtures |
 | F-07 lifecycle lock/projection semantics | Stable lock target; ICW history authoritative; projections rebuildable and fail closed | 161–165 | Lock-order and stale/corrupt projection reports |
 | F-08 pending/finalized exposure | Explicit publication states; all consumers gate actionability | 145–148 | API/cache/export/downstream denial results |
-| F-09 privileged-role threat boundary | Enumerated role matrix, separated ICW and DB authority, dual control | 166–172 | IAM/DB grant exports, adversarial role test report |
+| F-09 privileged-role threat boundary | Enumerated role matrix, separated ICW and DB authority, dual control | 166–172, 186–187 | IAM/DB grant exports, assertion issuer/ICW verification report and adversarial role test report |
 
 ## 4. Server requirement coverage
 
@@ -140,3 +140,8 @@ The following are binding refinements to the tables above:
 - "Unanchored tail" is retired terminology. The remaining operational lag is the database projection backlog or an ICW receipt not yet summarized by a checkpoint. Tests 48, 50, 180 and 182 exercise checkpoint alerting/verification mode and projection lag; tests 183–185 enforce current-head freshness; every committed batch already has an ICW receipt.
 - Sensitive evidence payloads may be encrypted and lawfully erased under the signed privacy policy. Receipt integrity and payload reconstruction are separate outcomes (tests 178–179, 181).
 - Snapshot publication state and reconstruction status are separate dimensions (test 181).
+
+
+## 10. Authorization assertion coverage
+
+The authorization boundary includes both API authentication and a signed assertion independently verified by the ICW. Tests 186–187 cover missing/forged/replayed assertions and attempted application-administrator privilege escalation. The assertion issuer's trust root, key custody, policy version and administrative separation are mandatory review artifacts under §5.

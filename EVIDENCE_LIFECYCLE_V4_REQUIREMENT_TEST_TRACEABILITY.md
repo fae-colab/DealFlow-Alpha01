@@ -27,7 +27,7 @@ A test is PASS only when all stated positive and negative assertions match. FAIL
 | AR-11 | Every finalized recommendation has immutable snapshot, independent integrity and reconstructable context | §§8, A8 | ICW snapshot receipt binds digest to exact ledger receipt | 139–157; v3 tests 53–64, 73–78, 103–108 |
 | AR-12 | Later events/policy changes never rewrite historical snapshot | §§8, A8 | Append-only snapshot state/correction stream | 149–157; v3 tests 65–72, 107 |
 | AR-13 | Corrections are new linked records | §§8, A8 | Separate correction identity and independent finalization receipt | 149, 157; v3 tests 69–72, 107 |
-| AR-14 | Unverifiable history/dependency causes explicit unavailable/abstain, never fallback | §§6, 7, 8, 12, A6–A8 | Typed integrity/provenance/reconstruction states; no DB-only fallback | 111–115, 123–128, 131–138, 140–157; v3 tests 43, 49–52, 77, 90 |
+| AR-14 | Unverifiable history/dependency causes explicit unavailable/abstain, never fallback | §§6, 7, 8, 12, A6–A8 | Typed integrity/provenance/reconstruction states; no DB-only fallback | 111–115, 123–128, 131–138, 140–157, 183–185; v3 tests 43, 49–52, 77, 90 |
 | AR-15 | Immutability scope is limited to authoritative history, not all operational records | §§1, 10 | Role/DDL scope distinguishes lifecycle and operational data | 166–169; v3 tests 65, 86 |
 
 ## 3. Review-finding closure mapping

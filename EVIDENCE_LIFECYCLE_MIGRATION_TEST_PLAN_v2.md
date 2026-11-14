@@ -268,3 +268,13 @@ These additions close design-review findings only if the corresponding schema, t
 107. Batch rows and their event rows are invisible to readers until transaction commit; no uncommitted or incomplete batch can be used as a decision watermark.
 108. Claim conflict cannot be cleared by UI, direct DB status update, latest timestamp, or administrator override; it remains ineligible until a separately reviewed adjudication capability exists.
 109. Raw JSON duplicate keys are rejected by the parser before JCS canonicalization; parsing must not silently keep first/last duplicate values.
+
+
+## 15. Expiry and evaluation-time regression tests
+
+110. Expiry is derived from immutable validity fields and evaluation time; it does not append a terminal event or mutate lifecycle state.
+111. An expired-but-lifecycle-active record is ineligible at an evaluation time after expiry, while its historical lifecycle projection remains active; the Decision Desk must not mistake lifecycle-active for currently eligible.
+112. A record superseded after its expiry remains terminally superseded from the supersession batch onward; expiry does not erase or reverse the terminal event.
+113. A snapshot records evaluationAt and freshness/expiry policy version; replay at the original evaluation time reproduces the original eligibility, while a separately labelled later retrospective evaluation may differ without modifying the original snapshot.
+114. Missing or malformed validity boundaries, timezone ambiguity, and unsupported policy version fail closed; no client-provided status or cached eligibility can override expiry evaluation.
+115. A quarantined legacy record remains non-eligible regardless of whether its legacy validity interval is current or expired; re-attestation requires a new evidence ID and current source verification.

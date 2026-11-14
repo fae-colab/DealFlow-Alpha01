@@ -310,18 +310,13 @@ An identical ICW receipt or checkpoint retry is idempotent. Concurrent checkpoin
 
 Snapshot payload insertion is immutable. Store publication state separately as append-only events, for example \`snapshot_anchor_pending\`, \`snapshot_anchor_confirmed\`, and \`snapshot_anchor_failed\`.
 
-The recommendation API must not return a finalized/actionable recommendation until a signed independent receipt confirms the exact snapshot hash and binds it to:
-- snapshot ID and schema version;
-- tenant, ledger and epoch;
-- committed batch ID, ending sequence and head hash;
-- checkpoint ID/hash covering that watermark, or a separately anchored snapshot receipt;
-- signing algorithm and key ID.
+The recommendation API must not return a finalized/actionable recommendation until a signed ICW snapshot-finalization receipt confirms the exact snapshot hash and binds it to snapshot ID/schema version, tenant/ledger/epoch, exact accepted ledger receipt ID/hash, committed batch ID, ending sequence, head hash, immutable snapshot object digest, algorithm and key ID. A checkpoint may accelerate verification only when it covers the exact watermark and its receipt inclusion proof verifies; it never replaces the snapshot receipt.
 
 If the anchor is pending/unavailable, persist the immutable snapshot as pending and return explicit pending/unavailable status. Do not silently downgrade to a same-database hash or issue an actionable recommendation. Retrying anchor publication is idempotent. Confirmation appends a publication event; it never edits the snapshot payload. A failed/invalid receipt leaves the recommendation non-final and triggers review.
 
 ### 15.4 Recovery cannot republish a stale checkpoint
 
-After restore, the checkpoint publisher must compare the restored head to the independent anchor before it can issue any new signature or anchor update. A locally valid hash chain that is shorter than, equal-but-divergent-from, or otherwise not a strict extension of the latest trusted checkpoint is rejected. Missing events must be recovered and verified first; a new epoch cannot be used to bypass the gap.
+After restore, the recovery controller must compare the restored projection with the latest ICW receipt head before it can serve or accept mutations. A locally valid hash chain that is shorter than, equal-but-divergent-from, or otherwise lacks matching ICW receipts is rejected. Missing projection batches are replayed only from retained ICW envelopes; a new epoch cannot be used to bypass missing receipts or unresolved history.
 
 
 

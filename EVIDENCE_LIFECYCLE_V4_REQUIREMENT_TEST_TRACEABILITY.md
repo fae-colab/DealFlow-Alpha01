@@ -18,8 +18,8 @@ A test is PASS only when all stated positive and negative assertions match. FAIL
 | AR-02 | Closed lifecycle vocabulary; no reactivation/status setter/delete | §§1, 3, 10 | Only typed commands; no direct DML; witness accepts valid event types only | 112, 128, 166–168; inherited v2-009–021, 031–038, 102–109 |
 | AR-03 | Terminal states irreversible | §§3, 4, A2–A4 | ICW validates transition and atomic batch; projection constraints defend in depth | 115–118, 158, 163–165; carried-forward tests 6–10, 23–27, 87–89 |
 | AR-04 | Legacy evidence quarantined absent explicit re-attestation | §§11, A10 | Isolated quarantine namespace; new ID via ordinary create command | carried-forward tests 79–84; inherited v2-001–008 |
-| AR-05 | Supersession is atomic two-event batch | §§4, A4 | Atomic ICW envelope append plus atomic projection transaction | 110, 116, 120–122, 158, 165; carried-forward tests 1–16 |
-| AR-06 | Concurrency, uniqueness and idempotency enforced below application layer and at commit authority | §§4, A2–A4 | ICW CAS/idempotency; database constraints and lock order | 115–118, 121, 122, 158–165; v3 tests 6–29 |
+| AR-05 | Supersession is atomic two-event batch | §§4, A4 | Atomic ICW envelope append plus atomic projection transaction | 110, 116, 120–122, 158, 165, 173, 175; carried-forward tests 1–16 |
+| AR-06 | Concurrency, uniqueness and idempotency enforced below application layer and at commit authority | §§4, A2–A4 | ICW CAS/idempotency; database constraints and lock order | 115–118, 121, 122, 158–165, 173, 175; carried-forward tests 6–29 |
 | AR-07 | One sequence authority; only complete batch watermarks | §§5, A2–A5 | ICW assigns sequence; DB cursor is projection only | 110, 115–116, 123–126, 132–138, 158; carried-forward tests 1–5, 9 |
 | AR-08 | Checkpoint trust independent of ordinary DB rollback/admin | §§6, A5–A7 | Separate ICW and checkpoint trust domain, monotonic CAS | 125–138, 166–172; carried-forward tests 30–52, 97–102, 109 |
 | AR-09 | Restore reconciles against latest trusted authoritative history before serving | §§6, A6–A7 | Rebuild projection exclusively from ICW receipts/envelopes | 111–115, 123–138; carried-forward tests 37–47, 101–102, 109 |
@@ -48,18 +48,18 @@ A test is PASS only when all stated positive and negative assertions match. FAIL
 
 | Server contract area | Required behavior | Test coverage |
 |---|---|---|
-| Authentication and tenant derivation | Trusted context only; no client override | v3 tests 20, 22, 26, 84, 92–93; 166–168 |
-| ICW receipt and envelope | Complete durable content; signed receipt; contiguous CAS | 110–118, 125–128 |
+| Authentication and tenant derivation | Trusted context only; no client override; ICW verifies signed scoped assertion | carried-forward tests 20, 22, 26, 84, 92–93; 166–168, 186–187 |
+| ICW receipt and envelope | Complete durable content; signed receipt; contiguous CAS | 110–118, 125–128, 173, 175 |
 | Mutation state machine | PREPARED → WITNESS_COMMITTED → PROJECTION_PENDING → APPLIED_VERIFIED or explicit failure | 119–124 |
 | Projection transaction | Entire batch all-or-none; receipt/digest checked before commit | 120–124 |
 | Supersession/graph constraints | No fork, merge, cycle, duplicate successor or partial transition | carried-forward tests 6–16, 23–27; 116, 165 |
 | Checkpoint publication | Immutable object before CAS; reconcile after crash | 129–132 |
-| Recovery | ICW-only authoritative replay; no re-signing database-only history | 111–115, 133–138 |
+| Recovery | ICW-only authoritative replay; no re-signing database-only history | 111–115, 133–138, 182–185 |
 | Snapshot finalization | Exact receipt binding, immutable payload and non-actionable pending state | 139–150 |
-| Historical verification/recomputation | Distinct result fields and deterministic oracle | 151–157 |
-| Watermark preconditions | Explicit command matrix; stale/future/interior semantics | 158–160 |
-| Locking/projection consistency | Stable lock, projection mismatch blocks mutation | 161–165 |
-| Privileged roles | Capabilities and residual risks explicit | 166–172 |
+| Historical verification/recomputation | Distinct result fields and deterministic oracle | 151–157, 181 |
+| Watermark preconditions | Explicit command matrix; stale/future/interior semantics | 158–160, 176–177 |
+| Locking/projection consistency | Stable lock, projection mismatch blocks mutation; no DB lock across ICW network call | 161–165, 174–175 |
+| Privileged roles and authorization assertions | Capabilities, signed assertion issuer and residual risks explicit | 166–172, 186–187 |
 | Privacy/retention/erasure | Pinned deployment policy; integrity vs reconstruction separation | v3 tests 58–64, 72; 151 |
 
 ## 5. Non-testable or review-based obligations
@@ -145,3 +145,12 @@ The following are binding refinements to the tables above:
 ## 10. Authorization assertion coverage
 
 The authorization boundary includes both API authentication and a signed assertion independently verified by the ICW. Tests 186–187 cover missing/forged/replayed assertions and attempted application-administrator privilege escalation. The assertion issuer's trust root, key custody, policy version and administrative separation are mandatory review artifacts under §5.
+
+
+## 11. Final current-head and checkpoint test coverage
+
+The matrix requires both distinct conditions:
+- checkpoint staleness changes verification mode and raises an operational alert, but does not invalidate a complete verifiable ICW receipt chain (tests 48, 50, 182);
+- current-state serving requires the latest ICW head or a valid freshness token and a matching projection (tests 183–185).
+
+A stale checkpoint must never be mistaken for an unanchored committed tail. A stale projection must never be mistaken for current evidence state.

@@ -7,7 +7,7 @@
 
 ## 1. Purpose and conformance
 
-This specification translates the v3 lifecycle architecture into server/database responsibilities, transaction boundaries, API outcomes, persistence invariants, cryptographic contracts, checkpoint recovery and historical snapshot behavior.
+This specification translates the v4 lifecycle architecture into server/database responsibilities, transaction boundaries, API outcomes, persistence invariants, cryptographic contracts, checkpoint recovery and historical snapshot behavior.
 
 A conforming implementation MUST satisfy the architecture invariants. A service that performs application-level prechecks but lacks database-enforced constraints, durable idempotency, independent checkpointing or immutable snapshot protection is non-conforming.
 
@@ -57,7 +57,7 @@ Tenant and actor IDs are derived from verified authentication context. Client-su
 
 ### 3.2 Response semantics
 
-Success is returned only after durable commit and includes committed operation/batch ID, batch ending sequence, head hash, event IDs and projection version.
+Success is returned only after durable ICW commit and verified projection application; it includes ICW receipt ID/hash, operation/batch ID, batch ending sequence, head hash, event IDs and projection version. If ICW commit exists but projection is pending, return a typed pending response (HTTP 202 or equivalent), not success or rollback.
 
 Typed failures:
 - \`401\`: unauthenticated/invalid credentials;

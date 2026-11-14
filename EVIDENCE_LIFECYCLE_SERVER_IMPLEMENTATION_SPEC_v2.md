@@ -241,3 +241,26 @@ Add stable code INVALID_INTERMEDIATE_WATERMARK (409). An integrity failure quara
 ### 15.7 Deployment policy values
 
 Before production, configure and approve numeric values for checkpoint maximum age, maximum unanchored tail length, clock-skew tolerance, projection consistency bound, backup retention, and recovery objectives. Include alerting and tests at below/at/above boundaries. No undocumented hard-coded fallback is permitted.
+
+
+## 16. Additional normative implementation details
+
+### 16.1 Record and event envelopes
+
+The record-hash envelope is the exact validated immutable object containing: record schema version; tenant ID; ledger ID and epoch; evidence ID; claim-identity schema version and canonical claim identity; evidence payload and provenance; observedAt, sourceCheckedAt, capturedAt and validity interval where applicable; and recordedAtServer/createdAtServer. The contentHash field is excluded from its own preimage. The canonicalizer rejects unknown fields unless the schema version explicitly permits them.
+
+The event-payload envelope contains every required event field and operation-specific field, including actor, reason, request ID, claim hash, replacement ID/content hash where applicable, and schema version. It excludes payloadHash, previousEventHash, and eventHash. previousEventHash is bound separately in the event-hash preimage. Event payloads and records are canonicalized from validated typed schemas, not arbitrary request JSON.
+
+### 16.2 Batch publication and write privileges
+
+The append procedure must insert the batch and its rows in one transaction, calculate the final batch hash, verify event count and contiguous sequence coverage, update the ledger head, persist the idempotency response, and commit. The database must not expose a batch as a valid projection watermark until the entire transaction commits. Use deferred constraints or a stored-procedure final validation to handle the batch/event insertion dependency.
+
+The request-serving API database role has no direct INSERT/UPDATE/DELETE privileges on records, events, batches, lineage, snapshots, or checkpoints. It may execute only explicitly granted lifecycle procedures. Procedure ownership is isolated; use a fixed search_path, validate tenant context against authenticated server context and RLS, revoke PUBLIC execute, and audit privileged procedure changes. No browser/client credential receives database access.
+
+### 16.3 Contradiction handling boundary
+
+The current API does not provide manual conflict clearing or adjudication. If two eligible-source records materially contradict the same canonical claim, the projection marks the claim CONFLICTED and excludes it. No latest-write-wins, recency override, or admin status toggle is allowed. A future adjudication event/schema/API is outside this specification and requires a separate design review, immutable audit trail, and replay tests.
+
+### 16.4 Legacy namespace isolation
+
+Legacy quarantine envelopes are stored in a separate non-eligible migration namespace/table. They cannot satisfy foreign keys for normal eligible evidence or receive evidence_created events. Re-attestation creates a fresh evidence ID through the normal authenticated API, with new source-check evidence and provenance; the old legacy ID remains quarantined and may be referenced only as an audit origin. Migration credentials cannot bypass this rule.

@@ -256,3 +256,15 @@ For every failure capture sanitized logs, exact commit/config, database snapshot
 ## 13. Review status and implementation boundary
 
 These additions close design-review findings only if the corresponding schema, transaction, projector, and tests are implemented exactly as specified. They do not demonstrate that implementation exists or works. This plan remains a proposal; no migration, implementation, PR #30 merge, or real-agent intake is authorized.
+
+
+## 14. Additional privilege and namespace-isolation tests
+
+102. A migration-role attempt to create an evidence_created event for a quarantined legacy ID is rejected by database constraints/procedure checks; the record remains quarantined and non-eligible.
+103. Legacy quarantine envelopes cannot be referenced by normal eligible-evidence foreign keys or Decision Desk projection queries.
+104. Re-attestation creates a new evidence ID through the normal authenticated create flow; the old ID remains quarantined even if its mutable legacy status snapshot says active.
+105. The request-serving API DB role cannot directly INSERT, UPDATE, or DELETE records, events, batches, lineage, snapshots, or checkpoints; only narrowly granted procedures can write.
+106. Batch creation cannot commit with a missing event, incorrect event count, sequence gap, missing record/lineage row, or absent final batch hash.
+107. Batch rows and their event rows are invisible to readers until transaction commit; no uncommitted or incomplete batch can be used as a decision watermark.
+108. Claim conflict cannot be cleared by UI, direct DB status update, latest timestamp, or administrator override; it remains ineligible until a separately reviewed adjudication capability exists.
+109. Raw JSON duplicate keys are rejected by the parser before JCS canonicalization; parsing must not silently keep first/last duplicate values.

@@ -233,3 +233,16 @@ No such live ownership/configuration evidence is currently available. This is an
 - S3 pricing components: https://aws.amazon.com/s3/pricing/
 - S3 Object Lock retention/version semantics: https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html
 - S3 Object Lock considerations, including encryption-key loss: https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock-managing.html
+
+
+---
+
+## 9. Binding topology reconciliation amendment (2026-11-15)
+
+The conflicting provisional topology in `ICW_F01_PROVIDER_EVALUATION_AND_PROVISIONAL_TOPOLOGY.md` has been reconciled by the separate decision record `ICW_F01_TOPOLOGY_RECONCILIATION_DECISION.md`.
+
+**Sole primary candidate carried forward:** Google Cloud Spanner multi-region as transactional ICW + AWS S3 Object Lock Compliance as immutable envelope/receipt archive.
+
+DynamoDB MRSC + S3 + GCS is retained as historical alternative only, not the selected baseline. Its single-item head-CAS protocol requires a separate architecture redesign and proof because MRSC does not support multi-item transactions. The Spanner + S3 candidate best fits the current atomic receipt/head/idempotency contract.
+
+This is a documentary candidate selection for independent review only. It does not select a production provider, authorize accounts/trials/spend, approve a retention schedule, or establish operational independence. The published-rate compute estimate and exclusions in this document remain applicable. F-01 remains OPEN / NOT DEMONSTRATED.

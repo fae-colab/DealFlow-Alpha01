@@ -94,3 +94,14 @@ Official evidence:
 - MRSC feature limitations include no TTL, per-item replication and region-set constraints: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-global-table-design.html
 
 **Updated disposition:** DynamoDB MRSC remains a candidate only for the single-item head CAS role. It is not a transactional ledger database. F-01 remains OPEN / NOT DEMONSTRATED.
+
+
+---
+
+## 8. Historical status and supersession notice (2026-11-15)
+
+This document records an earlier candidate design: DynamoDB MRSC + S3 Object Lock + GCS Bucket Lock. It is preserved as historical analysis, including its single-item head-CAS amendment, but it is **no longer the selected primary topology** for the current v4.2 baseline.
+
+The binding reconciliation is recorded in `ICW_F01_TOPOLOGY_RECONCILIATION_DECISION.md`: Spanner multi-region + S3 Object Lock Compliance is the sole primary candidate carried forward because its serializable transaction better matches the current atomic receipt/head/idempotency contract. DynamoDB MRSC remains a possible future alternative only after a separately reviewed single-item protocol redesign.
+
+Do not use the earlier “Preferred proof-of-capability topology” wording in §§1–3 as the current selection. Read those sections as the historical proposal they were when written. No topology is production-approved, procured or deployed. F-01 remains OPEN / NOT DEMONSTRATED.

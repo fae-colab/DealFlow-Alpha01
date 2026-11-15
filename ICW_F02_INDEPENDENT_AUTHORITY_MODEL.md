@@ -193,3 +193,91 @@ Still required:
 - Open Policy Agent external data and evaluation: https://www.openpolicyagent.org/docs/external-data
 
 **Evidence boundary:** Vendor documentation describes product capabilities. It does not establish that a deployed ADS is organizationally independent, correctly configured, uncompromised, or entitled to speak for a particular tenant. Those facts require actual ownership records, permission exports, key-custody evidence, policy artifacts and independent adversarial tests.
+
+
+## 12. Binding ownership and trust-root decision (supersedes provisional ownership language above)
+
+This section resolves the ownership model. It does not select a commercial identity provider or HSM product.
+
+### 12.1 Ultimate authorization owner: the tenant
+
+**Decision:** The customer tenant—not DealFlow, the application operator, the database operator, or the ICW operator—is the ultimate authority over who may perform lifecycle operations on that tenant's evidence.
+
+For an individual-agent tenant, the named agent is the tenant owner. For a brokerage/team tenant, the tenant owner is the person or legal entity formally designated by that organization, with delegated administrators recorded under the same tenant authority.
+
+The tenant owner controls:
+- initial owner designation and recovery;
+- creation, scope, expiry and revocation of tenant grants;
+- delegation to agents, staff, service identities and integrations;
+- approval of changes to the tenant trust root and delegated authorization keys;
+- ownership transfer and tenant shutdown.
+
+DealFlow may provide a user interface or relay requests, but it cannot create or expand tenant grants. An application administrator cannot bootstrap a tenant, promote themselves, or replace its owner.
+
+### 12.2 Authorization authority deployment ownership
+
+**Decision:** The Authorization Decision Service (ADS) must operate in a security control plane separately administered from DealFlow application and database operations. The preferred ownership is a tenant-controlled security account or an independently contracted security custodian operating under tenant-controlled policy and key permissions.
+
+DealFlow application operators must not:
+- administer ADS policy or grant stores;
+- change the ADS signing-key policy;
+- assume the ADS runtime identity;
+- issue or alter tenant grants;
+- control the tenant trust-root recovery path.
+
+A DealFlow-managed ADS under the same unrestricted company/cloud super-administrator as the application is not accepted as independent for the stated threat model. It may only be used for synthetic testing or under an explicitly downgraded threat claim that does not resist compromise of the shared operator.
+
+No external ADS operator, legal custodian, or service provider has yet been named. Therefore the deployment owner is structurally decided but operationally unassigned; F-02 cannot be marked ACCEPTED until a real owner and its control evidence are recorded.
+
+### 12.3 Tenant trust root and delegated ADS key
+
+**Decision:** Each tenant has its own tenant authorization root (TAR). The ICW trust registry pins the tenant root public-key fingerprint after out-of-band verification of the tenant owner and a second approver. The tenant root is the ultimate trust anchor for grants and delegated ADS signing authority.
+
+The hierarchy is:
+
+1. **Tenant authorization root (TAR):** tenant-controlled, offline or strongly isolated signing authority. It signs tenant grants, revocations, ADS-key delegation certificates and trust-root changes.
+2. **Delegated ADS signing key:** held in a separately administered KMS/HSM boundary and authorized by a TAR-signed delegation certificate. The certificate constrains tenant ID, allowed operations, resource scope, key ID, policy version and validity period.
+3. **Per-request ADS assertion:** short-lived signature over the exact actor, operation, resource, tenant/ledger/epoch, expected ICW head, canonical request digest, grant reference, assertion ID, audience and expiry.
+4. **ICW verifier:** pins the tenant root fingerprint, verifies the TAR delegation chain, verifies the ADS assertion, checks the referenced tenant grant/revocation state and independently binds the assertion to the submitted request.
+
+The ADS signing key is not itself a root of trust. It is a delegated, scoped key. A compromised ADS signer must not be able to create a grant, expand its delegated scope, change the tenant root, or authorize an actor/resource/operation outside the tenant-signed grant and delegation.
+
+### 12.4 Trust-root enrollment, rotation and recovery
+
+- Initial TAR enrollment requires out-of-band tenant-owner verification and independent second-person approval. The verification record includes verifier identity, tenant identity, owner subject, public-key fingerprint, date, method and evidence digest; unnecessary identity documents are not retained.
+- The ICW stores the pinned root fingerprint and a versioned trust manifest. Application and database administrators cannot edit it.
+- Normal TAR rotation requires a trust-manifest transition signed by both the currently pinned root and the new root, plus the tenant's second-approver authorization.
+- If the old root is suspected compromised or unavailable, cross-signing is not trusted. Recovery requires a documented out-of-band re-verification of tenant ownership, two independent approvers, an incident record and an ICW trust-registry transition. The prior trust interval remains visible and is never silently overwritten.
+- ADS delegation-key rotation is signed by the TAR; old public keys and validity intervals remain available for historical assertion verification.
+- Revocation is monotonic and versioned. The ICW rejects newly submitted assertions referencing a revoked grant, root or delegated key. Historical committed receipts remain verifiable against the key and grant state valid at their commit time, with any compromise uncertainty explicitly marked.
+- Root recovery must not be controlled solely by the DealFlow application account, the same cloud super-admin as the ADS signer, or the same individual who can alter the ICW trust registry.
+
+### 12.5 Independent enforcement at the ICW
+
+To prevent a compromised ADS from becoming an unrestricted authority, the ICW must verify more than the ADS signature. It must verify:
+- the ADS key's TAR-signed delegation certificate and exact scope;
+- the tenant-signed grant that authorizes the actor/client and operation/resource;
+- the monotonic grant/revocation version and current validity at the commit boundary;
+- the per-request assertion's digest, audience, expected head, tenant, ledger, epoch, actor, command, resource, expiry and unique ID;
+- that the assertion's scope is a subset of both the tenant grant and ADS delegation;
+- replay/idempotency constraints.
+
+The ADS is therefore a delegated decision and assertion service, not the ultimate source of tenant authority. The tenant root is the ultimate authority. The ICW enforces that chain independently.
+
+### 12.6 Identity provider decision
+
+Okta remains an **unselected upstream identity-provider candidate only**. It authenticates the human or service principal and supplies a stable subject/authentication context. It does not own the tenant trust root, create tenant grants, or sign the ICW authorization assertion.
+
+The identity provider's signing keys, the tenant authorization root, the ADS delegated signing key, the ICW receipt key and checkpoint/snapshot keys are distinct trust roles. They must not be collapsed into one shared key or one application-admin-controlled account.
+
+### 12.7 Residual and unassigned matters
+
+The ownership model is now decided, but the following deployment facts remain unassigned and therefore block acceptance:
+- the actual legal tenant owner and second approver for each real tenant;
+- the independent ADS security-account owner/operator or contracted custodian;
+- the ICW trust-registry owner and out-of-band enrollment process operator;
+- the KMS/HSM custodian and its administrative separation (resolved under F-04);
+- the identity-provider selection and stable-subject mapping;
+- the exact grant schema, policy versioning, revocation freshness and assertion lifetime values.
+
+**F-02 decision status:** OWNERSHIP MODEL DECIDED; DEPLOYMENT OWNER AND TRUST-ROOT ENROLLMENT NOT YET EVIDENCED; ACCEPTANCE BLOCKED. No real tenant or key has been enrolled. Synthetic-only development may use clearly labelled test keys, never presented as production trust.

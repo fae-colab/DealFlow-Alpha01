@@ -11,8 +11,8 @@
 |---|---|---|---|
 | F-01 | Provider comparison and provisional topology | AWS DynamoDB MRSC + S3 Object Lock Compliance + Google Cloud Storage Bucket Lock selected for controlled PoC evaluation. | OPEN / NOT DEMONSTRATED |
 | F-02 | Independent authority design and component selection | Dedicated ADS selected as sole issuer; Okta Custom Authorization Server selected as upstream identity provider. | OPEN / NOT DEMONSTRATED |
-| F-03 | Recovery inventory and exercise protocol | 30 object classes and clean-room procedure specified. Live exercise cannot run until stores, ledger, recovery credentials and verifier exist. | OPEN / BLOCKED |
-| F-04 | Key custody and compromise plan | AWS CloudHSM selected provisionally for ICW key domain; separate ADS keys; 2-of-3 custodian model. | OPEN / NOT DEMONSTRATED |
+| F-03 | Original recovery inventory + practical test specification | Original R01–R30 source preserved unchanged; companion spec maps all 30 classes to failure injection, detection, isolation, recovery, independent verification and acceptance, plus end-to-end and compound scenarios. Live exercise still requires actual stores, ledger, credentials and independent verifier. | SPECIFICATION DEFINED / LIVE EXERCISE BLOCKED — NOT RUN |
+| F-04 | Existing key custody plan + cryptographic trust test specification | Six key domains preserved; companion spec defines algorithm/canonicalization decision gates, human quorum, generation, use, rotation, backup/restore, compromise handling and 12 test cases. CloudHSM remains provisional; exact suite and custodians unselected. | DOCUMENTARY SPECIFICATION DEFINED / ACCEPTANCE BLOCKED — NOT DEMONSTRATED |
 | Independent review | Review charter and candidate screen | NCC Group, Trail of Bits and Bishop Fox screened from public service descriptions; no contact/appointment/engagement. | NOT COMMISSIONED |
 
 ## 2. Work not performed
@@ -20,8 +20,8 @@
 - No cloud account, project, provider contract, Okta tenant, ADS or HSM has been provisioned.
 - No actual configuration exports, IAM policies, named administrators or custodians have been examined.
 - No receipt, envelope, signed assertion, HSM key, backup or recovery object exists in this evidence pack.
-- No acceptance tests 188–220 have been executed.
-- No clean-room recovery exercise has been conducted.
+- No acceptance tests 188–220 or F-04 specification tests F04-T01–T12 have been executed.
+- No clean-room recovery exercise has been conducted; the new F-03 specification is not execution evidence.
 - No independent reviewer has been appointed or engaged.
 - No guarantee of rollback resistance, independent authorization, full reconstructability or cryptographic trust is claimed.
 
@@ -32,10 +32,11 @@
 3. Provision non-production test infrastructure only after explicit authorization and signed deployment parameter register.
 4. Execute F-01 fault tests and capture raw evidence.
 5. Provision ADS/Okta and run F-02 assertion/revocation/outage tests.
-6. Build the recovery package and separately reviewed verifier; run F-03 clean-room exercise.
-7. Perform HSM key ceremony, backup restore and compromise/quarantine exercise for F-04.
-8. Commission independent reviewers after the evidence pack is complete; resolve findings and repeat review.
-9. Only then present a separate implementation-authorization decision to the user.
+6. Resolve F-01/F-02 prerequisites and approved retention/legal scope; build the recovery package and separately reviewed verifier; then run the F-03 clean-room exercise against all R01–R30 classes.
+7. Resolve F-04 algorithm/canonicalization/trusted-time choices and named independent custody; only after explicit authorization perform HSM key ceremony, backup restore, rotation and compromise/quarantine exercises.
+8. Reconcile the conflicting F-01 topology descriptions in the provider evaluation documents before selecting an HSM/account trust boundary.
+9. Commission independent reviewers after the evidence pack is complete; resolve findings and repeat review.
+10. Only then present a separate implementation-authorization decision to the user.
 
 ## 4. Governance
 

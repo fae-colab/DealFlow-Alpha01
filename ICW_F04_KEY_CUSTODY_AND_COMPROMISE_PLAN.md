@@ -81,3 +81,41 @@ HSM config/inventory/firmware and non-exportability; named custodians and 2-of-3
 - KMS asymmetric rotation: https://docs.aws.amazon.com/kms/latest/developerguide/rotate-keys.html
 
 **F-04 status: OPEN / NOT DEMONSTRATED.** No key ceremony, HSM configuration, custodian group, restore or compromise exercise has occurred.
+
+
+---
+
+## 8. Binding documentary amendment — cryptographic policy v1 (2026-11-15)
+
+This amendment resolves the algorithm and custody-model choices left open in the original plan. The original six key classes and their separation are unchanged. This amendment is normative for the v4.2 documentation baseline; it does not create keys or authorize HSM provisioning.
+
+### 8.1 Cryptographic suite
+
+Adopt policy identifier `DF-ICW-CRYPTO-v1`:
+- Signatures: ECDSA P-256 with SHA-256 (ES256 profile), unique key per purpose.
+- Signature encoding: fixed 64-byte IEEE-P1363 `r || s`, 32-byte big-endian components, low-S form; reject DER/variable/high-S encodings.
+- Digests: SHA-256.
+- JSON: RFC 8785 JCS, UTF-8; reject duplicate names, invalid Unicode, NaN/Infinity and unsafe numeric values. Encode money and large/exact integers as integer minor units or canonical decimal strings.
+- Domain separation: unique versioned ASCII context per signed object type, NUL separator, then canonical bytes.
+- Payload encryption: AES-256-GCM, unique 96-bit nonce per encryption under each key, per-object DEK wrapped by a separately administered KEK; bind tenant/object/schema/digest as AAD.
+- Transport: TLS 1.3 and separate X.509 service identity keys/certificates.
+- Timestamp: RFC 3161 tokens from two independent TSA operators for checkpoints, key lifecycle events, trust-root changes and recovery/incident manifests. ICW sequencing, not timestamp values, establishes ledger order.
+
+AWS CloudHSM SDK 5 documents ECDSA; AWS documents Ed25519 only for non-FIPS clusters in its OpenSSL provider. ES256 is selected as the compatible baseline for the FIPS-capable CloudHSM candidate. Exact module/service configuration and signing encoding remain subject to pre-ceremony compatibility testing. RFC 8785 and NIST FIPS 186-5 are the documentary bases; see the companion F-04 test specification for the source references and required vectors.
+
+### 8.2 Custody model
+
+- ICW receipt signing: non-exportable ES256 private key in a dedicated AWS CloudHSM trust account, separate from the AWS S3 archive account and the application account; independent account-root and HSM custodians.
+- ADS assertion signing: separate HSM/key domain and separate administrators from ICW; ADS operator must not administer the ICW receipt key. Tenant TAR remains tenant-controlled as defined by F-02.
+- Trust-root/policy signing: offline or separately administered HSM-backed approval keys; tenant TAR is not replaced by a DealFlow operator key.
+- Recovery-manifest signing: separate key and custody from production receipt signing.
+- Envelope encryption: per-object AES-256-GCM DEKs wrapped by a separately administered KEK; no signing-key reuse.
+- TLS/service identity: independent managed certificate lifecycle; no signing or trust-root use.
+
+The 2-of-3 human quorum applies to HSM administration and lifecycle operations (user/policy changes, key generation/activation, restore, disable/revoke and destruction). Routine machine receipt/ADS signing is performed by a constrained service identity and is audited; it is not manually approved for every transaction. HSM-enforced quorum must be verified for each protected operation. The requester may count as one approval, so a second distinct custodian is mandatory.
+
+### 8.3 Explicitly unresolved operational assignments
+
+The model is selected, but actual named custodians, tenant owner/second approver, ADS legal operator, TSA providers, account owners, legal retention basis, HSM region/firmware, backup/restore objectives and numeric timestamp-disagreement policy are not available in the source record. These are evidence/ownership blockers, not reasons to revert to unspecified cryptographic algorithms. F-04 remains OPEN / NOT DEMONSTRATED.
+
+No HSM, key, certificate, TSA subscription or provider account has been created or purchased.

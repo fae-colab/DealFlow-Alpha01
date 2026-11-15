@@ -130,3 +130,106 @@ Before any selection:
 - Google Cloud Storage Bucket Lock: https://docs.cloud.google.com/storage/docs/bucket-lock
 
 **Evidence boundary:** This review establishes that the documented provider primitives are plausible candidates. It does not establish the selected configuration's real-world behavior, independent administrative ownership, application-level correctness, durability under all failures, or rollback resistance. Those require configuration evidence, contract review and independent fault-injection testing.
+
+
+## 8. Cost assessment — published-price floor, not a quote (2026-11-15)
+
+### Spanner multi-region compute floor
+
+The published Spanner pricing page currently shows **USD 3.705 per node-hour** for the displayed Asia 1 multi-region Enterprise Plus configuration, including its replicas. Spanner defines 1 node as 1,000 processing units and permits capacity in 100-PU increments. On that displayed rate:
+
+- 100 PU = 0.1 node.
+- 0.1 × USD 3.705 = **USD 0.3705/hour**.
+- 730-hour planning month × USD 0.3705 = **USD 270.47/month**.
+
+This is a published-rate arithmetic estimate for a 100-PU configuration, not a verified bill or quote. Regional configuration prices vary; the eventual region and configuration are not selected. Confirm that the selected configuration supports the required 100-PU floor and obtain a calculator estimate before any account is provisioned.
+
+Spanner also bills for actual database storage, backup storage, replication and applicable network traffic. Multi-region data storage is billed across replicas; storage and compute prices vary by configuration. These costs are excluded from USD 270.47.
+
+### S3 envelope storage and access
+
+S3 has no fixed minimum monthly charge, but charges depend on storage class, retained bytes, PUT/GET/LIST requests, lifecycle transitions, retrieval, data transfer, replication and enabled management/analytics features. The object count, envelope size, retention period, storage class, access frequency, region and restore/export pattern are not yet specified. Therefore a defensible S3 monthly amount cannot yet be stated.
+
+Object Lock must be enabled with versioning and the exact retained version ID pinned in each receipt. Compliance retention is irreversible for the locked version during the retention period; this protects against ordinary deletion/overwrite but creates a corresponding privacy, lawful-erasure and mistaken-retention risk that must be resolved before real data is stored.
+
+### Total-cost interpretation
+
+| Cost component | Current estimate/status |
+|---|---|
+| Spanner 100-PU multi-region compute, displayed Asia 1 price | **USD 270.47/month floor estimate** |
+| Spanner database storage | Not estimated; workload and selected region absent |
+| Spanner backup storage | Not estimated; backup policy absent |
+| Spanner replication/network | Not estimated; workload and region topology absent |
+| S3 envelope storage | Not estimated; bytes, class and retention absent |
+| S3 PUT/GET/LIST and retrieval | Not estimated; request volume absent |
+| Cross-cloud egress/transfer | Not estimated; traffic pattern absent |
+| KMS/HSM, audit logs, monitoring, alerts, support, recovery tooling | Not estimated; key and operational architecture not selected |
+| Engineering/on-call and independent audit | Not included; non-cloud operating cost |
+
+**Budget conclusion:** Candidate A is not a near-zero-cost production architecture. The minimum published compute component alone is roughly USD 270/month at the displayed multi-region rate. A real deployment budget will be higher. Do not promise a fixed monthly total until region, topology, data volume, retention, backup, request and egress assumptions are pinned in a cost worksheet.
+
+A regional free-trial Spanner instance is useful only for learning and schema/transaction prototyping. It is not a substitute for multi-region acceptance: it has no SLA, cannot use multi-region configuration, lacks backup/restore and CMEK support, and is not recommended for production, load testing or ongoing development. It cannot prove the proposed multi-region witness durability or recovery properties.
+
+## 9. Administrative independence — required ownership design
+
+Using Google and AWS is **provider diversity**, not automatically administrative independence.
+
+Candidate A is acceptable for further evaluation only if the following are implemented and evidenced:
+
+| Control plane | Required independent ownership/control |
+|---|---|
+| DealFlow application and relational DB | Application operator may submit commands but has no Spanner IAM admin, S3 bucket admin, Object Lock bypass, ADS signer, or trust-root authority. |
+| ICW / Spanner | Dedicated Google Cloud organization/project and billing owner; separate named administrators; hardware-backed MFA; no shared app-admin identities; audit export controlled outside the app project. |
+| Envelope archive / S3 | Dedicated AWS account, not merely another bucket in the application account; separate root email/phone/recovery custody; separate IAM admins and billing owner; no cross-cloud federation that lets app admins assume archive roles. |
+| Google/AWS organizational super-admins | Explicitly identified as residual privileged trust roots. If one person or one organization can administer both cloud organizations, the architecture does not resist compromise/collusion of that shared top-level authority. |
+| Break-glass and recovery | Two-person approval, separately stored recovery credentials, time-bounded elevation, immutable external audit and tested revocation. |
+| Security monitoring | Logs exported to a third, separately controlled audit destination or customer-controlled archive; neither application nor ICW operators can erase all copies. |
+
+### Threat boundary decision
+
+The proposed design can target resistance to compromise of an ordinary application administrator or relational database administrator, assuming the ICW and envelope archive accounts and their trust roots remain uncompromised.
+
+It does **not** establish resistance to:
+- compromise of the Google Cloud organization super-admin and AWS account/root recovery paths;
+- collusion between administrators controlling both provider domains;
+- simultaneous compromise of ICW, ADS and cryptographic trust roots;
+- provider-wide compromise outside the contractual threat model;
+- malicious authorized evidence submission.
+
+For a stronger organizational independence claim, the Google ICW environment and AWS archive must be controlled by distinct legal entities or genuinely independent custodians, not merely separate projects administered by the same super-admin. If that level of separation is unavailable, state the narrower threat model honestly.
+
+### Administrative acceptance evidence
+
+Before F-01 can be ACCEPTED, collect:
+1. Named legal account owners and service owners for both providers.
+2. Organization/account IDs and ownership evidence (redacted in review artifacts).
+3. IAM role and trust-policy exports proving no app-admin path into either trust domain.
+4. MFA, root recovery, break-glass and two-person approval evidence.
+5. Cross-account and cross-cloud federation map.
+6. Independent audit-log destination and retention proof.
+7. Object Lock bucket configuration, versioning state, retention mode and sample version-level retention evidence.
+8. Spanner configuration, edition, region topology, compute capacity and contractual SLA.
+9. Independent export and restore test from ICW receipts and S3 envelopes.
+10. Documented residual risk for provider super-admin and cross-organization collusion.
+
+No such live ownership/configuration evidence is currently available. This is an explicit blocker, not a presumed pass.
+
+## 10. F-01 decision record
+
+**Decision:** Carry Google Cloud Spanner + AWS S3 Object Lock Compliance mode forward as the preferred *candidate architecture* for the receipt/head + complete-envelope split. Do not select it as the production provider pair yet.
+
+**Reason:** Spanner provides the cleanest documented atomic transaction boundary for receipt insertion plus authoritative-head advancement; S3 Object Lock provides a separate-provider immutable object-version retention primitive. The protocol can avoid a distributed transaction by retaining and verifying the envelope first, then atomically committing the receipt and head in Spanner.
+
+**Rejected as drop-in:** DynamoDB MRSC is not selected for the current multi-record receipt contract because MRSC does not support transactions and its multi-account limitation complicates the desired administrative separation. It may be reconsidered only with a revised single-item CAS/idempotency design and proof.
+
+**F-01 status remains BLOCKED.** The public documentation and cost floor are assessed, but actual provider selection, region, contracts, independent legal ownership, IAM evidence, retention/legal policy, fault injection and recovery evidence are still missing. No cloud account or paid service has been created.
+
+## 11. Additional primary documentation reviewed
+
+- Spanner pricing: https://cloud.google.com/spanner/pricing
+- Spanner compute capacity and 100-PU increments: https://docs.cloud.google.com/spanner/docs/compute-capacity
+- Spanner free trial limitations: https://docs.cloud.google.com/spanner/docs/free-trial-instance
+- Spanner SLA: https://cloud.google.com/spanner/sla
+- S3 pricing components: https://aws.amazon.com/s3/pricing/
+- S3 Object Lock retention/version semantics: https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html
+- S3 Object Lock considerations, including encryption-key loss: https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock-managing.html

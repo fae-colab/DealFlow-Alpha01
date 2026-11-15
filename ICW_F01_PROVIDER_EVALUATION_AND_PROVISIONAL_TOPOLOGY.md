@@ -71,3 +71,26 @@ Concurrent losers may leave prewritten orphan objects; these are not accepted le
 - Azure immutable Blob: https://learn.microsoft.com/azure/storage/blobs/immutable-time-based-retention-policy-overview
 
 **F-01 status: OPEN / NOT DEMONSTRATED.** Public documentation supports a plausible PoC; no live configuration, provider contract or fault test has been inspected.
+
+
+## 7. MRSC transaction limitation — mandatory amendment
+
+A further check of the official DynamoDB documentation establishes that MRSC global tables do **not** support TransactWriteItems or TransactGetItems; those APIs return an error. MRSC conditional writes operate on the latest version of the individual item. This rules out any design that assumes an atomic multi-item transaction across the ledger head and idempotency map.
+
+The PoC MUST therefore use a single authoritative head item as the only sequencing/CAS authority:
+- Each candidate receipt is immutable and written to both object stores before the head update.
+- The receipt contains the expected previous receipt hash, candidate sequence, idempotency key, request digest and exact envelope object references.
+- One conditional update of the single head item advances from the expected previous hash to the new receipt hash. The condition is the only acceptance linearization point.
+- Exact idempotency lookup retrieves the immutable receipt by its deterministic idempotency reference and verifies that the receipt is actually in the authoritative receipt chain from the pinned head. A prewritten object that is not in the chain is an orphan, not an accepted event.
+- Conflicting regional writes and ReplicatedWriteConflictException must be retried only after a strongly consistent read of the current head and full revalidation. No sequence may be allocated by a local counter or eventually consistent index.
+- Do not depend on TTL for MRSC: AWS documents TTL is not supported for MRSC global tables. Orphan cleanup must be an explicit, separately governed retention process and must never delete referenced receipt/envelope objects.
+- Do not rely on GSIs or eventually consistent reads for commit acceptance, authorization, idempotency truth or recovery.
+- The exact object write and retention operations remain outside DynamoDB. They are deliberately completed before the single-item CAS; failures can create unreferenced orphan objects, but cannot create a falsely accepted ledger event.
+
+This restriction is a hard PoC acceptance condition. If the single-item head protocol cannot meet required throughput, idempotency, contention and recovery semantics under adversarial tests, reject DynamoDB MRSC and re-evaluate a transactional serializable ledger such as multi-region Spanner.
+
+Official evidence:
+- MRSC does not support transaction APIs; exactly three Regions; conditional writes evaluate latest state: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/V2globaltables_HowItWorks.html
+- MRSC feature limitations include no TTL, per-item replication and region-set constraints: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-global-table-design.html
+
+**Updated disposition:** DynamoDB MRSC remains a candidate only for the single-item head CAS role. It is not a transactional ledger database. F-01 remains OPEN / NOT DEMONSTRATED.

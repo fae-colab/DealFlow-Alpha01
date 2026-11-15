@@ -313,7 +313,7 @@ The following documentary selections are binding for v1; operational facts remai
 - operational cryptoperiods and maximum data/signature volume per key, to be approved by the independent cryptographic reviewer using actual workload and risk assessment; no arbitrary calendar interval is imposed;
 - historical public-key, certificate, TSA and revocation evidence retention period, covering every dependent record and the legally approved audit-retention period;
 - compromise detection/uncertainty policy and maximum acceptable unverified interval;
-- envelope encryption key hierarchy, scope, legal destruction and recovery ownership;
+- named KMS/KEK operator, actual KEK custody and recovery ownership; legal destruction/erasure policy and approved retention schedule;
 - independent cryptographic reviewer and review date.
 
 The provisional CloudHSM choice must be re-evaluated against the actual F-01 account topology and the F-02 ADS custody boundary. A single cloud-provider organization or common unrestricted human administrator may defeat claimed independence even if key domains are separate.

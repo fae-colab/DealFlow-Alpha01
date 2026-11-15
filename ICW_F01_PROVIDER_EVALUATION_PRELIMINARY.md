@@ -1,7 +1,7 @@
 # ICW F-01 Provider Evaluation — Preliminary Evidence Review
 
 **Date:** 2026-11-15  
-**Status:** Preliminary documentary evaluation only; no provider selected, no account created, no paid service or trial authorized.  
+**Status:** Documentary provider evaluation; Spanner + S3 selected as the sole primary candidate for independent review only. No production provider approved, no account created, no paid service or trial authorized.  
 **Related control:** ICW Master Closure Register — Baseline 01.  
 **Scope:** Evaluate public provider semantics relevant to atomic witness commits and immutable complete-batch retention. This is not a security certification or implementation authorization.
 

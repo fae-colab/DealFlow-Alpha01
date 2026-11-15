@@ -52,24 +52,28 @@ F-02 makes the tenant the ultimate authority for its grants and tenant authoriza
 
 Actual TAR owners, second approvers, ADS operator, trust-registry owner and HSM custodians are currently unassigned. No real tenant root is enrolled.
 
-### 2.3 Algorithm and canonicalization policy — intentionally unresolved
+### 2.3 Binding cryptographic policy decision — v1 selected
 
-The v4 design requires versioned canonicalization, domain-separated digests, signing algorithm and key ID, immutable verifier metadata and independent golden vectors. The existing F-04 plan does **not** select exact algorithm identifiers, key sizes/curves, signature encoding, digest algorithm, trusted-time authority, certificate profile or crypto-policy version.
+The following version-1 suite is selected as the normative documentary baseline for ICW receipts, ADS assertions, trust-root/policy approvals and recovery manifests. This is not a claim that a live implementation or HSM has been configured.
 
-These values must not be guessed or silently defaulted. Before any live key generation, a cryptographic design owner must propose a versioned suite and record:
-- exact signature and digest algorithm identifiers and parameters;
-- key type, size/curve and generation mechanism;
-- signature encoding and verification rules;
-- canonical preimage format, domain-separation strings and byte encoding;
-- schema/canonicalization version and duplicate-key/invalid-Unicode/non-finite-number rejection;
-- trusted-time source, precision, uncertainty and failure behavior;
-- certificate profile, issuer chain, validity and revocation semantics where certificates are used;
-- approved HSM firmware/service version and supported mechanism;
-- algorithm deprecation, migration and historical verification policy;
-- independent test-vector corpus and second implementation.
+| Function | Binding v1 selection | Rules |
+|---|---|---|
+| Asymmetric signatures | ECDSA over NIST P-256 with SHA-256 (ES256 profile) | Unique key per purpose/domain; immutable key ID; no key reuse. |
+| Signature encoding | Fixed 64-byte IEEE-P1363 `r || s`, each 32-byte big-endian; low-S form required | Reject DER, variable-length, high-S, malformed and non-canonical encodings. HSM adapter must convert/validate exactly; independent vectors prove equivalence. |
+| Content and object digests | SHA-256 | Lowercase 64-character hex for display; raw 32-byte digest in binary structures. |
+| JSON canonicalization | RFC 8785 JCS over I-JSON-compatible values, UTF-8 bytes | Reject duplicate property names, invalid Unicode/lone surrogates, NaN/Infinity and unsafe numeric values. Represent money, large integers and exact decimals as canonical decimal strings or integer minor units. Preserve Unicode code points without normalization. |
+| Domain separation | Distinct fixed ASCII context prefix per signed object type, followed by NUL and canonical JCS bytes | Versioned distinct contexts for receipt, ADS assertion, TAR grant/delegation, policy, checkpoint, recovery manifest and incident/epoch transition. No cross-purpose signature acceptance. |
+| Trusted timestamp | RFC 3161 timestamp tokens from two separately administered TSA operators for checkpoints, key lifecycle events, trust-root changes and recovery/incident manifests | Tokens bind SHA-256 imprint of exact signed bytes/digest; validate TSA chain, policy OID, nonce where used, token signature and historical revocation evidence. TSA time corroborates time; it does not allocate ledger sequence or prove source truth. |
+| Transport identity | TLS 1.3; X.509 service certificates using ECDSA P-256/SHA-256 where supported | Separate from application signing keys; managed certificate lifecycle; historical certificate/revocation metadata retained. |
+| Payload encryption | AES-256-GCM with a unique 96-bit nonce per encryption under a given key; per-object DEK wrapped by a separately administered KEK | Bind tenant, object ID, schema/version and expected digest as authenticated additional data. Never reuse a nonce with the same key. Separate encryption keys from every signing key. |
 
-RFC 8785 JSON Canonicalization Scheme or a fully specified equivalent is referenced by the v4 design. Selection of the exact canonicalization contract and its compatibility vectors remains a documented decision gate. A valid signature over ambiguous or differently canonicalized bytes is not accepted.
+**Why ES256 rather than Ed25519:** AWS CloudHSM Client SDK 5 documents ECDSA support; AWS documents Ed25519 in its OpenSSL provider as available only on non-FIPS clusters. P-256 ECDSA is selected as the more compatible baseline for the FIPS-capable CloudHSM candidate. Exact cluster mode, firmware, client SDK and mechanism compatibility must still be verified before key generation. See AWS CloudHSM [PKCS #11 mechanisms](https://docs.aws.amazon.com/cloudhsm/latest/userguide/pkcs11-mechanisms.html), [OpenSSL provider mechanisms](https://docs.aws.amazon.com/cloudhsm/latest/userguide/openssl-provider-mechanisms.html), and [NIST FIPS 186-5](https://csrc.nist.gov/pubs/fips/186-5/final).
 
+RFC 8785 JCS is selected rather than a bespoke canonicalizer. Its I-JSON restrictions, number serialization and Unicode-preservation rules are normative; an implementation-specific “equivalent” serializer is not accepted unless it passes the same independent vectors. See [RFC 8785](https://www.rfc-editor.org/rfc/rfc8785.html).
+
+**Timestamp interpretation:** the ICW sequencer (selected F-01 candidate: Spanner transaction commit) establishes order. RFC 3161 tokens provide independently verifiable time evidence for designated milestones and checkpoint manifests. If either TSA is unavailable, ledger order remains defined by the ICW but the relevant artifact is marked TIME_ATTESTATION_DEGRADED; the time-attestation acceptance test remains BLOCKED until both tokens are obtained or an independently approved exception is recorded. If the two tokens conflict beyond the approved tolerance, the affected time interval is UNRESOLVED. No local wall clock alone establishes trust.
+
+**Cryptographic policy identifier:** `DF-ICW-CRYPTO-v1`. Each signed receipt/assertion/manifest records this identifier, canonicalization version, digest identifier, signature algorithm identifier and immutable key ID. Algorithm agility requires a new policy version, never silent substitution.
 ## 3. Key lifecycle controls
 
 ### 3.1 Generation and activation
@@ -121,7 +125,7 @@ Existing F-04 plan notes CloudHSM backups are periodic (at least every 24 hours 
 
 ## 4. Quorum and human custody
 
-The provisional model is 2-of-3 named human custodians for sensitive HSM administration, restore and policy actions. CloudHSM's documented quorum semantics must be checked against the exact service version and operation: the requesting HSM user may contribute one approval, so a second independent custodian approval is required for the two-person control.
+The binding custody policy is 2-of-3 named human custodians for HSM administration and lifecycle actions: user creation/deletion, quorum-policy changes, key generation/activation, key attribute changes, backup restore, key disable/revoke and destruction. The requester may contribute one approval; at least one other distinct custodian must approve, and the HSM-enforced quorum must require two distinct registered users. Routine receipt/ADS signing is performed by a narrowly scoped service identity under HSM key-use policy and is not manually quorum-approved per transaction; every use is audited and rate/role constrained. If the selected HSM cannot enforce the specified quorum for an action, that action requires an independently controlled approval gate outside the HSM. Exact supported operations must be tested before acceptance.
 
 Before acceptance:
 - Name all three custodians and their legal/organizational accountability.
@@ -297,16 +301,17 @@ No test can be marked PASS from a mock HSM, software-generated key stored with t
 
 ## 9. Open decisions and blockers
 
-The following remain unselected/unassigned and are hard blockers, not defaults:
-- exact signature/digest algorithms, parameters, key types and signature encodings;
-- exact canonicalization implementation/version and complete golden-vector corpus;
-- trusted-time authority and uncertainty/failure policy;
-- certificate profile/issuer and revocation evidence requirements;
+The following documentary selections are binding for v1; operational facts remain hard blockers:
+- FIPS-capable AWS CloudHSM configuration and exact cluster/client SDK/firmware/mechanism compatibility;
+- complete independent golden-vector corpus and two separately implemented verifiers;
+- two actual RFC 3161 TSA operators, their policy OIDs, certificates, revocation archives and approved maximum disagreement/response-latency policy;
+- certificate issuer/operator and concrete certificate profile/validity/revocation evidence configuration;
 - named tenant owners, second approvers, ADS operator, trust-registry owner and three HSM custodians;
 - actual AWS account/org ownership and independent root/break-glass administration;
 - exact CloudHSM cluster configuration, firmware/service version, quorum policy and recovery region;
 - backup interval, acceptable key-loss window, restore objectives and verification schedule;
-- key rotation cadence and historical public-key retention period;
+- operational cryptoperiods and maximum data/signature volume per key, to be approved by the independent cryptographic reviewer using actual workload and risk assessment; no arbitrary calendar interval is imposed;
+- historical public-key, certificate, TSA and revocation evidence retention period, covering every dependent record and the legally approved audit-retention period;
 - compromise detection/uncertainty policy and maximum acceptable unverified interval;
 - envelope encryption key hierarchy, scope, legal destruction and recovery ownership;
 - independent cryptographic reviewer and review date.
@@ -315,8 +320,8 @@ The provisional CloudHSM choice must be re-evaluated against the actual F-01 acc
 
 ## 10. Current disposition
 
-**F-04: DOCUMENTARY PLAN AND TEST SPECIFICATION DEFINED; ACCEPTANCE BLOCKED / NOT DEMONSTRATED.**
+**F-04: CRYPTOGRAPHIC POLICY v1 AND CUSTODY CONTROL MODEL DOCUMENTARILY SELECTED; OPERATIONAL ACCEPTANCE BLOCKED / NOT DEMONSTRATED.**
 
 No HSM, signing key, ADS key, TAR, recovery key, custodian group or live test environment has been configured. No key ceremony, backup restore, rotation or compromise exercise has occurred. No claim of cryptographic trust, key recoverability or compromise resistance is made.
 
-The next action is not implementation. It is a documentary decision review of the unresolved algorithm/canonicalization/trusted-time suite and the real human/account custody model, followed by independent review. Only after those decisions and explicit authorization may a non-production key ceremony or HSM test be considered.
+The next action is independent review of the selected v1 suite and custody model, followed by assignment and verification of actual independent human/legal custodians, TSA operators and account ownership. Only after that evidence and explicit authorization may a non-production key ceremony or HSM test be considered.

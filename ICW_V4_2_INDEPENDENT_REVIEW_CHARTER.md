@@ -116,3 +116,13 @@ No reviewer has been contacted or appointed under this charter. No budget or fee
 Candidate firms previously screened at a preliminary public-service-description level: NCC Group, Trail of Bits and Bishop Fox. This is not a ranking, endorsement, availability check or evidence that any firm has agreed to perform the work. Obtain comparable written scopes and fees before selection.
 
 **Commissioning status: REVIEW PACKAGE PREPARED; EXTERNAL ENGAGEMENT NOT YET EXECUTED.**
+
+
+## 7. Preliminary reviewer sourcing recommendation
+
+For this mixed scope, request two separately accountable workstreams rather than assume one generalist has deep competence in every area:
+- Lead architecture/security reviewer: NCC Group is the first proposal request candidate because its public NCSC listing identifies certified cyber security consultancy, audit/review and risk-management services.
+- Cryptographic protocol specialist: Trail of Bits is the first specialist proposal request candidate because its published cryptography practice explicitly offers pre-implementation cryptographic design assessment, algorithm/parameter review and protocol/threat-model analysis.
+- Bishop Fox remains an alternate architecture-security proposal candidate.
+
+These are only public-scope matches. They are not endorsements, conflict checks, availability checks, fee estimates or appointments. The accompanying RFP requests qualifications, named reviewers, independence disclosures, fixed/capped fees, confidentiality terms and deliverables. Do not select or engage either firm until the owner approves cost and disclosure.

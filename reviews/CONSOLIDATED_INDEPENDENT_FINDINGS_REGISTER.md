@@ -25,9 +25,10 @@ This register consolidates reviewer findings. It does not replace any reviewer r
 | ICW-REV-CRYPTO-01 | ChatGPT | Independent Cryptography and Key Management Specialist | 2026-11-15 | Original report's A01–A12 and workstream findings; preserve source identifiers | Preserved as `ICW-REV-CRYPTO-01_BASELINE.md` in the prior independent-review artifact. Original report remains unchanged. |
 | ICW-REV-ARCH-01 | Claude | Chief Security Architect and Adversarial Security Critic | 2026-11-16 | P0-01–P0-05; P1-01–P1-12; P2-01–P2-11; P3-01–P3-06 | Original source: `ICW v4.2 — Independent Security Architecture Review (Adversarial).md`. The source did not specify a stable reviewer ID; ICW-REV-ARCH-01 is the register-assigned reference only. |
 | ICW-REV-DS-01 | DeepSeek | Adversarial architecture/security review | 2026-11-15 | P0-01–P0-05; P1-01–P1-09; P2-01–P2-06; P3-01–P3-03 | Review supplied by the owner in conversation. Preserve all original IDs. A standalone immutable source file has not yet been added to this branch. |
-| **ICW-REV-DR-01** | **Copilot** | **Adversarial Disaster Recovery Review** | **2026-11-16** | **CR-01–CR-05; H-01–H-06** | **Verbatim baseline preserved at `reviews/ICW-REV-DR-01_BASELINE.md`; Git blob SHA `f78419ee14696123dab54782587c0c84ab2c93f7`.** |
+| **ICW-REV-DR-01** | **Copilot** | **Adversarial Disaster Recovery Review** | **2026-11-16** | **CR-01–CR-05; H-01–H-06** | **Baseline preserved at `reviews/ICW-REV-DR-01_BASELINE.md`; Git blob SHA `f78419ee14696123dab54782587c0c84ab2c93f7`.** |
+| **ICW-REV-CSC-01** | **Claude** | **Chief Security Critic / Lead Adversarial Security Reviewer** | **2026-11-16** | **CSC-01–CSC-24** | **Structured archival transcription at `reviews/ICW-REV-CSC-01_BASELINE.md`; source was supplied in conversation, not as a separate file. Not represented as byte-for-byte original or independently hash-verified.** |
 
-All four named reviews are AI-generated reviews. They are useful independent analytical passes but **do not satisfy the charter's human-independence gate or replace a qualified external human review**. No external reviewer engagement is claimed.
+All five registered review passes are AI-generated reviews. ICW-REV-ARCH-01 and ICW-REV-CSC-01 are two distinct Claude review passes/roles, not two independent reviewer organizations; do not count them as independent organizational corroboration. They are useful independent analytical passes but **do not satisfy the charter's human-independence gate or replace a qualified external human review**. No external reviewer engagement is claimed.
 
 ## 3. Consolidation rules
 
@@ -39,7 +40,8 @@ All four named reviews are AI-generated reviews. They are useful independent ana
 6. R01–R30 remain unchanged. If a reviewer proposes new inventory coverage, record it as a proposed amendment with a separate decision; do not silently add or renumber a recovery class.
 7. Finding status is independent of document status. Rewriting a document does not close a finding.
 8. BLOCKED, NOT RUN, PARTIAL, UNAVAILABLE, or undocumented outcomes must never be promoted to PASS.
-9. Copilot's CR/H identifiers are retained exactly as supplied. The new register-level keys are not source finding IDs.
+9. Copilot's CR/H identifiers and Claude Chief Security Critic's CSC identifiers are retained exactly as supplied. The new register-level keys are not source finding IDs.
+10. The CSC baseline is an archival transcription of the report pasted into chat; it is not claimed to be byte-identical to an original attachment.
 
 ## 4. Consolidated finding map
 
@@ -69,6 +71,37 @@ The following are not separately numbered CR/H findings in the source report. Th
 - Evidence package covering authorization, clean-room isolation, independent inventory, raw provider API traces, cryptographic verification, reconstruction, key restore, service restoration, RPO/RTO and independent acceptance.
 
 These work items must be assigned to explicit owners and mapped to existing requirements/tests or formally approved new requirements/tests. Do not alter R01–R30 merely to accommodate a reviewer recommendation.
+
+### 4.3 Claude Chief Security Critic findings — source-preserving map
+
+| Register key | Original Claude ID | Severity | Finding summary | Cross-review relationship | Current state |
+|---|---|---|---|---|---|
+| CSCF-01 | CSC-01 | P1 | Single mutable Spanner holds authoritative receipts/head; normative protocol does not archive receipts | **Confirmed thematic overlap:** Copilot CR-03 (independent completeness oracle), CR-02 (topology mismatch); earlier Claude architecture review P0-01/P1-04 may overlap. Distinct receipt-copy requirement retained. | OPEN |
+| CSCF-02 | CSC-02 | P1 | No external head anchor/fork detection; expected recovery head is circular | **Confirmed thematic overlap:** Copilot CR-03/CR-04/H-06; earlier Claude P0-01 and Copilot's rollback/fixed-scope concerns. | OPEN |
+| CSCF-03 | CSC-03 | P1 | Composite runtime identity can write, commit and sign; no continuous independent verifier | **Related overlap:** Copilot H-05 compound control-plane compromise; earlier Claude P0-04. Runtime-use compromise is distinct from administrator/control-plane compromise. | OPEN |
+| CSCF-04 | CSC-04 | P1 | Tenant-root enrollment/recovery operator-controlled and unowned | **Related overlap:** Copilot H-01/H-05; earlier Claude authority/trust-root findings. Tenant-root bootstrap is a distinct explicit control. | OPEN |
+| CSCF-05 | CSC-05 | P1 | F-02 authority documents conflict; Okta status contradictory | **Confirmed overlap:** Copilot CR-01/CR-02 baseline/consistency gaps; earlier Claude authority-model findings. | OPEN |
+| CSCF-06 | CSC-06 | P1 | Session assertion does not prove user intent; compromised app can act as user | **Potential overlap — verify:** earlier Claude authorization/ADS findings. Copilot H-05 is only compound control-plane related, not equivalent. | OPEN |
+| CSCF-07 | CSC-07 | P1 | Same 2-of-3 custodians span multiple key/control classes | **Related overlap:** Copilot H-01/H-05 and earlier Claude custody/quorum findings. Exact cross-class quorum concentration is retained. | OPEN |
+| CSCF-08 | CSC-08 | P1 | Operator-controlled epoch reset/quarantine/re-enablement creates repudiation and DoS lever | **Related overlap:** Copilot CR-04/CR-05 (recovery scope/service governance); earlier Claude recovery authority findings. | OPEN |
+| CSCF-09 | CSC-09 | P2 | Pre-commit signatures can produce signed but uncommitted/equivocating receipts | **Related overlap:** Copilot CR-03 and H-06 on receipt/anchor completeness; distinct commit-proof semantics. | OPEN |
+| CSCF-10 | CSC-10 | P2 | Append order omits authorization/semantic/replay checks and retention ordering | **Potential overlap — verify:** earlier Claude protocol/authorization findings; no direct Copilot equivalent identified. | OPEN |
+| CSCF-11 | CSC-11 | P2 | Idempotency semantics conflict with head-bound digest | **Potential overlap — verify:** earlier Claude retry/protocol findings; no direct Copilot equivalent identified. | OPEN |
+| CSCF-12 | CSC-12 | P2 | Revocation feed/freshness unspecified; emergency revocation conflicts with tenant-root model | **Related overlap:** Copilot H-01 bootstrap and earlier Claude authority/revocation findings. | OPEN |
+| CSCF-13 | CSC-13 | P2 | HSM signing use not constrained/reconciled; emergency suspension requires quorum | **Related overlap:** Copilot H-04 backup/key custody and H-05 compromise exercise; distinct live signing misuse and suspension issue. | OPEN |
+| CSCF-14 | CSC-14 | P2 | HSM control-plane enforcement assumptions and recovery credentials/KEK custody unverified | **Confirmed thematic overlap:** Copilot H-04; earlier Claude key-custody/recovery findings. | OPEN |
+| CSCF-15 | CSC-15 | P2 | Google/AWS concentration; no provider-exit/legal-inaccessibility path | **Confirmed overlap:** Copilot H-02 provider exit/account loss. CSC-15 additionally couples archive and signing concentration. | OPEN |
+| CSCF-16 | CSC-16 | P2 | Compliance lock, wrapped keys and retained digests conflict with lawful erasure | **Related overlap:** earlier Claude privacy/erasure concerns; Copilot recovery-scope/legal exclusions may intersect but are not equivalent. | OPEN |
+| CSCF-17 | CSC-17 | P2 | Projection gating inside application is bypassable by stated adversary | **Related overlap:** Copilot CR-05 operational service restoration/consumer gating. Consumer-side verification is an additional requirement. | OPEN |
+| CSCF-18 | CSC-18 | P2 | Incomplete/inconsistent baseline; stale MRSC/dual-store references and absent test/design docs | **Confirmed overlap:** Copilot CR-01/CR-02; earlier Claude P0-05/P1-01. | OPEN |
+| CSCF-19 | CSC-19 | P2 | No consolidated threat model/claims register | **Related overlap:** Copilot CR-01 baseline trace and H-05 compound threat scenario; earlier Claude threat-boundary findings. | OPEN |
+| CSCF-20 | CSC-20 | P2 | Global receipt-key/aggregated ADS blast radius | **Potential overlap — verify:** earlier Claude key-scope/tenant-isolation findings; no direct Copilot equivalent identified. | OPEN |
+| CSCF-21 | CSC-21 | P3 | TSA cadence, algorithm and receipt time source incomplete | **Related overlap:** Copilot H-06 anchor/TSA inventory; earlier Claude time-attestation findings. | OPEN |
+| CSCF-22 | CSC-22 | P3 | Unicode identifier normalization can desynchronize authorization scope | **No direct overlap identified** in Copilot register; retain as unique. | OPEN |
+| CSCF-23 | CSC-23 | P3 | Verifier/review independence asserted, not structurally independent | **Related overlap:** Copilot H-05 and human-review governance; distinct verifier authorship/vector independence. | OPEN |
+| CSCF-24 | CSC-24 | P3 | Editorial/status/test-numbering inconsistencies and stale product-category wording | **Confirmed thematic overlap:** Copilot CR-01/CR-02 baseline hygiene; earlier Claude P0-05/P1-01. | OPEN |
+
+**Mapping caution:** These are thematic cross-review links, not findings adjudicated as identical. Earlier Claude source IDs remain attributed to ICW-REV-ARCH-01. Because both Claude passes originate from the same AI provider, their agreement is not independent organizational corroboration. No source finding is closed by overlap.
 
 ## 5. Consolidated remediation register
 
@@ -124,3 +157,21 @@ Each closure record must contain:
 - The consolidated review does not authorize implementation, migration, test execution, deployment, or merge of the underlying architecture PRs.
 
 **Current final disposition: HOLD — F-01 through F-04 OPEN; F-03 requires documentary revision before any exercise; no operational recovery claim is demonstrated; implementation/production authorization remains withheld.**
+
+
+## 8. Addendum — Claude Chief Security Critic remediation workstreams
+
+The following workstreams supplement REM-01–REM-12. They do not replace or close existing remediation items. All source CSC identifiers remain OPEN pending their own objective evidence.
+
+| Work ID | Source findings | Required action | Minimum acceptance evidence | State |
+|---|---|---|---|---|
+| REM-13 | CSC-01, CSC-02, CSC-09 | Separate receipt archival from Spanner; external witnessed head/consistency proofs; commit-bound receipts and bounded unanchored tail. | Independent archive rebuild after Spanner rollback/project loss; rollback/fork alarms; blind head reconstruction; CAS-loser receipt classified UNCOMMITTED. | NOT STARTED |
+| REM-14 | CSC-03, CSC-13, CSC-17 | Split runtime identities; separate deployment authority; continuous verifier; HSM sign-count reconciliation; unilateral suspension; consumer-side verification. | Real-identity non-production runtime compromise exercise; no verifier-valid forged history; bounded alarm/suspension; consumer rejects forged projections. | NOT STARTED |
+| REM-15 | CSC-04, CSC-05, CSC-06, CSC-12 | One normative F-02; operator-independent tenant-root enrollment/recovery; tenant-visible registry/cool-off; user-held request signature; signed revocation feed and freshness. | Consistency matrix; operator-only enrollment attack fails or is tenant-detected; app-as-user mutation fails without device signature; measured revoke-to-reject bound. | NOT STARTED |
+| REM-16 | CSC-07, CSC-08, CSC-14 | Partition custodians/quorums; evidence-based quarantine/epoch decisions; safe interim mode; map enforcement to actual HSM/IAM/control-plane layer; govern recovery credentials/KEK. | Identity-backed disjoint quorum matrix; cross-class bypass tests; lose-two recovery; fabricated quarantine test; admin-class enforcement and credential-theft drills. | NOT STARTED |
+| REM-17 | CSC-15, CSC-20 | Provider-exit and legal-inaccessibility design; separate AWS organizations or state residual risk; tenant/cohort key partitioning and blast-radius limits. | Google and AWS account-loss exercises; portable export/verification; measured affected cohort; tenant-visible epoch discontinuity and RPO/RTO results. | NOT STARTED |
+| REM-18 | CSC-16 | Resolve envelope content, retention/legal basis, destroyable per-subject key hierarchy and keyed commitments. | Erasure test proves no recoverable plaintext or confirmable digest while permitted tombstone/receipt integrity remains verifiable; legal and technical approval. | NOT STARTED |
+| REM-19 | CSC-18, CSC-19, CSC-24 | Complete frozen baseline/hash manifest; reconcile contradictions; publish consolidated threat model and claims register; editorial consistency pass. | Complete per-file manifest; requirement-to-objective/adversary/test trace; X1–X14 resolution matrix; independent review. | NOT STARTED |
+| REM-20 | CSC-10, CSC-11, CSC-21, CSC-22, CSC-23 | Specify total append order, semantic/idempotency vs authorization digests, revocation race/replay rules, time/Unicode policy and independent verifier authorship/vectors. | Executed concurrency/replay/retention matrix; TSA rollover vectors; adversarial Unicode differential tests; independent verifier divergence and authorship evidence. | NOT STARTED |
+
+**Overall status remains HOLD.** The CSC-01–CSC-08 architecture blockers are not accepted as resolved by document edits. All 24 CSC findings are OPEN; tests are NOT RUN unless separately evidenced. The review is an AI desk review and does not satisfy the independent human-review gate.

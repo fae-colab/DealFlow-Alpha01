@@ -378,3 +378,21 @@ The v1.1.0 amendment establishes:
 | Independent human review | BLOCKED / NOT ENGAGED | Charter-compliant reviewer not yet engaged. |
 
 **Important:** Documentary topology resolution is not F-01 acceptance. Profile definitions do not prove recoverability. No tests have been executed by this amendment. F-01 through F-04 remain OPEN / NOT DEMONSTRATED; overall disposition remains **HOLD — NOT ACCEPTED**. No implementation, procurement, infrastructure spend, live exercise, migration, ingestion, deployment, production authorization or PR merge is authorized.
+
+
+## 15. Cross-document correction implementation status (2026-11-16)
+
+Following audit ICW-AUD-XDOC-01, the PR branch now contains documentary corrections for:
+- AUD-XD-01: explicit witness commit / internal commit result / client API success separation; committed-but-projection-pending is typed HTTP 202 and non-actionable.
+- AUD-XD-02: Spanner is authoritative for exact signed receipt representation, head and idempotency; S3 is the exact-version canonical batch-envelope archive only.
+- AUD-XD-03: legacy unqualified FULL aggregation is explicitly superseded; only FULL-L/C/D/O/A are valid complete-profile claims.
+- AUD-XD-04: R03 recovery reads exact receipt bytes/representation from the committed Spanner row using independent recovery credentials; the expected-truth anchor is a completeness oracle, not a second receipt authority.
+- AUD-XD-05 / XD-11: provisional R01–R30 to AR/test/profile crosswalk and profile-level acceptance rows have been added to the core traceability matrix. All mappings remain provisional pending independent review.
+- AUD-XD-08: F03-O-01–O-08 test definitions, negative assertions, FULL-O/FULL-A gates, anchor/scope and RPO/RTO tests have been added. All are TESTS DEFINED / NOT RUN.
+- AUD-XD-09 / XD-10: v1.0 inventory provenance is explicit; current v1.1.0 inventory is normative; selected candidate versus unprovisioned provider services is explicit; MRSC/two-store procedure is marked historical/superseded.
+
+**Still OPEN / DESIGN AUTHORITY DECISION REQUIRED:**
+- AUD-XD-06: identity of the expected-truth anchor relative to the core checkpoint anchor, owner/writer/trust root/publication protocol/cadence and client-success dependency.
+- AUD-XD-07: R06 payload embedding versus separate encrypted objects, exact locators/version/digest/key bindings, retention/Object Lock and lawful-erasure/tombstone model.
+
+No design default has been silently selected for XD-06 or XD-07. F-01–F-04 remain OPEN / NOT DEMONSTRATED. Overall disposition remains HOLD — NOT ACCEPTED. No provider provisioning, implementation, test execution, procurement, deployment, production authorization or PR merge is authorized.

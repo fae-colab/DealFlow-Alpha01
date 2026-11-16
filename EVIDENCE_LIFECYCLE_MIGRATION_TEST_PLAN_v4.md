@@ -474,3 +474,18 @@ These tests implement the accepted AUD-XD-06 Option 2 policy. Client/API success
 **Regression acceptance:** all cases must include deterministic fixtures for (a) a commit inside the approved lag, (b) publication exactly at the deadline, (c) publication after the deadline, (d) anchor rollback/replay/conflict, and (e) a disaster occurring before anchor catch-up. Assertions must verify projection-gated client success independently of anchor publication, exact anchor watermark, the committed-but-uncovered interval, the fail-closed behavior at the approved bound, and exclusion of uncovered positions from every FULL profile.
 
 The signed parameter register must supply finite numeric `ANCHOR_MAX_PUBLICATION_LAG`, trusted measurement clock, publication deadline semantics, alert/escalation owner, degraded/stop-accepting behavior and numeric RPO/RTO. Missing any required parameter = BLOCKED / NOT RUN; tests cannot substitute guessed defaults. All tests remain DEFINED / NOT RUN.
+
+## 22.4 AUD-XD-07 — R06 payload placement, exact-version binding and crypto-erasure regression requirements
+
+The following F-03 tests are mandatory additions to the core regression suite and MUST be linked to the signed parameter/legal register and the provider-neutral R06 contract in the append-only design and server specification.
+
+| Test ID | Scenario / injection | Required assertion | Forbidden outcome |
+|---|---|---|---|
+| F03-R06-01 | Missing VersionId, mutable locator, substituted object version, altered ciphertext digest/length, wrong receipt/event binding or derivative substituted for original | Independently fetch exact pinned version; verify descriptor, digest, length, artifact role, provenance and Spanner receipt binding | Latest-version lookup, silent substitution, or treating derivative as original |
+| F03-R06-02 | Upload/read-back failure, Spanner abort, pre-commit orphan, lost acknowledgement and retry | Orphan excluded; abort creates no receipt; committed retry returns original receipt; committed-but-missing payload remains committed but PARTIAL/UNAVAILABLE for dependent profiles | Object existence implies acceptance, or committed receipt is rewritten/rolled back |
+| F03-R06-03 | Erase one payload while preserving other payloads; attempt key recovery from primary, replica, backup, escrow and DR | Unique DEK isolation; all usable copies irrecoverable; signed receipt-backed tombstone verifies; unrelated artifacts remain decryptable | Shared-key collateral erasure or false ERASED_BY_AUTHORITY |
+| F03-R06-04 | Missing authority, incomplete key inventory, recoverable backup, pointer-only deletion, missing tombstone or premature object deletion | FAIL/BLOCKED; no erasure status until independent proof; retain receipt and legal audit | Operator assertion or pointer deletion accepted as proof |
+| F03-R06-05 | Original/normalized/attachment lineage and privacy-sensitive digest handling | Distinct artifact roles and provenance; policy-governed digest retention; erased plaintext excluded from recovery counts | Normalized copy silently replaces source or sensitive digest disclosed without policy |
+
+**Profile assertions:** FULL-C requires every retained in-scope R06 artifact to verify or a lawful independently verified tombstone; FULL-D requires each R06 dependency actually consumed by the historical decision; FULL-A requires all R06 artifacts in the signed approved scope. FULL-L has no R06 payload dependency unless its signed scope expressly includes content. All R06 test cases remain DEFINED / NOT RUN until provider/key-management semantics and isolated fixtures are approved.
+

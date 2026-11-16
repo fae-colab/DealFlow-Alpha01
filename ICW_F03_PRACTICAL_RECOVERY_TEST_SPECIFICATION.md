@@ -530,7 +530,7 @@ A synthetic fixture can validate verifier mechanics only and must be labelled SY
 
 ## 8. Source preservation and change control
 
-The v1.0 inventory source blob (`8a1d86fce3cf8c5c78edeb2aa468141a60543bcc`) is preserved in Git history. The current companion inventory is v1.1.0 (blob `948082dadac5aa0c3deb18a46da0821136071267`) and is the normative companion for this specification. Original R01–R30 class IDs, labels, required contents, integrity/binding statements and missing consequences remain unchanged. Any future change to those definitions requires an explicit reviewed amendment and versioned traceability update; no silent edits are permitted.
+The v1.0 inventory source blob (`8a1d86fce3cf8c5c78edeb2aa468141a60543bcc`) is preserved in Git history. The current companion inventory is v1.1.1 (blob `e15d1c3a9aab98777822302665d17da1c588ba68`) and is the normative companion for this v1.1.1 specification. Original R01–R30 class IDs, labels, required contents, integrity/binding statements and missing consequences remain unchanged. Any future change to those definitions requires an explicit reviewed amendment and versioned traceability update; no silent edits are permitted.
 
 
 ---

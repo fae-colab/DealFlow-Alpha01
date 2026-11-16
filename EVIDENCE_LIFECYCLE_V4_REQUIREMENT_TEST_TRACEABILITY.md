@@ -238,3 +238,17 @@ All mappings in §12 are proposed. Independent review must validate both positiv
 **Reviewer checklist:** verify that client/API success is projection-gated but not anchor-gated; publication is bounded and monotonic; late publication does not retroactively undo a valid Spanner commit/client result; bound breach triggers approved fail-closed acceptance behavior; after rollback, all committed positions beyond the last independently verified anchor are explicitly enumerated and excluded from every completeness-qualified FULL profile; and a post-disaster self-generated anchor cannot close the gap.
 
 All mappings remain PROPOSED / PROVISIONAL pending independent review. The added regression tests are DEFINED / NOT RUN.
+
+### 12.4 AUD-XD-07 R06 payload contract traceability (normative design; implementation unproven)
+
+| Requirement | Normative source | Test(s) | Required evidence | Fail-closed result |
+|---|---|---|---|---|
+| Separate immutable payload placement | Append-only design §12; server spec §12.1; F-03 inventory §6.5 | F03-R06-01/02 | Artifact ID/role, exact object VersionId/generation, receipt-bound descriptor and read-back digest/length | No dependent FULL-C/D/A |
+| Exact receipt/event/source binding | Server spec §12.1; F-03 spec §27.7 | F03-R06-01/05 | R04 digest in Spanner receipt; source/version/provenance; artifact-role and lineage verification | PARTIAL/UNAVAILABLE |
+| Independent per-artifact crypto-erasure | Append-only design §12; server spec §12.2; inventory §6.5 | F03-R06-03/04 | Unique DEK reference, key-vault inventory, replica/backup/escrow/DR disposition, independent decrypt-failure evidence | BLOCKED/UNAVAILABLE; not ERASED_BY_AUTHORITY |
+| Lawful erasure authority and tombstone | F-03 inventory §6.5; F-03 spec §27.7 | F03-R06-03/04 | Signed authority, receipt-backed tombstone, policy digest, exact object/key refs, approver and trusted time | FAIL/BLOCKED |
+| Original vs derivative distinction | Server spec §12.1–12.2; F-03 spec §27.7 | F03-R06-01/05 | Explicit artifact role, source identity/version and lineage | No original-source recovery claim |
+| Recovery profile scope | F-03 spec §27.7; migration plan §22.4 | F03-R06-01–05 | Signed scope manifest and explicit decision dependency edges | No FULL-C/D/A beyond verified scope |
+
+This crosswalk resolves the documentary design ambiguity in AUD-XD-07. It does not constitute provider approval, legal sign-off, implementation evidence or test execution; those remain separate gates.
+

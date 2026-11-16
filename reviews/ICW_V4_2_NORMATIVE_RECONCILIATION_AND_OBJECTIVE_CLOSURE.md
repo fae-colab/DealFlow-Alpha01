@@ -391,8 +391,23 @@ Following audit ICW-AUD-XDOC-01, the PR branch now contains documentary correcti
 - AUD-XD-08: F03-O-01–O-08 test definitions, negative assertions, FULL-O/FULL-A gates, anchor/scope and RPO/RTO tests have been added. All are TESTS DEFINED / NOT RUN.
 - AUD-XD-09 / XD-10: v1.0 inventory provenance is explicit; current v1.1.0 inventory is normative; selected candidate versus unprovisioned provider services is explicit; MRSC/two-store procedure is marked historical/superseded.
 
-**Still OPEN / DESIGN AUTHORITY DECISION REQUIRED:**
-- AUD-XD-06: identity of the expected-truth anchor relative to the core checkpoint anchor, owner/writer/trust root/publication protocol/cadence and client-success dependency.
+**AUD-XD-06 policy decision updated (2026-11-16):** Option 2 ACCEPTED. Client/API success is not delayed for anchor publication; bounded asynchronous publication is mandatory, and any committed-but-uncovered interval after rollback is excluded from every completeness-qualified FULL-L/C/D/O/A result. The normative contract is F-03 practical recovery specification §27.6 (v1.1.2), with inventory §6.4/§7.5, traceability §12.3 and migration test plan §22.3.
+
+**Still OPEN / IMPLEMENTATION PARAMETERS AND DESIGN AUTHORITY APPROVAL REQUIRED:**
+- AUD-XD-06: finite numeric `ANCHOR_MAX_PUBLICATION_LAG`, measurement clock/deadline, breach alert and degraded/stop-accepting behavior; anchor identity relative to the core checkpoint, owner/writer/trust root, administrative independence, source/provider independence criteria, retention/recovery path and numeric RPO alignment. The policy choice itself is accepted; implementation and F-03 acceptance remain blocked.
 - AUD-XD-07: R06 payload embedding versus separate encrypted objects, exact locators/version/digest/key bindings, retention/Object Lock and lawful-erasure/tombstone model.
 
 No design default has been silently selected for XD-06 or XD-07. F-01–F-04 remain OPEN / NOT DEMONSTRATED. Overall disposition remains HOLD — NOT ACCEPTED. No provider provisioning, implementation, test execution, procurement, deployment, production authorization or PR merge is authorized.
+
+
+## 14. AUD-XD-06 policy decision amendment (2026-11-16)
+
+The architecture decision authority accepted Option 2: permit bounded asynchronous publication of the independent expected-truth anchor; do not make client/API success wait for anchor coverage. Client/API success remains projection-gated. The maximum publication lag must be a finite numeric value in the signed threat/parameter register. Following rollback, all committed positions after the last independently verified anchor are an uncovered committed interval and cannot be included in FULL-L/C/D/O/A. The exact interval must be reported; post-disaster self-anchoring from recovered sources is prohibited.
+
+Normative implementation and regression requirements are in:
+- `ICW_F03_PRACTICAL_RECOVERY_TEST_SPECIFICATION.md` §27.6, v1.1.2;
+- `ICW_F03_RECOVERY_OBJECT_INVENTORY_AND_EXERCISE_RECORD.md` §§6.4 and 7.5, v1.1.2;
+- `EVIDENCE_LIFECYCLE_V4_REQUIREMENT_TEST_TRACEABILITY.md` §12.3;
+- `EVIDENCE_LIFECYCLE_MIGRATION_TEST_PLAN_v4.md` §22.3.
+
+The accepted policy choice is no longer open. Numeric lag, anchor identity/ownership/trust/administrative separation, provider/source independence, publisher implementation, retention/recovery and RPO alignment remain unapproved implementation parameters. AUD-XD-06 is therefore **POLICY RESOLVED / IMPLEMENTATION BLOCKED / NOT DEMONSTRATED**, not closed for F-03 acceptance. AUD-XD-07 remains open.

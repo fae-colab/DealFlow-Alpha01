@@ -143,6 +143,18 @@ For every class below, perform the specified failure injection in an isolated no
 - **Independent verification:** Independently recompute ciphertext digest and, where authorized, plaintext digest; verify source/version binding and key-access audit.
 - **Acceptance:** PASS for retained scope only when original bytes and provenance verify. Erased content is not counted as recovered.
 
+#### R06-ERASE-01 — Complete cryptographic erasure across recovery domains (normative)
+
+A payload MUST NOT be classified as irreversibly erased solely because its primary object or primary encryption key has been deleted, disabled, revoked, or made unavailable in the primary environment.
+
+Before an irreversible-erasure claim is accepted, the system MUST establish that every in-scope copy of the payload and every cryptographic dependency capable of recovering its plaintext has been eliminated or rendered permanently unusable. The inventory MUST include, at minimum: primary and replicated payload objects; backup/archive ciphertext; primary and backup data-encryption keys (DEKs); wrapped DEKs and every key-encryption key (KEK) or parent key in their wrapping hierarchy; escrowed/exported/recovery key material; KMS/HSM backup and point-in-time restore states; DR-region key copies and recovery credentials; cached or previously unwrapped key material; and plaintext-bearing exports, normalized captures, attachments, media, temporary files, caches and derivatives within the declared erasure scope.
+
+The verification MUST exercise the documented backup, restore, DR, escrow and key-recovery procedures in an isolated environment using the actual in-scope recovery artifacts or provider-backed evidence. A failed decryption attempt against only the primary key endpoint is insufficient. The verifier MUST establish inventory completeness, key lineage, provider backup/retention behavior, destruction or permanent-inaccessibility evidence, and the absence of an untested recovery authority/path.
+
+Any successful recovery of prohibited plaintext through any in-scope copy or recovery path is **FAIL**. If the key-copy inventory, provider evidence, restore path, or required independent access is unavailable, the erasure result is **BLOCKED / NOT DEMONSTRATED**; it MUST NOT be represented as PASS or irreversible erasure. A signed tombstone records the authorized disposition and claim; it does not by itself prove cryptographic irrecoverability.
+
+The test MUST distinguish: (a) primary-object deletion, (b) primary-key unavailability, (c) cryptographic inaccessibility across all inventoried recovery domains, and (d) verified irreversible erasure within a declared and evidenced scope. No claim may exceed the tested scope.
+
 ### R07 — Evidence lineage
 
 **Original required contents:** Parent/child, source-to-claim, derived-from, duplicate/conflict/supersedes links.  
@@ -442,6 +454,10 @@ For every class below, perform the specified failure injection in an isolated no
 - **Independent verification:** Independent cryptographic reviewer validates HSM configuration, quorum evidence, key identity and known-answer vectors without seeing private material.
 - **Acceptance:** PASS only when approved backup restores the same key identity and policy under quorum, or the documented new-key/epoch discontinuity path is correctly invoked. Silent key replacement is FAIL.
 
+**R06 payload-key erasure coverage (without changing the source inventory's R29 class definition):** For every R06 payload in the erasure fixture, the R29 evidence package MUST additionally enumerate the payload-key custody/recovery surface: DEK identifiers and fingerprints where safely recordable; wrapping/KEK hierarchy and key-version identifiers; backup IDs and retention/expiry; HSM/KMS backup and point-in-time restore sets; escrow/export records; replication/DR regions and recovery accounts; custodians/quorum requirements; provider deletion semantics; restore logs; and audit references. Never include private key bytes or secrets in the manifest.
+
+R29 MUST NOT be treated as proof that payload keys were destroyed merely because signing-key restoration was tested. The verifier MUST map each R06 DEK to every wrapping key and recovery copy, then test the applicable R06-A through R06-D scenarios. Any unresolved copy, unknown recovery path, or unverified provider backup-retention behavior leaves R06 erasure BLOCKED / NOT DEMONSTRATED.
+
 ### R30 — Retention/legal basis
 
 **Original required contents:** Schedule, legal holds, erasure policy, classification/jurisdiction decisions.  
@@ -477,11 +493,12 @@ The following cross-class scenarios are mandatory because isolated per-class tes
 - **C01 — Receipt present, envelope absent:** R03 exists but R04 is missing in one store; require quarantine and no ledger FULL.
 - **C02 — Checkpoint rollback versus post-checkpoint tail:** restore an older valid checkpoint while newer accepted R03 receipts exist; discover and verify the complete tail from independently anchored witness history; reject stale history.
 - **C03 — Historical key compromise:** combine R12 key compromise interval, R03 signatures, R11 issuer/key history and R26 incident record; quarantine the uncertain interval and do not retroactively trust it.
-- **C04 — Erasure and replay:** combine R08 tombstone, R06 encrypted payload, R29 key disposition and R30 legal policy; preserve permitted integrity evidence while reporting content PARTIAL, never FULL.
+- **C04 — Erasure and replay:** combine R08 tombstone, R06 encrypted payload, R29 key disposition and R30 legal policy; preserve permitted integrity evidence while reporting content PARTIAL, never FULL. Include the complete R06 key-lineage/backup/DR inventory; test historical restore and escrow paths; a tombstone or primary-key deletion alone MUST NOT satisfy erasure acceptance.
 - **C05 — Authorization provenance loss:** combine R09 assertion, R10 decision, R11 issuer metadata and R25 actor context; accepted mutation provenance must become UNVERIFIABLE if any required proof is absent.
 - **C06 — Snapshot dependency loss:** combine R15/R16 with missing R17–R24 dependencies; preserve snapshot integrity while marking recomputation/reconstruction PARTIAL or UNAVAILABLE.
 - **C07 — Recovery package tampering:** alter R28 manifest and R27 report; independent reviewer must detect and reject the purported result.
-- **C08 — Key restore and signer interruption:** combine R12/R13/R29; stop signing, restore only under quorum, verify historical signatures and explicitly document any new epoch.
+- **C08 — Key restore and signer interruption:** combine R12/R13/R29; stop signing, restore only under quorum, verify historical signatures and explicitly document any new epoch. Keep signing-key continuity results separate from payload-key erasure results.
+- **C09 — Erased payload recovery-path adversary:** combine R06/R08/R29/R30. After lawful erasure, independently attempt the five R06-A–R06-E scenarios in isolated fixtures. Any recovered prohibited plaintext is FAIL; incomplete inventory/provider evidence is BLOCKED; only evidence-backed irreversible erasure within the declared scope may PASS.
 
 ## 6. Global acceptance gates
 

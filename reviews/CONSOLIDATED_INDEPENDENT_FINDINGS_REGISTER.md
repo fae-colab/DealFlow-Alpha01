@@ -1,6 +1,6 @@
 # ICW v4.2 — Consolidated Independent Findings Register
 
-**Register version:** 0.3.0  
+**Register version:** 0.3.1  
 **Date:** 2026-11-16  
 **Baseline branch:** `docs/icw-v4-2-evidence-closure`  
 **Working branch:** `review/icw-v4-2-copilot-dr-review`  
@@ -29,8 +29,9 @@ This register consolidates reviewer findings. It does not replace any reviewer r
 | **ICW-REV-CSC-01** | **Claude** | **Chief Security Critic / Lead Adversarial Security Reviewer** | **2026-11-16** | **CSC-01–CSC-24** | **Structured archival transcription at `reviews/ICW-REV-CSC-01_BASELINE.md`; source was supplied in conversation, not as a separate file. Not represented as byte-for-byte original or independently hash-verified.** |
 | **ICW-REV-DSI-01** | **Gemini** | **Distributed Systems and Infrastructure Reviewer** | **2026-11-16** | **F-01-01–F-04-01** | **Structured archival transcription at `reviews/ICW-REV-DSI-01_BASELINE.md`; source was supplied in conversation, not as a separate file. Not represented as byte-for-byte original or independently hash-verified.** |
 | **ICW-REV-ISA-01** | **Grok** | **Independent Systems Assurance Auditor (Reviewer 05)** | **2026-11-16** | **ISA-01–ISA-11** | **Structured archival transcription at `reviews/ICW-REV-ISA-01_BASELINE.md`; source was supplied in conversation, not as a separate file. Not represented as byte-for-byte original or independently hash-verified.** |
+| **ICW-REV-R06-02** | **ChatGPT** | **Focused adversarial reassessment of R06 erasure, backup/DR recovery copies and test-oracle completeness (Reviewer 06)** | **2026-11-16** | **CG-R06-01–CG-R06-09** | **Baseline preserved at `reviews/ICW-REV-R06-02_CHATGPT_BASELINE.md`; review scope and exact PR head recorded in the report. This is a focused second ChatGPT pass, not a separate reviewer organization.** |
 
-All seven registered review passes are AI-generated reviews. Grok is Reviewer 05 in the reviewer sequence; the register ID `ICW-REV-ISA-01` is its stable traceability identifier. ICW-REV-ARCH-01 and ICW-REV-CSC-01 are two distinct Claude review passes/roles, not two independent reviewer organizations; do not count them as independent organizational corroboration. They are useful independent analytical passes but **do not satisfy the charter's human-independence gate or replace a qualified external human review**. No external reviewer engagement is claimed.
+All eight registered review passes are AI-generated reviews. Grok is Reviewer 05 and the focused ChatGPT R06 reassessment is Reviewer 06 in the reviewer sequence; the register ID `ICW-REV-ISA-01` is its stable traceability identifier. ICW-REV-ARCH-01 and ICW-REV-CSC-01 are two distinct Claude review passes/roles, not two independent reviewer organizations; do not count them as independent organizational corroboration. They are useful independent analytical passes but **do not satisfy the charter's human-independence gate or replace a qualified external human review**. No external reviewer engagement is claimed.
 
 ## 3. Consolidation rules
 
@@ -259,3 +260,40 @@ Grok findings are mapped to existing workstreams wherever the corrective action 
 | REM-22 | Grok ISA-08 | Define pre-commit envelope state and lawful disposition of orphaned/aborted/lost-acknowledgement objects under S3 Object Lock. Reconcile retention timing with Spanner commit and lawful erasure. | Failure matrix for crash-before-upload, crash-after-upload, transaction abort and lost acknowledgement; exact object version/lock metadata; accepted-versus-unaccepted legal classification; approved retention/erasure/key-destruction disposition; no irreversible object with undefined legal status. | NOT STARTED |
 
 All GISA-01–GISA-11 findings remain **OPEN**. Existing remediation items remain NOT STARTED unless separately evidenced. REM-21 and REM-22 are NOT STARTED. No test is claimed executed, no normative document is amended by this addendum, and no implementation, procurement, infrastructure, external engagement or production authorization is granted.
+
+
+## 11. Addendum — ChatGPT focused R06 adversarial reassessment (ICW-REV-R06-02)
+
+ChatGPT is registered as **Reviewer 06 — Focused R06 Erasure and Recovery-Copy Adversarial Reviewer**. The full review is preserved at `reviews/ICW-REV-R06-02_CHATGPT_BASELINE.md` and is scoped to PR #34 head `90cda0bb8225d8d733fd4f43b26992f2f3802165`. This is a second ChatGPT analytical pass, not an independent reviewer organization and not a human review.
+
+**Reviewer verdict: DOCUMENTARY FAIL.** The five R06 tests materially improve the contract, but do not yet establish reliable detection of all surviving backup/DR keys or residual plaintext. Provider-backed execution remains BLOCKED / NOT RUN.
+
+| Register key | Original ChatGPT ID | Severity | Finding summary | Required remediation | State |
+|---|---|---|---|---|---|
+| CGR-01 | CG-R06-01 | P1 | Active stale OPEN wording in F-03 spec §27.6 and inventory §7.4 contradicts the selected separate-object model in later sections. | Mark/remove stale wording as HISTORICAL / SUPERSEDED and rerun exact-head cross-document audit. | OPEN — DOCUMENTARY CONTRADICTION |
+| CGR-02 | CG-R06-02 | P1 | F03-R06-04 positive control can detect a listed surviving key without proving recovery-domain inventory completeness. | Add blind unregistered surviving copy, independent provider-native enumeration and fail-closed inventory reconciliation. | OPEN — FALSE-PASS RISK |
+| CGR-03 | CG-R06-03 | P1 | “Each in-scope” historical restore has no exhaustive boundary across generations, retention, regions, accounts, replicas, escrow and managed recovery copies. | Define discovery sources, retention interval, pagination/completeness evidence, snapshot identifiers and independent manifest reconciliation. | OPEN — RESTORE COVERAGE GAP |
+| CGR-04 | CG-R06-04 | P1 | Monotonic erasure state lacks a concrete independent trust boundary and rollback/freshness test. | Specify independent owner/root/state authority and add rollback, replay, deletion and stale-state negative tests. | OPEN — ANTI-ROLLBACK TRUST GAP |
+| CGR-05 | CG-R06-05 | P1 | Shared parent/KEK, wrapped DEK and cached/unwrapped key paths are not a complete explicit test fixture. | Test parent/child key lineage and prove erased artifact isolation while unrelated artifacts remain decryptable. | OPEN — KEY-HIERARCHY GAP |
+| CGR-06 | CG-R06-06 | P1 | Residual derivative detection lacks measurable coverage for partial, transformed, chunked, re-encoded and restored plaintext copies. | Add multi-marker transformed fixtures, per-storage-class detection criteria and independent storage-domain enumeration. | OPEN — RESIDUAL-PLAINTEXT GAP |
+| CGR-07 | CG-R06-07 | P2 | Positive/negative oracle calibration is incomplete; a verifier that always fails is not a useful erasure oracle. | Add paired known-positive, known-negative, blind-copy, incomplete-inventory, shared-parent and residual-derivative controls. | OPEN — ORACLE QUALITY GAP |
+| CGR-08 | CG-R06-08 | P1 | Audit 04 does not validate the current reviewed PR head and its pinned v4 files do not fully represent the current v4.1 set; it also misses active stale OPEN wording. | Issue a new exact-head audit with current document blob SHAs and explicit section-level authority checks. | OPEN — AUDIT SCOPE GAP |
+| CGR-09 | CG-R06-09 | P1 | No provider-backed restore/erasure evidence exists; no CI status checks or PR workflow runs were returned for the reviewed head. | Keep execution BLOCKED / NOT RUN until separately authorized provider-backed isolated tests and evidence exist. | OPEN — EXECUTION BLOCKED |
+
+### 11.1 Test-by-test disposition
+
+| Test | ChatGPT result | Execution |
+|---|---|---|
+| F03-R06-01 | Adequate requirement outline; executable fixture/evidence schema still required. | NOT RUN |
+| F03-R06-02 | Adequate requirement outline; separately cross-check orphan retention/erasure disposition. | NOT RUN |
+| F03-R06-03 | INSUFFICIENT: historical inventory boundary, independent anti-rollback authority and full key-hierarchy coverage under-specified. | BLOCKED / NOT RUN |
+| F03-R06-04 | INSUFFICIENT: no blind unregistered copy or independent inventory-completeness oracle. | BLOCKED / NOT RUN |
+| F03-R06-05 | INSUFFICIENT: transformed/partial derivative oracle and independent storage-domain enumeration under-specified. | BLOCKED / NOT RUN |
+
+### 11.2 Coordination and independence limits
+
+The recommended AI reassessment sequence is Copilot (disaster-recovery/inventory completeness), Claude (cryptographic hierarchy and anti-rollback), Gemini (distributed inventory/restore consistency), and Grok (oracle/evidence completeness). Each must attempt to falsify the current findings rather than merely endorse them. Findings must retain their original IDs and be reconciled as confirmed, disputed, unique or not examinable.
+
+No named GitHub reviewer accounts were supplied for these AI systems; no reviewer requests are represented as sent. AI-only review is an analytical coordination process and does not satisfy any unchanged charter requirement for qualified independent human review. It cannot substitute for provider-backed evidence or authorize acceptance.
+
+**Disposition:** AUD-XD-07 NOT ACCEPTED; F-03 OPEN / NOT DEMONSTRATED; F03-R06-01–05 DEFINED / NOT RUN; provider-backed R06 execution BLOCKED / NOT RUN; PR #34 remains OPEN / DRAFT / UNMERGED; overall HOLD — NOT ACCEPTED.

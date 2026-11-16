@@ -424,3 +424,39 @@ The signed deployment parameter register must provide exact numeric values for a
 
 186. **Unsigned/forged authorization assertion:** submit an otherwise valid batch with missing, unsigned, altered, wrong-audience, expired or wrong-scope assertion. PASS only if ICW rejects each request without receipt/head advancement.
 187. **Application administrator cannot mint assertion:** compromise ordinary application-administrator credentials and attempt to issue or broaden an assertion for another actor/tenant/operation. PASS only if the separately controlled issuer denies it and ICW accepts no batch.
+
+
+## 22. Supplemental F-03 recovery and operational profile test linkage (additive; 2026-11-16)
+
+This section adds cross-system recovery tests without renumbering or replacing existing core test IDs. The detailed injection/recovery/verification procedures are normative in `ICW_F03_PRACTICAL_RECOVERY_TEST_SPECIFICATION.md` §§27.4–27.5. These tests are **DEFINED / NOT RUN** until an approved provider-backed isolated environment, signed parameter register, independent verifier and authorized exercise are available.
+
+| F-03 test ID | Core linkage | Required integration assertion |
+|---|---|---|
+| F03-O-01 | 166–172,186–187 | Identity/IAM and assertion issuer bootstrap is independently restored; no default/admin bypass |
+| F03-O-02 | Additive; no direct existing core test | DNS/network/TLS/certificate chain restored and independently verified before traffic |
+| F03-O-03 | 151–157 | Exact source/build/runtime/dependency/SBOM reproducibility; no floating or substituted artifact |
+| F03-O-04 | 30–36,166–172,186–187 | HSM/KMS key generation, custody quorum and historical verification restored without plaintext export |
+| F03-O-05 | 115–124,158–165,173–175 | Queues/workers/retries/replay preserve idempotency and reconcile every side effect |
+| F03-O-06 | 30–36,48–52,97–109 | Trusted time, monitoring, alerting and independent audit export restored; clock uncertainty within approved bound |
+| F03-O-07 | 111–124,133–138,145–148,182–185 | Projection rebuilt from ICW; API/cache/downstream actionability blocked until verified current head |
+| F03-O-08 | 37–52,101–109,166–172,182–185 | Old writers fenced; single writer and cutover/rollback independently verified |
+
+### 22.1 Profile aggregation gates
+
+- FULL-L requires the F-03 ledger profile gate, R01–R05 plus required trust/crypto classes, independent expected-truth coverage and no receipt/head gap or fork.
+- FULL-C requires FULL-L plus every lawfully retained in-scope R06 payload, R07 lineage and R08 tombstone/retention proof. AUD-XD-07 remains unresolved; any case depending on the undecided object model is BLOCKED.
+- FULL-D requires all in-scope R09–R25 decision-history artifacts, snapshot/finalization bindings and deterministic reconstruction evidence.
+- FULL-O requires all O-01–O-08 tests to PASS or have signed independently reviewed NOT_APPLICABLE disposition, with service-owner re-enable approval.
+- FULL-A requires all mandatory L/C/D/O requirements, all in-scope R01–R30 classes, O-01–O-08, signed denominator and anti-scope-narrowing checks.
+- No unqualified FULL status is valid. BLOCKED/NOT RUN/FAIL/UNAVAILABLE cannot be omitted from the denominator or treated as PASS.
+
+### 22.2 Anchor and scope negative tests
+
+The F-03 test suite adds:
+- F03-ANCHOR-01: reject monotonic rollback/replay of expected-truth anchor.
+- F03-ANCHOR-02: reject same-position conflicting head/digest.
+- F03-ANCHOR-03: prohibit completeness-qualified FULL for receipt ranges not covered by an independently verified anchor.
+- F03-SCOPE-01: reject removal of mandatory classes, tenants, epochs, sequence ranges, key generations or dependencies from the recovered denominator.
+- F03-RPO-01 / F03-RTO-01: measure against pre-approved numeric values using trusted event times; missing target or time source is BLOCKED.
+
+These F-03 additions do not resolve AUD-XD-06's production publication cadence or acknowledgement dependency. The architecture decision must precede implementation; no synthetic test substitutes for that decision.

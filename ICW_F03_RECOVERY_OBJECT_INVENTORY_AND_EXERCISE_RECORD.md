@@ -1,10 +1,10 @@
 # ICW F-03 — Recovery Object Inventory and Clean-Room Exercise Record
 
 **Record date:** 2026-11-16  
-**Document version:** 1.1.1  
+**Document version:** 1.1.2  
 **Amends:** v1.0 baseline (Git blob `8a1d86fce3cf8c5c78edeb2aa468141a60543bcc`)  
 
-**Status:** v1.1.0 normative topology/profile amendment recorded; live clean-room exercise BLOCKED / NOT RUN.  
+**Status:** v1.1.2 normative anchor-policy amendment recorded; live clean-room exercise BLOCKED / NOT RUN.  
 **Disposition:** No recovery guarantee claimed.
 
 ## 1. Exercise disposition
@@ -241,6 +241,10 @@ All §4 steps that mention MRSC, DynamoDB MRSC, two object stores, “both store
 
 R06's authoritative object placement, whether embedded in R04 or separately encrypted, exact locator/version/digest binding, key lifecycle, Object Lock/retention interaction and lawful-erasure/tombstone protocol remain **OPEN — AUD-XD-07**. This inventory does not silently select an implementation. Until a versioned architecture/privacy decision resolves these points, R06 content recovery is BLOCKED wherever those object-model details are required. Ledger-integrity verification must not be represented as successful content recovery.
 
-### 7.5 Expected-truth anchor contract remains a decision gate
+### 7.5 Expected-truth anchor publication policy — Option 2 accepted
 
-The anchor's identity relative to the core checkpoint anchor, owner/writer, trust root, publication protocol/cadence, monotonicity/freshness rules and relationship to client-visible success remain **OPEN — AUD-XD-06**. No numeric anchor-provider count is prescribed. Until approved, completeness-qualified recovery cannot be claimed for any interval whose completeness is not independently established.
+**Decision:** Client/API success does not wait for independent expected-truth anchor publication. A bounded asynchronous interval between Spanner commit and anchor coverage is accepted. The detailed normative contract, including rollback treatment and required parameter-register controls, is in F-03 practical recovery specification §27.6 (v1.1.2).
+
+The anchor publisher MUST publish monotonic coverage within finite numeric `ANCHOR_MAX_PUBLICATION_LAG`, approved in the signed threat/parameter register before implementation. If the bound is missed, alert/escalate and enter the approved degraded/fail-closed acceptance mode. Following rollback, only the last independently verified anchor position establishes completeness. The committed but uncovered tail MUST be enumerated and excluded from every completeness-qualified FULL-L/C/D/O/A claim; report PARTIAL/UNAVAILABLE or the specified limited statement. A post-disaster anchor derived only from recovered/rolled-back sources cannot close the gap.
+
+The accepted policy choice is resolved. Anchor identity relative to the core checkpoint anchor, legal owner/writer, trust root, administrative independence, provider/source count, exact numeric lag, publisher implementation, retention and recovery path remain **OPEN implementation parameters** requiring approval. No provider count or lag value is invented.

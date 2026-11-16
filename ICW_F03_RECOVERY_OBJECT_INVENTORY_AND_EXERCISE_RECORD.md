@@ -4,7 +4,7 @@
 **Document version:** 1.1.0  
 **Amends:** v1.0 baseline (Git blob `8a1d86fce3cf8c5c78edeb2aa468141a60543bcc`)  
 
-**Status:** Inventory baseline defined; live clean-room exercise BLOCKED.  
+**Status:** v1.1.0 normative topology/profile amendment recorded; live clean-room exercise BLOCKED / NOT RUN.  
 **Disposition:** No recovery guarantee claimed.
 
 ## 1. Exercise disposition
@@ -105,7 +105,7 @@ Controlled statuses: VERIFIED, MISSING, ALTERED, UNAVAILABLE, ERASED_BY_AUTHORIT
 
 **Amendment authority:** User-directed F-03 remediation aligned to `ICW_F01_TOPOLOGY_RECONCILIATION_DECISION.md`.  
 **Status:** Normative documentary amendment for the selected candidate; no provider-backed recovery is demonstrated.  
-**Preservation:** The original R01–R30 IDs, labels, required contents, integrity/binding statements and missing consequences in §2 remain unchanged. This section adds authority, dependency, profile and supplemental operational mappings. It does not delete historical material.
+**Precedence and preservation:** This v1.1.0 section supersedes conflicting operative text in §4 that requires MRSC or retrieval of receipts/envelopes from “both stores”. Those statements remain as historical v1.0 procedure text only. The selected candidate is Spanner transactional witness + S3 exact-version envelope archive. The original R01–R30 IDs, labels, required contents, integrity/binding statements and missing consequences in §2 remain unchanged. This section adds authority, dependency, profile and supplemental operational mappings; it does not delete historical material.
 
 ### 6.1 Selected topology: authoritative placement and recovery source
 

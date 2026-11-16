@@ -1,10 +1,10 @@
 # ICW F-03 — Recovery Object Inventory and Clean-Room Exercise Record
 
 **Record date:** 2026-11-16  
-**Document version:** 1.1.2  
+**Document version:** 1.1.3  
 **Amends:** v1.0 baseline (Git blob `8a1d86fce3cf8c5c78edeb2aa468141a60543bcc`)  
 
-**Status:** v1.1.2 normative anchor-policy amendment recorded; live clean-room exercise BLOCKED / NOT RUN.  
+**Status:** v1.1.3 normative anchor and R06 payload-contract amendments recorded; live clean-room exercise BLOCKED / NOT RUN.  
 **Disposition:** No recovery guarantee claimed.
 
 ## 1. Exercise disposition

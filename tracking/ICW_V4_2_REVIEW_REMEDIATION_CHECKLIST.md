@@ -5,11 +5,11 @@
 **Register:** `reviews/CONSOLIDATED_INDEPENDENT_FINDINGS_REGISTER.md`  
 **Status:** Tracking only. No implementation or live-exercise authorization.
 
-All items are initially unchecked. A completed document edit does not close the finding. Mark an item complete only when the listed artifact exists; mark a finding CLOSED only after the required independent acceptance test passes and closure evidence is retained.
+All items are initially unchecked. Gemini findings GDSF-01–GDSF-04 are cross-linked to the existing workstreams below; no duplicate workstream is created solely to count the same remediation twice. A completed document edit does not close the finding. Mark an item complete only when the listed artifact exists; mark a finding CLOSED only after the required independent acceptance test passes and closure evidence is retained.
 
 ## P0 / critical documentary and assurance gates
 
-- [ ] **REM-01 — Normative dependency trace** (Copilot CR-01; Claude P0-05)  
+- [ ] **REM-01 — Normative dependency trace** (Copilot CR-01; Claude P0-05; Gemini F-03-01)  
   Freeze all four normative v4 documents and referenced artifacts in one immutable review baseline. Map every service, persisted object, manifest field and dependency to recovery class, restore order, verifier, failure consequence, requirement and test.  
   **Evidence:** baseline commit and per-file hashes; completed dependency trace; independent consistency review.  
   **Finding state:** OPEN. **Test state:** NOT RUN.
@@ -29,19 +29,19 @@ All items are initially unchecked. A completed document edit does not close the 
   **Evidence:** versioned profile schema; scope hash; independent expected inventory; omission list; coverage calculation; scope-narrowing negative tests.  
   **Finding state:** OPEN. **Test state:** NOT RUN.
 
-- [ ] **REM-05 — Operational service restoration** (Copilot CR-05)  
+- [ ] **REM-05 — Operational service restoration** (Copilot CR-05; Gemini F-03-01)  
   Add a profile that proves clean-account service restoration, not just archival reconstruction.  
   **Evidence:** clean account/org; new identities/network/DNS/TLS/monitoring; verified replay and projections; consumer/cache gating; synthetic business transactions; duplicate prevention; old-site fencing; authorized cutover; measured service RTO.  
   **Finding state:** OPEN. **Test state:** NOT RUN.
 
 ## High-priority identity, provider, recovery and control-plane gates
 
-- [ ] **REM-06 — Recovery credential bootstrap** (Copilot H-01; Claude P1-06/P1-07)  
+- [ ] **REM-06 — Recovery credential bootstrap** (Copilot H-01; Claude P1-06/P1-07; Gemini F-02-01)  
   Specify and test the credential-denial matrix, quorum bootstrap and break-glass path without production application credentials.  
   **Evidence:** identity/account ownership and recovery procedure; raw logs for IdP, custodian, mailbox, token, federation, policy and provider-support failures.  
   **Finding state:** OPEN. **Test state:** NOT RUN.
 
-- [ ] **REM-07 — Provider outage and provider-exit claims** (Copilot H-02; Claude P0-02/P1-09)  
+- [ ] **REM-07 — Provider outage and provider-exit claims** (Copilot H-02; Claude P0-02/P1-09; Gemini F-01-01)  
   Separate same-provider regional recovery, same-provider account-loss recovery and provider-exit recovery.  
   **Evidence:** provider-by-provider export/restore matrix; customer-controlled export; verifier output without unavailable provider, or an explicit narrowed portability claim.  
   **Finding state:** OPEN. **Test state:** NOT RUN.
@@ -51,12 +51,12 @@ All items are initially unchecked. A completed document edit does not close the 
   **Evidence:** signed parameter register; repeated-run timestamped raw measurements; acknowledged-commit loss calculation; throughput, volume, percentile and worst-case results.  
   **Finding state:** OPEN. **Test state:** BLOCKED / NOT RUN.
 
-- [ ] **REM-09 — Actual HSM backup restore** (Copilot H-04; ChatGPT A12)  
+- [ ] **REM-09 — Actual HSM backup restore** (Copilot H-04; ChatGPT A12; Gemini F-04-01)  
   Restore randomly selected generations, including pre/post rotation, corrupted, wrong-region/account and missing-custodian cases.  
   **Evidence:** backup IDs; quorum approvals; restored fingerprints/attributes/allowed operations; known-answer signatures; KEK/payload recovery where in scope; HSM audit; measured restore throughput.  
   **Finding state:** OPEN. **Test state:** NOT RUN.
 
-- [ ] **REM-10 — Compound control-plane compromise** (Copilot H-05; Claude P0-04/P1-06/P1-07)  
+- [ ] **REM-10 — Compound control-plane compromise** (Copilot H-05; Claude P0-04/P1-06/P1-07; Gemini F-01-01)  
   Inject simultaneous identity-provider, cloud-organization-admin, manifest/deployment/head/audit compromise.  
   **Evidence:** offline trust pins; separate provider account; two-person approvals; verifier and scope integrity; evidence that alerts and re-enablement cannot be suppressed or self-approved.  
   **Finding state:** OPEN. **Test state:** NOT RUN.
@@ -98,12 +98,12 @@ All source findings below remain OPEN; all tests remain NOT RUN unless separate 
   **Evidence:** real-identity non-production runtime compromise test; no verifier-valid forged history; bounded alarm and suspension; forged projection rejected by consumer verifier.  
   **Finding state:** OPEN. **Test state:** NOT RUN.
 
-- [ ] **REM-15 — Tenant authority, user intent and revocation** (CSC-04, CSC-05, CSC-06, CSC-12)  
+- [ ] **REM-15 — Tenant authority, user intent and revocation** (CSC-04, CSC-05, CSC-06, CSC-12; Gemini F-02-01)  
   Establish one normative F-02 model; operator-independent tenant-root enrollment/recovery; tenant-visible registry and cool-off; user-held signature over canonical request; authenticated revocation feed with freshness bound and revoke-only authority.  
   **Evidence:** consistency matrix; operator-only re-root attack fails or is detected/reversible; app-as-user attempts fail without user-device signature; measured revoke-to-reject latency.  
   **Finding state:** OPEN. **Test state:** NOT RUN.
 
-- [ ] **REM-16 — Custody partition, recovery governance and actual enforcement points** (CSC-07, CSC-08, CSC-14)  
+- [ ] **REM-16 — Custody partition, recovery governance and actual enforcement points** (CSC-07, CSC-08, CSC-14; Gemini F-04-01)  
   Partition quorums/personnel by key class; define objective quarantine/epoch criteria and safe read-only mode; map HSM vs IAM/org-policy enforcement; split-custody expiring recovery credentials and KEK.  
   **Evidence:** identity-backed custodian matrix; cross-class bypass attempts; lose-two recovery; fabricated anomaly/quarantine exercise; AWS admin bypass and recovery-credential theft drills.  
   **Finding state:** OPEN. **Test state:** NOT RUN.
@@ -128,3 +128,21 @@ All source findings below remain OPEN; all tests remain NOT RUN unless separate 
   **Evidence:** concurrent replay/CAS/revocation/retention tests; TSA rollover/algorithm vectors; adversarial Unicode differential corpus; verifier divergence and authorship evidence.  
   **Finding state:** OPEN. **Test state:** NOT RUN.
 
+
+
+## Gemini Distributed Systems and Infrastructure — source finding cross-links (ICW-REV-DSI-01)
+
+- [ ] **GDSF-01 / Gemini F-01-01 — Cross-provider administrative independence**  
+  Extend REM-10 and REM-17 evidence to include named legal account owners, separate cloud organizations and IAM hierarchies, super-admin/root-recovery path analysis, role exports, and independent audit-export proofs.  
+  **Finding state:** OPEN. **Test state:** NOT RUN.
+- [ ] **GDSF-02 / Gemini F-02-01 — Tenant-root ownership and bootstrap**  
+  Extend REM-06 and REM-15 to require named tenant-root owner and second approver, out-of-band identity verification, key-enrollment evidence, and negative tests for operator-controlled or unverified bootstrap.  
+  **Finding state:** OPEN. **Test state:** NOT RUN.
+- [ ] **GDSF-03 / Gemini F-03-01 — R01–R30 clean-room recovery execution**  
+  Extend REM-01, REM-05, REM-11 and REM-12. First reconcile and approve the complete normative test baseline, dependencies and authorization; only then run the recovery suite in an isolated non-production environment with independent expected-truth sources and raw evidence. Do not modify or renumber R01–R30 as part of this checklist update.  
+  **Finding state:** OPEN. **Test state:** NOT RUN / NOT AUTHORIZED BY THIS REGISTER.
+- [ ] **GDSF-04 / Gemini F-04-01 — CloudHSM, FIPS and human-quorum evidence**  
+  Extend REM-09, REM-16 and REM-20 to require named 2-of-3 custodians with disjoint roles, actual CloudHSM provisioning only after separate approval, FIPS mechanism/firmware validation, and independent known-answer vectors across two implementations.  
+  **Finding state:** OPEN. **Test state:** NOT RUN / NOT AUTHORIZED BY THIS REGISTER.
+
+**Gemini review disposition note:** Gemini's CONDITIONAL PASS is limited to architectural design progression and test-framework validation. It does not supersede the consolidated HOLD — NOT ACCEPTED, authorize provisioning or spending, authorize live tests, or satisfy the independent human-review gate.

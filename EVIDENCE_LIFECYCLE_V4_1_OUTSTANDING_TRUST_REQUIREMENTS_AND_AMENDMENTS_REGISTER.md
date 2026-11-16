@@ -122,6 +122,8 @@ The system MUST distinguish:
 
 No aggregate `FULL` claim is permitted unless every component in the declared scope is complete. Legal erasure MUST be represented explicitly; integrity metadata may remain, but erased plaintext MUST NOT be claimed as reconstructed.
 
+For R06, an irreversible-erasure claim MUST be supported by a complete in-scope inventory of payload ciphertext, DEKs, wrapped DEKs, KEKs/parent-key dependencies, replicas, backups, archives, escrow/export material, DR copies, historical KMS/HSM backup and point-in-time restore states, cached/unwrapped keys and plaintext-bearing derivatives. The verifier MUST attempt documented backup/DR/escrow recovery and historical key-management restore in an isolated environment; erasure state MUST remain monotonic across restore. A positive-control surviving backup/DR key MUST be detected. Any recovered prohibited plaintext is FAIL; incomplete inventory or unavailable provider evidence is BLOCKED / NOT DEMONSTRATED. A tombstone or primary-key deletion alone is not proof.
+
 ### Acceptance criteria
 
 1. A clean recovery environment with no access to the relational database can enumerate and retrieve the complete ICW authoritative receipt history from genesis or a separately verified genesis manifest.
@@ -134,6 +136,7 @@ No aggregate `FULL` claim is permitted unless every component in the declared sc
 8. A recovery from total relational database loss is completed, independently audited and compared to the witness head.
 9. Every missing dependency is named by stable ID, class, digest/reference and reason; no newer substitute is silently used.
 10. The recovered system remains isolated until an independent recovery verifier and authorized operator approve re-enablement.
+11. For each R06 erasure fixture, independently enumerate every key and payload recovery copy; restore all declared historical KMS/HSM backup states and DR/escrow paths in isolation; detect a deliberately surviving backup/DR key positive control; inspect every declared plaintext-bearing export/cache/derivative location; and retain raw provider logs plus independent privacy/cryptographic sign-off.
 
 ### Required closure evidence
 

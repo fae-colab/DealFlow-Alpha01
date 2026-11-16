@@ -217,3 +217,24 @@ A stale checkpoint must never be mistaken for an unanchored committed tail. A st
 | FULL-A — complete approved scope | All applicable profile tests, F03-PROFILE-A, F03-SCOPE-01, F03-R01–R30 and F03-O-01–08 | Signed pre-disaster denominator and every mandatory class/dependency, all profile evidence, approved scope and measured RPO/RTO | No FULL-A; explicit limited/partial/unavailable outcome |
 
 All mappings in §12 are proposed. Independent review must validate both positive mappings and any missing/over-broad AR associations. Where the core v4 plan has no equivalent test ID, the F-03 test is an additive test, not a renumbering or replacement of the core suite.
+
+
+### 12.3 Accepted bounded anchor-publication policy — AUD-XD-06 (additive; 2026-11-16)
+
+**Decision status:** Option 2 ACCEPTED. Client/API success does not wait for independent expected-truth anchor publication. This is distinct from projection gating: HTTP success still requires verified receipt-bound projection under the existing core contract. The anchor is an asynchronous, independent completeness control.
+
+| Requirement / control | Normative source | Regression test(s) | Required assertion / evidence | Fail-closed result |
+|---|---|---|---|---|
+| Bounded asynchronous publication | F-03 practical recovery specification §27.6; inventory §7.5 | F03-ANCHOR-04 | Spanner commit and projection-verified client success proceed before anchor coverage within approved finite `ANCHOR_MAX_PUBLICATION_LAG`; anchor remains PENDING and completeness never extends past last published position | No false anchor-covered status; no FULL beyond anchored range |
+| Publication deadline / breach | F-03 §27.6 | F03-ANCHOR-05 | Approved numeric lag, trusted measurement clock, deadline, alert/escalation and degraded/fail-closed mode; raw publisher/commit evidence retained | Alert and stop/throttle further unanchored acceptance before approved exposure bound is exceeded |
+| Rollback after anchor prefix | F-03 §27.6 | F03-ANCHOR-03, F03-ANCHOR-06 | Recover last independently anchored position; enumerate every committed-but-uncovered sequence, count, receipt commitment and time bound | No FULL-L/C/D/O/A may include uncovered committed interval; PARTIAL/UNAVAILABLE or explicit limited statement |
+| Circular post-disaster anchoring | F-03 §27.6 | F03-ANCHOR-07 | Reject an anchor reconstructed solely from rolled-back Spanner, recovered manifest, mutable logs or operator output | No retroactive completeness proof |
+| Monotonicity / conflicting anchor | F-03 §§26.2, 27.6 | F03-ANCHOR-01, F03-ANCHOR-02 | Reject stale, replayed, regressed, conflicting, compromised or unverifiable anchor | BLOCKED/quarantine; no FULL |
+| RPO / lag compatibility | F-03 §27.6 | F03-RPO-01, F03-RTO-01 | Signed numeric lag and RPO/RTO targets; measured tail and recovery against trusted time and sequence evidence | Missing numeric parameter or trusted time = BLOCKED |
+| Anchor trust and administration | F-03 §27.6; inventory §6.4/§7.5 | F03-ANCHOR-05 plus independent trust-boundary review | Approved identity relationship to core checkpoint, owner/writer, trust root, administrative domain, source independence, retention and recovery path | Implementation and F-03 acceptance BLOCKED until approved |
+
+**Normative implementation parameters still outstanding:** finite numeric `ANCHOR_MAX_PUBLICATION_LAG`; anchor identity relative to the core checkpoint; legal owner/writer; trust root and administrative boundary; source/provider independence criteria; retention and recovery path; publisher implementation; signed RPO/RTO alignment. The accepted Option 2 policy choice itself is no longer provisional. No numeric provider count or lag is fabricated.
+
+**Reviewer checklist:** verify that client/API success is projection-gated but not anchor-gated; publication is bounded and monotonic; late publication does not retroactively undo a valid Spanner commit/client result; bound breach triggers approved fail-closed acceptance behavior; after rollback, all committed positions beyond the last independently verified anchor are explicitly enumerated and excluded from every completeness-qualified FULL profile; and a post-disaster self-generated anchor cannot close the gap.
+
+All mappings remain PROPOSED / PROVISIONAL pending independent review. The added regression tests are DEFINED / NOT RUN.

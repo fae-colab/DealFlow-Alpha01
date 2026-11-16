@@ -681,3 +681,37 @@ This decision closes the policy choice portion of AUD-XD-06 only. The anchor own
 ### 27.7 Execution and governance boundary
 
 All new cases, including F03-ANCHOR-04 through F03-ANCHOR-07, are TESTS DEFINED / NOT RUN. Execution requires approved numeric anchor-lag and RPO parameters. No provider-backed test, operational restoration, RPO/RTO measurement, legal-erasure validation or independent acceptance is claimed. F-01–F-04 remain OPEN / NOT DEMONSTRATED; overall disposition remains HOLD — NOT ACCEPTED.
+
+### 27.7 R06 payload object, receipt binding and cryptographic-erasure contract — AUD-XD-07
+
+This section is normative and supersedes any less-specific R06 payload-placement or erasure wording in §3, §6 and the original R06 class test. R06 uses separate immutable payload objects; R04 envelopes contain canonical descriptors that bind each payload artifact's exact object version and cryptographic commitments to the Spanner-committed receipt. The inventory §6.5 is the placement/key-erasure authority.
+
+**F03-R06-01 — Descriptor and exact-version binding**
+- Fixture: original source, normalized capture and attachment artifacts uploaded as separate encrypted objects; canonical R04 envelope carries their descriptors.
+- Inject: omit VersionId/generation; substitute a later version at the same key; alter ciphertext digest/length; change event/receipt reference; replace original with normalized derivative; alter source version/provenance.
+- Expected: verifier rejects any mutable locator, missing exact version, digest/length mismatch, wrong receipt/event binding or artifact-role substitution. It independently fetches the pinned version and recomputes ciphertext digest/length; where authorized, it decrypts and verifies plaintext digest/length.
+- PASS: Spanner receipt binds the R04 envelope digest, and every in-scope descriptor resolves to exactly the committed immutable payload version. Otherwise affected content is PARTIAL/UNAVAILABLE and no FULL-C/D/A claim may include it.
+
+**F03-R06-02 — Upload/commit ordering and orphan handling**
+- Inject upload failure, read-back mismatch, Spanner abort, timeout-before-commit and lost acknowledgement after commit.
+- Expected: no receipt for an aborted append; uploaded-but-uncommitted payloads are classified as orphans and excluded from accepted history; committed receipt retry resolves to the original receipt; a committed receipt with unavailable payload remains committed but content recovery is PARTIAL/UNAVAILABLE.
+- PASS: no payload object is treated as accepted without a matching committed receipt and no committed payload descriptor is silently rewritten.
+
+**F03-R06-03 — Per-artifact key isolation and lawful crypto-erasure**
+- Fixture: multiple payload artifacts with independently erasable DEKs, wrapped-key registry, replicas/backups and an approved signed erasure authority.
+- Inject: destroy one artifact's DEK while preserving other artifacts; attempt recovery through primary key service, replica, backup, escrow and DR restore paths.
+- Expected: erased artifact remains undecryptable through every authorized recovery path; unrelated artifacts remain decryptable; ciphertext may remain under WORM retention; a signed receipt-backed tombstone binds exact payload IDs/versions, key references, policy digest, authority and destruction evidence.
+- PASS: independent verifier confirms per-artifact isolation, complete key-copy disposition and tombstone integrity. Otherwise do not label ERASED_BY_AUTHORITY.
+
+**F03-R06-04 — False, unauthorized or incomplete erasure**
+- Inject missing/invalid authority, incomplete key-copy inventory, recoverable backup key, shared DEK, deletion of only a key pointer, premature ciphertext deletion, missing tombstone and attempted restoration after erasure.
+- Expected: verifier reports FAIL or BLOCKED as appropriate; no ERASED_BY_AUTHORITY status is accepted; legal/retention controls and the original receipt remain intact.
+- PASS: every false-erasure path is rejected and no plaintext or usable key is restored contrary to the tombstone.
+
+**F03-R06-05 — Derivative, lineage and privacy handling**
+- Inject normalized capture without original source, derivative with wrong source/version, digest disclosure outside policy and tombstone missing lineage.
+- Expected: derivative is not treated as original; provenance and artifact role remain explicit; digest disclosure is governed by policy; erased plaintext is not counted as recovered.
+- PASS: R06/R07/R08 links and privacy restrictions verify independently.
+
+**R06 profile rule:** FULL-C requires all retained in-scope R06 artifacts and their exact descriptors/versions/keys to verify, or independently verified ERASED_BY_AUTHORITY tombstones where policy permits an erased outcome. FULL-D requires R06 only where a historical decision actually consumed or depended on that artifact; the dependency must be explicit in the decision manifest. FULL-A requires every R06 artifact in the signed approved scope. No profile may count erased plaintext as recovered. These tests are DEFINED / NOT RUN until an approved provider/key design and isolated fixtures exist.
+

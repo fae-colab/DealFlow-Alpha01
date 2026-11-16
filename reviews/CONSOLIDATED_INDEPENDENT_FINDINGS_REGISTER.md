@@ -1,6 +1,6 @@
 # ICW v4.2 — Consolidated Independent Findings Register
 
-**Register version:** 0.2.0  
+**Register version:** 0.3.0  
 **Date:** 2026-11-16  
 **Baseline branch:** `docs/icw-v4-2-evidence-closure`  
 **Working branch:** `review/icw-v4-2-copilot-dr-review`  

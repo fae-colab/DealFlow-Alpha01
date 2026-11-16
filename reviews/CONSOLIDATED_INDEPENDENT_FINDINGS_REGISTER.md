@@ -27,8 +27,9 @@ This register consolidates reviewer findings. It does not replace any reviewer r
 | ICW-REV-DS-01 | DeepSeek | Adversarial architecture/security review | 2026-11-15 | P0-01–P0-05; P1-01–P1-09; P2-01–P2-06; P3-01–P3-03 | Review supplied by the owner in conversation. Preserve all original IDs. A standalone immutable source file has not yet been added to this branch. |
 | **ICW-REV-DR-01** | **Copilot** | **Adversarial Disaster Recovery Review** | **2026-11-16** | **CR-01–CR-05; H-01–H-06** | **Baseline preserved at `reviews/ICW-REV-DR-01_BASELINE.md`; Git blob SHA `f78419ee14696123dab54782587c0c84ab2c93f7`.** |
 | **ICW-REV-CSC-01** | **Claude** | **Chief Security Critic / Lead Adversarial Security Reviewer** | **2026-11-16** | **CSC-01–CSC-24** | **Structured archival transcription at `reviews/ICW-REV-CSC-01_BASELINE.md`; source was supplied in conversation, not as a separate file. Not represented as byte-for-byte original or independently hash-verified.** |
+| **ICW-REV-DSI-01** | **Gemini** | **Distributed Systems and Infrastructure Reviewer** | **2026-11-16** | **F-01-01–F-04-01** | **Structured archival transcription at `reviews/ICW-REV-DSI-01_BASELINE.md`; source was supplied in conversation, not as a separate file. Not represented as byte-for-byte original or independently hash-verified.** |
 
-All five registered review passes are AI-generated reviews. ICW-REV-ARCH-01 and ICW-REV-CSC-01 are two distinct Claude review passes/roles, not two independent reviewer organizations; do not count them as independent organizational corroboration. They are useful independent analytical passes but **do not satisfy the charter's human-independence gate or replace a qualified external human review**. No external reviewer engagement is claimed.
+All six registered review passes are AI-generated reviews. ICW-REV-ARCH-01 and ICW-REV-CSC-01 are two distinct Claude review passes/roles, not two independent reviewer organizations; do not count them as independent organizational corroboration. They are useful independent analytical passes but **do not satisfy the charter's human-independence gate or replace a qualified external human review**. No external reviewer engagement is claimed.
 
 ## 3. Consolidation rules
 
@@ -101,7 +102,7 @@ These work items must be assigned to explicit owners and mapped to existing requ
 | CSCF-23 | CSC-23 | P3 | Verifier/review independence asserted, not structurally independent | **Related overlap:** Copilot H-05 and human-review governance; distinct verifier authorship/vector independence. | OPEN |
 | CSCF-24 | CSC-24 | P3 | Editorial/status/test-numbering inconsistencies and stale product-category wording | **Confirmed thematic overlap:** Copilot CR-01/CR-02 baseline hygiene; earlier Claude P0-05/P1-01. | OPEN |
 
-**Mapping caution:** These are thematic cross-review links, not findings adjudicated as identical. Earlier Claude source IDs remain attributed to ICW-REV-ARCH-01. Because both Claude passes originate from the same AI provider, their agreement is not independent organizational corroboration. No source finding is closed by overlap.
+**Mapping caution:** These are thematic cross-review links, not findings adjudicated as identical. Earlier Claude source IDs remain attributed to ICW-REV-ARCH-01. Because both Claude passes originate from the same AI provider, their agreement is not independent organizational corroboration. Gemini is a separate AI provider/reviewer system, but this remains an AI desk review and does not satisfy the charter's qualified human-independence gate. No source finding is closed by overlap.
 
 ## 5. Consolidated remediation register
 
@@ -175,3 +176,33 @@ The following workstreams supplement REM-01–REM-12. They do not replace or clo
 | REM-20 | CSC-10, CSC-11, CSC-21, CSC-22, CSC-23 | Specify total append order, semantic/idempotency vs authorization digests, revocation race/replay rules, time/Unicode policy and independent verifier authorship/vectors. | Executed concurrency/replay/retention matrix; TSA rollover vectors; adversarial Unicode differential tests; independent verifier divergence and authorship evidence. | NOT STARTED |
 
 **Overall status remains HOLD.** The CSC-01–CSC-08 architecture blockers are not accepted as resolved by document edits. All 24 CSC findings are OPEN; tests are NOT RUN unless separately evidenced. The review is an AI desk review and does not satisfy the independent human-review gate.
+
+
+## 9. Addendum — Gemini Distributed Systems and Infrastructure review (ICW-REV-DSI-01)
+
+Gemini's original source identifiers are retained exactly as supplied. Register keys below are cross-review tracking keys only; they do not replace the source IDs. The source is a structured archival transcription of the report supplied in conversation, not a byte-identical source attachment.
+
+| Register key | Original Gemini ID | Severity | Finding summary | Cross-review relationship | Current state |
+|---|---|---|---|---|---|
+| GDSF-01 | F-01-01 | P1 | Two cloud vendors do not guarantee administrative independence where shared super-admin or root-recovery paths can compromise both domains. | **Confirmed thematic overlap:** Copilot H-05 / REM-10 (compound identity and cloud-control-plane compromise); Claude CSC-15 / REM-17 (provider concentration and provider-exit/legal-inaccessibility). Adds explicit demand for named legal account owners, IAM-role exports and independent audit-export proof. | OPEN |
+| GDSF-02 | F-02-01 | P1 | TAR/ADS separation is not operationally assured while tenant-root bootstrap, key enrollment, ownership and second-person approval remain unassigned. | **Confirmed thematic overlap:** Claude CSC-04/CSC-05/CSC-06/CSC-12 / REM-15 (tenant authority, enrollment and revocation); Copilot H-01 / REM-06 (recovery credential bootstrap). Adds out-of-band tenant-root verification and named second approver. | OPEN |
+| GDSF-03 | F-03-01 | P2 | The R01–R30 inventory and clean-room recovery design have not been exercised; documentary coverage is not demonstrated recovery. | **Confirmed thematic overlap:** Copilot CR-01/CR-05 and H-06 / REM-01/REM-05/REM-11/REM-12; Claude CSC-18 / REM-19 (baseline completeness). Distinct explicit requirement: execute the approved full recovery suite in an isolated environment only after the test specification and authorization gates are satisfied. | OPEN |
+| GDSF-04 | F-04-01 | P2 | CloudHSM, FIPS mechanism behavior, 2-of-3 human custody and known-answer testing are specified but not provisioned or demonstrated. | **Confirmed thematic overlap:** Copilot H-04 / REM-09 (actual HSM backup restore); Claude CSC-07/CSC-13/CSC-14 / REM-16 and REM-20 (quorum partition, HSM enforcement and cryptographic verification). Adds named custodians, FIPS mechanism tests and independent known-answer vectors. | OPEN |
+
+### 9.1 Gemini cross-review interpretation and limits
+
+- Gemini's **CONDITIONAL PASS** applies only to architectural design progression and test-framework validation. It is not a production approval and does not override the consolidated **HOLD — NOT ACCEPTED** disposition.
+- The report independently reinforces that Spanner/S3, ADS/TAR, CloudHSM, and R01–R30 are still documentary/specification-stage components. No live provisioning, cryptographic ceremony, fault injection, clean-room recovery or operational acceptance is evidenced by this review.
+- The stated Spanner cost estimate (approximately USD 270.47/month for a 100-PU Asia 1 floor) is a reviewer-reported estimate, not a verified quote or authorization to incur spend.
+- Gemini identifies residual shared dependencies (cloud control planes, DNS, IAM, time sources and cross-cloud super-admins), immutable-retention/legal-erasure tension, and quorum/custodian availability. These remain risk statements requiring evidence and design decisions, not accepted mitigations.
+- Gemini's source refers to production closure evidence F-01 through F-09, while this register's top-level governing findings currently track F-01 through F-04. Do not silently equate these numbering schemes; reconcile the source register references against the frozen baseline before any closure decision.
+
+### 9.2 Remediation cross-links
+
+Gemini's findings are mapped into existing workstreams to avoid duplicate actions:
+- **GDSF-01 → REM-10 and REM-17:** named legal owners, genuinely separated organizations/IAM roots, independent audit exports, and compound cross-provider super-admin compromise testing.
+- **GDSF-02 → REM-06 and REM-15:** out-of-band tenant-root enrollment, named ownership, second-person approval and bootstrap-denial testing.
+- **GDSF-03 → REM-01, REM-05, REM-11 and REM-12:** complete dependency trace and authorized clean-room recovery / service-restoration exercises. R01–R30 must remain unchanged absent a separately approved amendment.
+- **GDSF-04 → REM-09, REM-16 and REM-20:** actual HSM/key restore, named disjoint custodians, FIPS mechanism validation and independent known-answer vectors.
+
+All GDSF-01–GDSF-04 findings remain **OPEN**. No remediation is marked started, no test is represented as run, and no production or implementation authorization is granted.

@@ -1,11 +1,11 @@
 # ICW F-03 — Practical Recovery Test Specification
 
 **Record date:** 2026-11-16  
-**Document version:** 1.1.2  
+**Document version:** 1.1.3  
 **Amends:** v1.0 baseline (Git blob `79d73a5def263ae4393727d9dea8d4708f714916`)  
 
 **Baseline source:** `ICW_F03_RECOVERY_OBJECT_INVENTORY_AND_EXERCISE_RECORD.md`  
-**Baseline source blob SHA (companion inventory v1.1.2):** `927ee737f0224201b52e841f3ee71a24a2f96b1f`  
+**Baseline source blob SHA (companion inventory v1.1.3):** `4b4a1e151515bcd8426dee5fe4e2e922aee4dfd0`  
 **Status:** TEST SPECIFICATION DEFINED — EXECUTION BLOCKED / NOT RUN  
 **Disposition:** Documentation only. This specification does not demonstrate recovery or authorize infrastructure, implementation, migration, ingestion, deployment or live test execution.
 

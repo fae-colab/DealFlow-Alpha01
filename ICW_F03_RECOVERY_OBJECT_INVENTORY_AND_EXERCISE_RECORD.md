@@ -9,7 +9,7 @@
 
 ## 1. Exercise disposition
 
-The clean-room recovery exercise cannot honestly be reported as completed. No selected/provisioned witness, dual-store object repository, issuer, HSM, recovery export or live receipt history is available. The repository currently contains specifications, not authoritative deployed history. Fabricating receipts or replaying a local DB would not test F-03.
+The F-01 topology is selected at documentary candidate level only: Google Cloud Spanner is the proposed transactional witness and AWS S3 Object Lock Compliance is the proposed exact-version canonical batch-envelope archive. No provider service is provisioned; no issuer, HSM, recovery export or live receipt history is available. The clean-room recovery exercise cannot honestly be reported as completed. The repository currently contains specifications, not authoritative deployed history. Fabricating receipts or replaying a local DB would not test F-03.
 
 Completed here: inventory, manifest contract, exercise procedure and pass/fail criteria.  
 Blocked: provider-backed retrieval, cryptographic verification, complete history reconstruction and independent recovery sign-off.
@@ -55,15 +55,15 @@ Every class must appear in the recovery manifest, even when NOT_APPLICABLE, ERAS
 
 ## 3. Manifest contract
 
-Every object entry must include stable object ID/class/scope/source; expected digest, algorithm and byte length; schema and canonicalization versions; receipt/epoch/sequence; primary and secondary exact object version/generation; retention and erasure status; retrieval timestamp; observed digest/length; integrity, semantic, replay and recovery statuses; missing reason; verifier build digest; reviewer identity.
+Every object entry must include stable object ID/class/scope/source; expected digest, algorithm and byte length; schema and canonicalization versions; receipt/epoch/sequence; authoritative store locator and exact VersionId/generation; optional separately approved replica locator/version (not assumed); retention and erasure status; retrieval timestamp; observed digest/length; integrity, semantic, replay and recovery statuses; missing reason; verifier build digest; reviewer identity.
 
 Controlled statuses: VERIFIED, MISSING, ALTERED, UNAVAILABLE, ERASED_BY_AUTHORITY, NOT_APPLICABLE, NOT_YET_TESTED. Empty is not equivalent to NOT_APPLICABLE.
 
 ## 4. Clean-room exercise procedure
 
 ### Preconditions
-1. Provision actual F-01 stores and MRSC ledger metadata.
-2. Generate non-production fixture history through approved ICW implementation; retain raw receipts/envelopes in both stores.
+1. [HISTORICAL / SUPERSEDED — NOT EXECUTABLE] Provision both MRSC-era stores and legacy ledger metadata. Current candidate is Spanner transactional witness + S3 envelope archive; no provider provisioning is authorized by this inventory.
+2. Generate non-production fixture history through approved ICW implementation; retain exact canonical envelope objects in S3 and committed receipt rows in Spanner. No second receipt-byte archive is assumed.
 3. Pin recovery package manifest digest and expected genesis/head.
 4. Prepare isolated account/project with no production DB, DB backup, cache, app export or production app credentials.
 5. Supply only documented recovery credentials and independently pinned trust-root fingerprints.
@@ -73,7 +73,7 @@ Controlled statuses: VERIFIED, MISSING, ALTERED, UNAVAILABLE, ERASED_BY_AUTHORIT
 ### Execution
 1. Record clean environment identity, timestamp, software bill of materials and network policy.
 2. Enumerate witness history from trusted genesis.
-3. Retrieve each receipt and exact envelope version/generation from both stores.
+3. Retrieve exact receipt bytes/representation from the committed Spanner row using independent recovery credentials; retrieve the exact referenced S3 envelope VersionId. Do not infer receipt authority from S3.
 4. Verify continuity, signatures, ranges, counts, lengths and digests.
 5. Retrieve payloads/tombstones, authorization provenance, snapshots/finalization receipts and all dependencies R01–R30.
 6. Reconstruct lifecycle state and verify supersession, revocation, conflict and lineage.
@@ -113,7 +113,7 @@ Controlled statuses: VERIFIED, MISSING, ALTERED, UNAVAILABLE, ERASED_BY_AUTHORIT
 |---|---|---|---|
 | R01 Genesis/bootstrap | Independently pinned genesis/trust-root record | Offline or separately administered trust-root copy | Never reconstruct from DB or later head. |
 | R02 Epoch/continuity | Spanner committed receipt/head history plus signed epoch transition | Independent expected-truth anchor and retained transition evidence | Verify signed continuity; no silent reset. |
-| R03 Append receipts | Spanner committed receipt rows and authoritative head | Independent expected-truth commitment to receipt IDs/ranges; key history in R12 | Spanner commit is acceptance. Do not assume a second S3 receipt archive. |
+| R03 Append receipts | Spanner committed receipt rows containing exact canonical signed receipt bytes/representation, transaction identity and authoritative head/idempotency state | Independent expected-truth commitment to receipt IDs/ranges; key history in R12 | Spanner commit is acceptance. The independent anchor is a completeness oracle, not an alternate receipt authority; no second S3 receipt archive is assumed. |
 | R04 Canonical batch envelopes | Exact S3 Object Lock Compliance object version referenced by committed Spanner receipt | S3 exact VersionId, retention evidence, independent expected-envelope inventory commitment | Read back and verify exact VersionId before commit; after commit, missing bytes block profiles requiring them. |
 | R05 Lifecycle events | Accepted canonical envelope bytes referenced by Spanner receipts | R04 exact S3 versions plus receipt-bound IDs | Reconstruct from accepted envelopes, never projection-only state. |
 | R06 Evidence payloads | Receipt-bound payload object/version under approved storage design | Independent digest/provenance and lawful retention evidence | Recover exact retained bytes; otherwise PARTIAL/UNAVAILABLE or ERASED_BY_AUTHORITY. |
@@ -221,3 +221,26 @@ This v1.1.0 amendment is additive. R01–R30 remain unchanged. Any change to the
 
 **F-03 remains OPEN / NOT DEMONSTRATED.** Current exercise: **BLOCKED — NOT RUN.** This amendment authorizes no procurement, implementation, infrastructure spend, migration, ingestion, deployment or live exercise. Synthetic fixtures may test verifier mechanics only and cannot close provider-backed recovery.
 
+
+
+## 7. Normative cross-document clarification (v1.1.1, 2026-11-16)
+
+### 7.1 Selected does not mean provisioned
+
+The selected topology is a documentary candidate only: Spanner is the sole logical transactional witness; S3 Object Lock Compliance is the exact-version canonical batch-envelope archive. Neither provider service has been provisioned or operationally validated. This status does not authorize procurement or implementation.
+
+### 7.2 Locator and receipt authority
+
+Every object manifest entry records one authoritative locator and exact immutable VersionId/generation. An optional replica locator is recorded only if a separately approved architecture decision provisions and binds that replica; no “primary/secondary” pair is presumed. The committed Spanner receipt row stores the exact canonical signed receipt bytes or formally defined exact canonical representation, transaction identity, idempotency identity and head transition. Recovery reads receipt material from Spanner with independent recovery credentials. The expected-truth anchor is an independent completeness oracle, not a second receipt authority. S3 stores the exact-version envelope object only.
+
+### 7.3 Historical procedure boundary
+
+All §4 steps that mention MRSC, DynamoDB MRSC, two object stores, “both stores”, or dual-store receipt/envelope retrieval are **HISTORICAL / SUPERSEDED — NOT EXECUTABLE**. They are retained to preserve v1.0 provenance and MUST NOT be used to provision, test or recover the selected candidate. The current executable candidate sequence is S3 exact-version envelope upload/read-back/digest verification followed by atomic Spanner receipt/idempotency/head commit. No provider services are provisioned.
+
+### 7.4 R06 content model remains a decision gate
+
+R06's authoritative object placement, whether embedded in R04 or separately encrypted, exact locator/version/digest binding, key lifecycle, Object Lock/retention interaction and lawful-erasure/tombstone protocol remain **OPEN — AUD-XD-07**. This inventory does not silently select an implementation. Until a versioned architecture/privacy decision resolves these points, R06 content recovery is BLOCKED wherever those object-model details are required. Ledger-integrity verification must not be represented as successful content recovery.
+
+### 7.5 Expected-truth anchor contract remains a decision gate
+
+The anchor's identity relative to the core checkpoint anchor, owner/writer, trust root, publication protocol/cadence, monotonicity/freshness rules and relationship to client-visible success remain **OPEN — AUD-XD-06**. No numeric anchor-provider count is prescribed. Until approved, completeness-qualified recovery cannot be claimed for any interval whose completeness is not independently established.

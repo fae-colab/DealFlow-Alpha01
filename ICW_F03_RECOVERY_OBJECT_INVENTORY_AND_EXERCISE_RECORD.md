@@ -1,7 +1,7 @@
 # ICW F-03 — Recovery Object Inventory and Clean-Room Exercise Record
 
 **Record date:** 2026-11-16  
-**Document version:** 1.1.0  
+**Document version:** 1.1.1  
 **Amends:** v1.0 baseline (Git blob `8a1d86fce3cf8c5c78edeb2aa468141a60543bcc`)  
 
 **Status:** v1.1.0 normative topology/profile amendment recorded; live clean-room exercise BLOCKED / NOT RUN.  

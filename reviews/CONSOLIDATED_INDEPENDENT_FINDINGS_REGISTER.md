@@ -28,8 +28,9 @@ This register consolidates reviewer findings. It does not replace any reviewer r
 | **ICW-REV-DR-01** | **Copilot** | **Adversarial Disaster Recovery Review** | **2026-11-16** | **CR-01–CR-05; H-01–H-06** | **Baseline preserved at `reviews/ICW-REV-DR-01_BASELINE.md`; Git blob SHA `f78419ee14696123dab54782587c0c84ab2c93f7`.** |
 | **ICW-REV-CSC-01** | **Claude** | **Chief Security Critic / Lead Adversarial Security Reviewer** | **2026-11-16** | **CSC-01–CSC-24** | **Structured archival transcription at `reviews/ICW-REV-CSC-01_BASELINE.md`; source was supplied in conversation, not as a separate file. Not represented as byte-for-byte original or independently hash-verified.** |
 | **ICW-REV-DSI-01** | **Gemini** | **Distributed Systems and Infrastructure Reviewer** | **2026-11-16** | **F-01-01–F-04-01** | **Structured archival transcription at `reviews/ICW-REV-DSI-01_BASELINE.md`; source was supplied in conversation, not as a separate file. Not represented as byte-for-byte original or independently hash-verified.** |
+| **ICW-REV-ISA-01** | **Grok** | **Independent Systems Assurance Auditor (Reviewer 05)** | **2026-11-16** | **ISA-01–ISA-11** | **Structured archival transcription at `reviews/ICW-REV-ISA-01_BASELINE.md`; source was supplied in conversation, not as a separate file. Not represented as byte-for-byte original or independently hash-verified.** |
 
-All six registered review passes are AI-generated reviews. ICW-REV-ARCH-01 and ICW-REV-CSC-01 are two distinct Claude review passes/roles, not two independent reviewer organizations; do not count them as independent organizational corroboration. They are useful independent analytical passes but **do not satisfy the charter's human-independence gate or replace a qualified external human review**. No external reviewer engagement is claimed.
+All seven registered review passes are AI-generated reviews. Grok is Reviewer 05 in the reviewer sequence; the register ID `ICW-REV-ISA-01` is its stable traceability identifier. ICW-REV-ARCH-01 and ICW-REV-CSC-01 are two distinct Claude review passes/roles, not two independent reviewer organizations; do not count them as independent organizational corroboration. They are useful independent analytical passes but **do not satisfy the charter's human-independence gate or replace a qualified external human review**. No external reviewer engagement is claimed.
 
 ## 3. Consolidation rules
 
@@ -206,3 +207,55 @@ Gemini's findings are mapped into existing workstreams to avoid duplicate action
 - **GDSF-04 → REM-09, REM-16 and REM-20:** actual HSM/key restore, named disjoint custodians, FIPS mechanism validation and independent known-answer vectors.
 
 All GDSF-01–GDSF-04 findings remain **OPEN**. No remediation is marked started, no test is represented as run, and no production or implementation authorization is granted.
+
+
+## 10. Addendum — Grok Independent Systems Assurance Auditor review (ICW-REV-ISA-01)
+
+Grok is registered as **Reviewer 05 — Independent Systems Assurance Auditor**. The original finding identifiers ISA-01–ISA-11 and severities P1/P2/P3 are preserved. The source baseline is a structured archival transcription of the complete report supplied in conversation; it is not represented as byte-identical to an original attachment or independently hash-verified.
+
+**Reviewer verdict: FAIL.** Grok's scope was documentary examination of the frozen 12-document PDF only. It did not establish operational test execution, live infrastructure, provider-account existence, key custody, or acceptance. Its FAIL is a reviewer disposition and does not itself amend normative documents or grant authority.
+
+### 10.1 Grok findings — source-preserving map
+
+| Register key | Original Grok ID | Severity | Finding summary | Cross-review relationship / remediation mapping | Current state |
+|---|---|---|---|---|---|
+| GISA-01 | ISA-01 | P1 | Okta is simultaneously selected and unselected across F-02 model, decision, register and execution status. | **Confirmed thematic overlap:** CSC-05 / REM-15 (F-02 authority-document contradiction); related to GDSF-02 / REM-15 (tenant authority/bootstrap). | OPEN — DOCUMENTARY CONTRADICTION |
+| GISA-02 | ISA-02 | P1 | F-02 binding authorization contract omits ledger, epoch, expected head, grant reference, TAR delegation and tenant-root binding from the decision's required claim set. | **Related overlap:** CSC-04/CSC-05/CSC-06/CSC-12 / REM-15. Adds explicit signed-schema field-level reconciliation. | OPEN — AUTHORIZATION CONTRACT MISMATCH |
+| GISA-03 | ISA-03 | P1 | Register reopens provider selection and restores single-item CAS wording superseded by Spanner read-write transaction. | **Confirmed thematic overlap:** Copilot CR-02 / REM-02 and CSC-18 / REM-19. Also maps to REM-01 for baseline/register consistency. | OPEN — REGISTER CONTRADICTION |
+| GISA-04 | ISA-04 | P1 | Authoritative F-03 inventory/procedure still requires MRSC and two stores; selected Spanner/S3 topology does not specify an independent receipt-byte copy. | **Confirmed overlap:** Copilot CR-02 / REM-02; CSC-01/CSC-02 / REM-13; GDSF-03 / REM-01/REM-11/REM-12. The missing second receipt copy remains a distinct design decision. | OPEN — RECOVERY PROCEDURE MISALIGNED |
+| GISA-05 | ISA-05 | P1 | Frozen archive does not match charter-required review baseline; required core contracts are absent and F-02 decision is omitted from charter list. | **Confirmed overlap:** Copilot CR-01 / REM-01; CSC-18/CSC-19/CSC-24 / REM-19. Grok adds explicit two-way manifest reconciliation across charter and archive. | OPEN — BASELINE MANIFEST INCOMPLETE |
+| GISA-06 | ISA-06 | P2 | F-01/F-02 status labels conflict across controlling records and include undefined vocabulary. | **Related overlap:** CSC-24 / REM-19 and Copilot CR-01 / REM-01. Adds explicit status-token normalization. | OPEN — STATUS VOCABULARY INCONSISTENT |
+| GISA-07 | ISA-07 | P2 | F-04 T05 retains stale algorithm-selection blocker despite selected v1 suite; quorum wording conflicts between plan §3 and amendment §8.2. | **Confirmed thematic overlap:** GDSF-04 / REM-09/REM-16/REM-20; CSC-07/CSC-13/CSC-14 / REM-16/REM-20. Adds precise stale-blocker and supersession defects. | OPEN — F-04 DOCUMENTARY CONTRADICTION |
+| GISA-08 | ISA-08 | P2 | S3 Compliance retention is applied before Spanner commit; failed/aborted uploads can become irreversible orphan objects without lawful disposition. | **Related overlap:** CSC-16 / REM-18 (lawful erasure/retention); CSC-01/CSC-09 / REM-13 (receipt/archive and commit semantics). Adds pre-commit object-state and orphan-specific disposition requirement. | OPEN — ORPHAN RETENTION DISPOSITION MISSING |
+| GISA-09 | ISA-09 | P2 | F-05–F-08 DESIGN-RESOLVED claims, v3 comparison and tests 188–220 are not examinable from supplied archive. | **Confirmed thematic overlap:** Copilot CR-01 / REM-01; CSC-18/CSC-24 / REM-19. The absent F-05–F-08 procedures and test trace remain explicit. | OPEN — CLAIMS NOT TRACEABLE IN BASELINE |
+| GISA-10 | ISA-10 | P2 | Acceptance prerequisites create a circular evidence gate; non-production evidence stage is not consistently authorized. | **Related overlap:** GDSF-03 / REM-01/REM-12 and Copilot CR-01 / REM-01. New sequencing/authorization issue; not equivalent to recovery-test execution. | OPEN — EVIDENCE-STAGE GATE CYCLE |
+| GISA-11 | ISA-11 | P3 | Per-document integrity pins omit hash algorithm; F-01 section numbering duplicates §9; baseline/companion order is confusing. | **Confirmed thematic overlap:** CSC-24 / REM-19; Copilot CR-01 / REM-01. Adds digest recomputation and section-identity checks. | OPEN — INTEGRITY PIN VERIFICATION MISSING |
+
+### 10.2 Grok cross-review interpretation and limits
+
+- Grok's **FAIL** is limited to the frozen documentary package and its readiness as a review baseline. It supports retaining the consolidated **HOLD — NOT ACCEPTED** disposition; it does not prove the underlying architecture is operationally defective in a live deployment.
+- ISA-01 through ISA-05 are P1 documentary contradictions/baseline defects. Their correction is a prerequisite to issuing a reliable external review package, but correction alone does not justify ACCEPTED.
+- ISA-04 identifies an unresolved architectural placement question: whether receipt bytes are stored only in Spanner or also in an independently administered object archive. This must be decided explicitly; do not silently assume the second copy exists.
+- ISA-08 requires an explicit pre-commit object state and orphan disposition. It is not resolved merely by a general lawful-erasure workstream.
+- ISA-10 requires a non-production evidence stage with a clear authorization boundary and no ability to mark F-01–F-04 ACCEPTED. This is a process-sequencing requirement, not permission to provision or execute anything now.
+- The review did not examine the missing charter-required core v4 contracts or test procedures for tests 188–220; claims depending on those documents remain NOT EXAMINABLE IN THIS BASELINE.
+- The review is AI-generated. It does not satisfy the charter's qualified independent human-review gate. Claude's two passes remain one AI provider; Grok is another AI reviewer system, not a human auditor.
+
+### 10.3 Remediation cross-links and new workstreams
+
+Grok findings are mapped to existing workstreams wherever the corrective action is genuinely shared. Two additional workstreams are added because existing items do not fully specify their acceptance criteria:
+
+- **ISA-01 / ISA-02 → REM-15:** one controlling F-02 authority decision and one signed assertion schema, with a field-level contract matrix.
+- **ISA-03 / ISA-04 → REM-02 and REM-01; ISA-04 also → REM-13:** align F-03 with Spanner/S3 and decide the independent receipt-byte copy and trust boundary.
+- **ISA-05 / ISA-09 / ISA-11 → REM-01 and REM-19:** complete hashed manifest, required-document reconciliation, traceable claims/tests, digest algorithm declaration, recomputation and unique section numbering.
+- **ISA-06 → REM-19:** normalize F-01/F-02 state vocabulary across every controlling record.
+- **ISA-07 → REM-16 and REM-20:** reconcile the F-04 quorum matrix, selected crypto suite and T05 blocker; retain NOT RUN absent operational evidence.
+- **ISA-08 → REM-18 and new REM-22:** define pre-commit object state, Object Lock timing, orphan classification, legal disposition, retry/lost-acknowledgement behavior and plaintext/key erasure.
+- **ISA-10 → new REM-21:** define an acyclic, explicitly authorized non-production evidence stage that cannot set ACCEPTED; keep production authorization separate.
+
+| Work ID | Source findings | Required action | Minimum acceptance evidence | State |
+|---|---|---|---|---|
+| REM-21 | Grok ISA-10 | Define a gated, non-production evidence-generation stage and remove circular prerequisites. Specify account/ownership verification, crypto compatibility, synthetic verifier and fault-injection sequence; state which authorization permits each step and which status transitions are forbidden. | Approved acyclic gate diagram; named authority for each stage; explicit non-production boundary; evidence that no stage can mark F-01–F-04 ACCEPTED or authorize production; all live steps separately authorized. | NOT STARTED |
+| REM-22 | Grok ISA-08 | Define pre-commit envelope state and lawful disposition of orphaned/aborted/lost-acknowledgement objects under S3 Object Lock. Reconcile retention timing with Spanner commit and lawful erasure. | Failure matrix for crash-before-upload, crash-after-upload, transaction abort and lost acknowledgement; exact object version/lock metadata; accepted-versus-unaccepted legal classification; approved retention/erasure/key-destruction disposition; no irreversible object with undefined legal status. | NOT STARTED |
+
+All GISA-01–GISA-11 findings remain **OPEN**. Existing remediation items remain NOT STARTED unless separately evidenced. REM-21 and REM-22 are NOT STARTED. No test is claimed executed, no normative document is amended by this addendum, and no implementation, procurement, infrastructure, external engagement or production authorization is granted.

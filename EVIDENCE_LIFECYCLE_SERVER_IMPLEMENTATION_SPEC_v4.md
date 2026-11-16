@@ -444,3 +444,20 @@ Before any current-state evidence read, eligibility evaluation or recommendation
 ## S13. Authorization assertion contract
 
 The ICW accepts lifecycle appends only with a signed, short-lived authorization assertion from a separately controlled issuer. The assertion binds tenant, actor/client, permitted command and resource/claim scope, canonical request digest, ICW audience, expiry and unique assertion ID. The ICW verifies signature, issuer, audience, expiry, scope and digest match. Ordinary application administrators cannot mint, broaden or replay assertions. Exact same-key/same-digest retries may resolve the original receipt without creating a second append, subject to current authorization to receive the result.
+
+## 12. Normative server obligations for R06 payload descriptors and erasure (AUD-XD-07)
+
+### 12.1 Payload write and receipt binding
+
+The command service MUST assign a stable artifact ID and role to each original source, normalized capture, attachment, media item or structured record. It MUST encrypt each artifact before object-store persistence, upload it to the approved immutable/versioned namespace, read back the exact returned VersionId/generation, and independently verify ciphertext digest and byte length before preparing the canonical R04 envelope. The envelope descriptor MUST bind: tenant/ledger/epoch; event and artifact IDs; artifact role; source identity/version/provenance; immutable object key plus exact VersionId/generation; ciphertext digest/algorithm/length; plaintext digest/algorithm/length where permitted; encryption algorithm/format/parameters; non-secret DEK reference/key version; schema version; retention and erasure-policy IDs.
+
+Spanner commit of the R04 envelope digest is the acceptance point for the descriptor. No payload is accepted solely because its object exists. Upload/read-back failure prevents the append. Spanner abort leaves an orphan, excluded from accepted history and handled under retention policy. After Spanner commit, missing/mismatched payload does not undo the receipt; dependent content/decision profiles become PARTIAL/UNAVAILABLE.
+
+### 12.2 Key management and erasure
+
+Each independently erasable artifact MUST use a unique DEK or equivalent isolated cryptographic domain. The wrapped DEK and recoverable copies MUST be outside immutable payload objects and R04 envelopes, in an independently administered key-management service with audited access, rotation, backup, replica and destruction operations. No ordinary API, database or object-store administrator may independently unwrap or destroy keys outside the approved quorum.
+
+The erasure workflow MUST require signed legal/policy authority and dual-controlled approval; emit a tombstone as a new receipt-backed event; destroy the artifact DEK and every usable copy, including replicas, backups, escrow and DR; and retain independently verifiable destruction evidence. The tombstone binds exact payload object versions, artifact IDs, key references, policy digest, approvers and trusted time. The verifier MUST test that primary, replica, backup and DR recovery paths cannot decrypt. Ciphertext may remain under WORM retention. The service MUST NOT report ERASED_BY_AUTHORITY until the independent verifier confirms all criteria. If provider semantics cannot prove completion, status remains BLOCKED/UNAVAILABLE.
+
+The implementation MUST never put plaintext, DEKs or unwrap material in R04 envelopes, ordinary logs, manifests or tombstones. A plaintext digest is retained only if permitted by the approved privacy policy. Original source, normalized capture and derivative artifacts remain distinct roles and lineage; a derivative cannot satisfy an original-source recovery requirement.
+

@@ -1,6 +1,6 @@
 # ICW v4.2 — Independent Review Remediation Checklist
 
-**Version:** 0.1.0  
+**Version:** 0.2.0  
 **Date:** 2026-11-16  
 **Register:** `reviews/CONSOLIDATED_INDEPENDENT_FINDINGS_REGISTER.md`  
 **Status:** Tracking only. No implementation or live-exercise authorization.
@@ -146,3 +146,31 @@ All source findings below remain OPEN; all tests remain NOT RUN unless separate 
   **Finding state:** OPEN. **Test state:** NOT RUN / NOT AUTHORIZED BY THIS REGISTER.
 
 **Gemini review disposition note:** Gemini's CONDITIONAL PASS is limited to architectural design progression and test-framework validation. It does not supersede the consolidated HOLD — NOT ACCEPTED, authorize provisioning or spending, authorize live tests, or satisfy the independent human-review gate.
+
+
+## Grok — Independent Systems Assurance Auditor (Reviewer 05, ICW-REV-ISA-01)
+
+Grok's source findings ISA-01–ISA-11 remain OPEN. The source-preserving baseline is `reviews/ICW-REV-ISA-01_BASELINE.md`. The mappings below supplement existing workstreams; they do not close findings or authorize execution.
+
+- [ ] **ISA-01 / ISA-02 — F-02 authority and assertion contract** → REM-15. Establish one controlling Okta disposition and one signed assertion schema covering ledger, epoch, expected head, grant reference and TAR delegation. Produce a four-document consistency matrix and field-level schema coverage. **Finding state:** OPEN. **Test state:** NOT RUN.
+- [ ] **ISA-03 — Register/commit primitive consistency** → REM-01 / REM-02. Remove superseded single-item CAS instructions and align register, F-01 topology decision and F-03 procedure to the selected Spanner transaction. **Finding state:** OPEN.
+- [ ] **ISA-04 — F-03 topology and receipt-byte placement** → REM-02 / REM-13. Amend MRSC/two-store assumptions; explicitly decide whether an independent receipt-byte copy exists and identify its trust boundary, owner, write/read/recovery behavior. **Finding state:** OPEN. **Test state:** NOT RUN.
+- [ ] **ISA-05 / ISA-09 / ISA-11 — Review baseline and integrity pins** → REM-01 / REM-19. Freeze the charter-required manifest and archive contents; hash each original source file with a declared algorithm; reconcile missing contracts/tests; correct duplicate section numbering. **Finding state:** OPEN.
+- [ ] **ISA-06 — Status vocabulary consistency** → REM-19. Use the register's defined lifecycle vocabulary consistently across F-01/F-02 source records, register and execution status. **Finding state:** OPEN.
+- [ ] **ISA-07 — F-04 crypto suite and quorum consistency** → REM-16 / REM-20. Remove the stale algorithm-selection blocker, explicitly supersede or restore the plan's dual-control sentence, and publish one operation-by-operation quorum matrix. **Finding state:** OPEN. **Test state:** NOT RUN.
+- [ ] **ISA-08 — Pre-commit object retention and orphan disposition** → REM-18 / REM-22. Define object state before Spanner commit, S3 Object Lock timing, orphan legal classification, lost-acknowledgement/retry behavior and erasure/key-destruction disposition. **Finding state:** OPEN. **Test state:** NOT RUN.
+- [ ] **ISA-10 — Acyclic non-production evidence stage** → REM-21. Define authorization and forbidden status transitions for each evidence-generation stage; preserve separate production gate. **Finding state:** OPEN. **Test state:** NOT RUN.
+
+### New workstream gates
+
+- [ ] **REM-21 — Non-production evidence-stage authorization and sequencing** (Grok ISA-10)  
+  Define an acyclic sequence for account/ownership verification, crypto compatibility, synthetic verifier and fault injection. Each stage must identify its authorization, evidence output and forbidden status transition. No stage may set F-01–F-04 to ACCEPTED or authorize production.  
+  **Evidence:** approved gate diagram; named authority; explicit non-production boundary; separate production authorization gate.  
+  **Finding state:** OPEN. **Test state:** NOT RUN / NOT AUTHORIZED BY THIS CHECKLIST.
+
+- [ ] **REM-22 — Pre-commit object state and orphan retention disposition** (Grok ISA-08)  
+  Specify crash-before-upload, crash-after-upload, Spanner abort and lost-acknowledgement outcomes, including exact S3 version/lock state and lawful treatment of unaccepted envelopes.  
+  **Evidence:** failure matrix; accepted/unaccepted classification; approved retention, erasure and key-destruction disposition; no irreversible object with undefined legal status.  
+  **Finding state:** OPEN. **Test state:** NOT RUN.
+
+**Grok review disposition:** FAIL for the frozen documentary package. This supports the existing HOLD — NOT ACCEPTED disposition. It does not constitute a human independent audit, operational evidence, closure, or authorization.

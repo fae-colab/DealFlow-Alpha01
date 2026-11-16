@@ -459,4 +459,18 @@ The F-03 test suite adds:
 - F03-SCOPE-01: reject removal of mandatory classes, tenants, epochs, sequence ranges, key generations or dependencies from the recovered denominator.
 - F03-RPO-01 / F03-RTO-01: measure against pre-approved numeric values using trusted event times; missing target or time source is BLOCKED.
 
-These F-03 additions do not resolve AUD-XD-06's production publication cadence or acknowledgement dependency. The architecture decision must precede implementation; no synthetic test substitutes for that decision.
+These tests implement the accepted AUD-XD-06 Option 2 policy. Client/API success is projection-gated but not anchor-gated. The anchor is asynchronous and must publish within approved finite numeric `ANCHOR_MAX_PUBLICATION_LAG`. The numeric lag, anchor identity/ownership/trust boundary, source independence, retention and RPO alignment remain parameter-register gates; no provider implementation or operational pass is implied.
+
+### 22.3 Bounded anchor-publication regression suite (AUD-XD-06 Option 2)
+
+| F-03 test ID | Core linkage | Required regression assertion |
+|---|---|---|
+| F03-ANCHOR-03 | 37–52, 101–109, 182–185 | On rollback with an unanchored committed tail, enumerate exact sequence range/count/receipt commitment/time bounds; no FULL-L/C/D/O/A includes the uncovered interval; a previously valid Spanner commit/client success is not relabelled uncommitted merely because anchor publication was asynchronous. |
+| F03-ANCHOR-04 | 111–124, 133–138, 145–148, 182–185 | Delay publication but stay within approved max lag. Spanner commit and projection-verified client success proceed without waiting for anchor; anchor status remains PENDING; no completeness claim extends beyond last independently anchored position. |
+| F03-ANCHOR-05 | 30–36, 48–52, 97–109, 166–172 | Exceed approved max lag. Verify high-severity alert/escalation, trusted deadline measurement, raw evidence preservation and configured degraded/fail-closed acceptance mode before further unanchored exposure exceeds approved bound. |
+| F03-ANCHOR-06 | 37–52, 101–109, 182–185 | Roll back Spanner behind previously committed head while anchor covers only a prefix; enumerate uncovered tail and reject all FULL profile claims that include it, even if recovered Spanner is internally consistent. |
+| F03-ANCHOR-07 | 37–52, 111–115, 182–185 | Attempt to create a post-disaster anchor from recovered Spanner, recovered manifest, mutable audit logs or operator output; reject as circular and insufficient to prove prior completeness. |
+
+**Regression acceptance:** all cases must include deterministic fixtures for (a) a commit inside the approved lag, (b) publication exactly at the deadline, (c) publication after the deadline, (d) anchor rollback/replay/conflict, and (e) a disaster occurring before anchor catch-up. Assertions must verify projection-gated client success independently of anchor publication, exact anchor watermark, the committed-but-uncovered interval, the fail-closed behavior at the approved bound, and exclusion of uncovered positions from every FULL profile.
+
+The signed parameter register must supply finite numeric `ANCHOR_MAX_PUBLICATION_LAG`, trusted measurement clock, publication deadline semantics, alert/escalation owner, degraded/stop-accepting behavior and numeric RPO/RTO. Missing any required parameter = BLOCKED / NOT RUN; tests cannot substitute guessed defaults. All tests remain DEFINED / NOT RUN.

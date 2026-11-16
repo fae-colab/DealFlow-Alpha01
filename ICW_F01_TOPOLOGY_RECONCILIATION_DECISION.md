@@ -16,13 +16,13 @@ These are different protocols. They cannot both be the selected PoC topology.
 
 ## 2. Binding documentary decision
 
-**Select Candidate A — Google Cloud Spanner multi-region as the ICW transactional witness, plus AWS S3 Object Lock Compliance as the immutable envelope/receipt object archive — as the sole primary topology for continued design review.**
+**Select Candidate A — Google Cloud Spanner multi-region as the ICW transactional witness, plus AWS S3 Object Lock Compliance as the immutable canonical batch-envelope object archive — as the sole primary topology for continued design review.**
 
 The decision is based on fit to the existing v4 contract:
 - The contract requires the receipt row, authoritative head advancement and idempotency identity to be committed atomically at one logical commit point.
 - Spanner supports a serializable read-write transaction that can atomically validate the expected head, insert the receipt/idempotency record and advance the head.
 - The envelope is uploaded first to S3 and its exact VersionId and digest are pinned. A Spanner transaction failure leaves an orphaned immutable object, not an accepted ledger commit.
-- Acknowledgement occurs only after the Spanner transaction commits; the transaction is the logical ICW commit point.
+- The Spanner transaction is the logical ICW witness-commit point. This is distinct from internal commit-result resolution and client/API success, which requires verified projection application; committed-but-projection-pending returns typed HTTP 202 and is not actionable (see §9).
 - Two independently administered cloud providers provide a clearer separation between the transaction witness and immutable object archive, subject to actual ownership evidence.
 
 This is a candidate selection for review, not proof of deployment, rollback resistance or production durability.
@@ -48,9 +48,9 @@ DynamoDB MRSC may be reconsidered only through a separately versioned architectu
 4. Prepare a receipt binding tenant, ledger, epoch, expected prior receipt/head, candidate sequence/range, batch digest, exact S3 bucket/key/VersionId, envelope digest, idempotency identity, request digest, schema/canonicalization/crypto policy versions, signature algorithm and key ID.
 5. Sign outside any automatically retried Spanner transaction callback. A transaction retry must not repeat a non-idempotent signing side effect without a stable precomputed receipt candidate and explicit retry semantics.
 6. Execute one Spanner serializable read-write transaction: read and compare the expected head; validate receipt/idempotency uniqueness; insert immutable receipt and idempotency identity; advance the head in the same transaction.
-7. The successful Spanner commit is the sole logical acceptance point. A failed/aborted transaction leaves an orphan S3 object, never an accepted receipt.
+7. The successful Spanner commit is the sole logical witness-commit/acceptance point. The committed Spanner receipt row stores the exact canonical signed receipt bytes (or the formally specified canonical byte representation), receipt record, idempotency identity and authoritative head transition. S3 stores only the exact-version canonical batch-envelope object referenced by that receipt; S3 object existence never proves acceptance. A failed/aborted transaction leaves an orphan S3 envelope object, never an accepted receipt.
 8. A retry resolves the original idempotency identity against authoritative receipt history and rechecks current authorization. Same identity/digest returns the original receipt; same identity/different digest is an integrity conflict.
-9. Acknowledge only after commit. A lost response is resolved by authoritative idempotency lookup; it must not allocate a second sequence or receipt.
+9. **Witness commit:** only a successful Spanner transaction constitutes authoritative acceptance. **Internal commit result:** the ICW caller resolves a lost transaction response by authoritative Spanner idempotency lookup; it must not allocate a second sequence or receipt. **Client/API result:** return success only after the receipt is committed, the projection transaction has applied the complete receipt-bound batch, and projection verification succeeds. If the witness commit succeeded but projection is pending, return the typed HTTP 202 pending result; do not expose the batch as current, decision-serving or actionable. A pre-commit failure is not accepted history.
 10. If Spanner or the required S3 operation is unavailable before commit, fail closed. No projection mutation or success acknowledgement occurs.
 
 ## 5. Account and trust-boundary model
@@ -91,3 +91,15 @@ Before F-01 can be accepted:
 - independently review the evidence and all residual trust assumptions.
 
 **Disposition: TOPOLOGY CONFLICT RESOLVED AT DOCUMENTARY CANDIDATE LEVEL. F-01 REMAINS OPEN / NOT DEMONSTRATED.**
+
+
+## 9. Normative acknowledgement and receipt-storage clarification (v1.0.1, 2026-11-16)
+
+This clarification is binding over any use of the unqualified word “acknowledge” in this record:
+
+1. **Witness commit:** a successful Spanner serializable transaction atomically commits the exact signed receipt representation, idempotency identity and authoritative head advancement. This is the sole logical ICW acceptance point.
+2. **Internal commit result:** the ICW service resolves an ambiguous/lost transaction response by querying Spanner using the original idempotency identity and request digest. A matching committed record proves the original commit; absence means no commit; a digest mismatch is an integrity conflict.
+3. **Client/API success:** the client receives success only after the complete receipt-bound projection batch is applied transactionally and independently checked against the committed receipt/head. A committed-but-projection-pending operation returns typed HTTP 202 and remains non-actionable/non-decision-serving until verification completes. No projection or client success is allowed for a pre-commit failure.
+4. **Receipt bytes and archive boundary:** the exact canonical signed receipt bytes (or an exactly reproducible canonical representation whose encoding is normative) are stored in the committed Spanner receipt row. Spanner is authoritative for receipt, head and idempotency. S3 is the exact-version canonical batch-envelope archive only. A separate receipt-byte archive requires a new, explicit, versioned architecture decision and is not part of this candidate.
+
+This remains a documentary candidate selection only. No provider service has been provisioned, and no durability, rollback-resistance, deployment or production acceptance is demonstrated.

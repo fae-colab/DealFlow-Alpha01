@@ -424,3 +424,68 @@ The signed deployment parameter register must provide exact numeric values for a
 
 186. **Unsigned/forged authorization assertion:** submit an otherwise valid batch with missing, unsigned, altered, wrong-audience, expired or wrong-scope assertion. PASS only if ICW rejects each request without receipt/head advancement.
 187. **Application administrator cannot mint assertion:** compromise ordinary application-administrator credentials and attempt to issue or broaden an assertion for another actor/tenant/operation. PASS only if the separately controlled issuer denies it and ICW accepts no batch.
+
+
+## 22. Supplemental F-03 recovery and operational profile test linkage (additive; 2026-11-16)
+
+This section adds cross-system recovery tests without renumbering or replacing existing core test IDs. The detailed injection/recovery/verification procedures are normative in `ICW_F03_PRACTICAL_RECOVERY_TEST_SPECIFICATION.md` §§27.4–27.5. These tests are **DEFINED / NOT RUN** until an approved provider-backed isolated environment, signed parameter register, independent verifier and authorized exercise are available.
+
+| F-03 test ID | Core linkage | Required integration assertion |
+|---|---|---|
+| F03-O-01 | 166–172,186–187 | Identity/IAM and assertion issuer bootstrap is independently restored; no default/admin bypass |
+| F03-O-02 | Additive; no direct existing core test | DNS/network/TLS/certificate chain restored and independently verified before traffic |
+| F03-O-03 | 151–157 | Exact source/build/runtime/dependency/SBOM reproducibility; no floating or substituted artifact |
+| F03-O-04 | 30–36,166–172,186–187 | HSM/KMS key generation, custody quorum and historical verification restored without plaintext export |
+| F03-O-05 | 115–124,158–165,173–175 | Queues/workers/retries/replay preserve idempotency and reconcile every side effect |
+| F03-O-06 | 30–36,48–52,97–109 | Trusted time, monitoring, alerting and independent audit export restored; clock uncertainty within approved bound |
+| F03-O-07 | 111–124,133–138,145–148,182–185 | Projection rebuilt from ICW; API/cache/downstream actionability blocked until verified current head |
+| F03-O-08 | 37–52,101–109,166–172,182–185 | Old writers fenced; single writer and cutover/rollback independently verified |
+
+### 22.1 Profile aggregation gates
+
+- FULL-L requires the F-03 ledger profile gate, R01–R05 plus required trust/crypto classes, independent expected-truth coverage and no receipt/head gap or fork.
+- FULL-C requires FULL-L plus every lawfully retained in-scope R06 payload, R07 lineage and R08 tombstone/retention proof. AUD-XD-07 remains unresolved; any case depending on the undecided object model is BLOCKED.
+- FULL-D requires all in-scope R09–R25 decision-history artifacts, snapshot/finalization bindings and deterministic reconstruction evidence.
+- FULL-O requires all O-01–O-08 tests to PASS or have signed independently reviewed NOT_APPLICABLE disposition, with service-owner re-enable approval.
+- FULL-A requires all mandatory L/C/D/O requirements, all in-scope R01–R30 classes, O-01–O-08, signed denominator and anti-scope-narrowing checks.
+- No unqualified FULL status is valid. BLOCKED/NOT RUN/FAIL/UNAVAILABLE cannot be omitted from the denominator or treated as PASS.
+
+### 22.2 Anchor and scope negative tests
+
+The F-03 test suite adds:
+- F03-ANCHOR-01: reject monotonic rollback/replay of expected-truth anchor.
+- F03-ANCHOR-02: reject same-position conflicting head/digest.
+- F03-ANCHOR-03: prohibit completeness-qualified FULL for receipt ranges not covered by an independently verified anchor.
+- F03-SCOPE-01: reject removal of mandatory classes, tenants, epochs, sequence ranges, key generations or dependencies from the recovered denominator.
+- F03-RPO-01 / F03-RTO-01: measure against pre-approved numeric values using trusted event times; missing target or time source is BLOCKED.
+
+These tests implement the accepted AUD-XD-06 Option 2 policy. Client/API success is projection-gated but not anchor-gated. The anchor is asynchronous and must publish within approved finite numeric `ANCHOR_MAX_PUBLICATION_LAG`. The numeric lag, anchor identity/ownership/trust boundary, source independence, retention and RPO alignment remain parameter-register gates; no provider implementation or operational pass is implied.
+
+### 22.3 Bounded anchor-publication regression suite (AUD-XD-06 Option 2)
+
+| F-03 test ID | Core linkage | Required regression assertion |
+|---|---|---|
+| F03-ANCHOR-03 | 37–52, 101–109, 182–185 | On rollback with an unanchored committed tail, enumerate exact sequence range/count/receipt commitment/time bounds; no FULL-L/C/D/O/A includes the uncovered interval; a previously valid Spanner commit/client success is not relabelled uncommitted merely because anchor publication was asynchronous. |
+| F03-ANCHOR-04 | 111–124, 133–138, 145–148, 182–185 | Delay publication but stay within approved max lag. Spanner commit and projection-verified client success proceed without waiting for anchor; anchor status remains PENDING; no completeness claim extends beyond last independently anchored position. |
+| F03-ANCHOR-05 | 30–36, 48–52, 97–109, 166–172 | Exceed approved max lag. Verify high-severity alert/escalation, trusted deadline measurement, raw evidence preservation and configured degraded/fail-closed acceptance mode before further unanchored exposure exceeds approved bound. |
+| F03-ANCHOR-06 | 37–52, 101–109, 182–185 | Roll back Spanner behind previously committed head while anchor covers only a prefix; enumerate uncovered tail and reject all FULL profile claims that include it, even if recovered Spanner is internally consistent. |
+| F03-ANCHOR-07 | 37–52, 111–115, 182–185 | Attempt to create a post-disaster anchor from recovered Spanner, recovered manifest, mutable audit logs or operator output; reject as circular and insufficient to prove prior completeness. |
+
+**Regression acceptance:** all cases must include deterministic fixtures for (a) a commit inside the approved lag, (b) publication exactly at the deadline, (c) publication after the deadline, (d) anchor rollback/replay/conflict, and (e) a disaster occurring before anchor catch-up. Assertions must verify projection-gated client success independently of anchor publication, exact anchor watermark, the committed-but-uncovered interval, the fail-closed behavior at the approved bound, and exclusion of uncovered positions from every FULL profile.
+
+The signed parameter register must supply finite numeric `ANCHOR_MAX_PUBLICATION_LAG`, trusted measurement clock, publication deadline semantics, alert/escalation owner, degraded/stop-accepting behavior and numeric RPO/RTO. Missing any required parameter = BLOCKED / NOT RUN; tests cannot substitute guessed defaults. All tests remain DEFINED / NOT RUN.
+
+## 22.4 AUD-XD-07 — R06 payload placement, exact-version binding and crypto-erasure regression requirements
+
+The following F-03 tests are mandatory additions to the core regression suite and MUST be linked to the signed parameter/legal register and the provider-neutral R06 contract in the append-only design and server specification.
+
+| Test ID | Scenario / injection | Required assertion | Forbidden outcome |
+|---|---|---|---|
+| F03-R06-01 | Missing VersionId, mutable locator, substituted object version, altered ciphertext digest/length, wrong receipt/event binding or derivative substituted for original | Independently fetch exact pinned version; verify descriptor, digest, length, artifact role, provenance and Spanner receipt binding | Latest-version lookup, silent substitution, or treating derivative as original |
+| F03-R06-02 | Upload/read-back failure, Spanner abort, pre-commit orphan, lost acknowledgement and retry | Orphan excluded; abort creates no receipt; committed retry returns original receipt; committed-but-missing payload remains committed but PARTIAL/UNAVAILABLE for dependent profiles | Object existence implies acceptance, or committed receipt is rewritten/rolled back |
+| F03-R06-03 | Erase one payload while preserving other payloads; attempt key recovery from primary, replica, backup, escrow and DR | Unique DEK isolation; all usable copies irrecoverable; signed receipt-backed tombstone verifies; unrelated artifacts remain decryptable | Shared-key collateral erasure or false ERASED_BY_AUTHORITY |
+| F03-R06-04 | Missing authority, incomplete key inventory, recoverable backup, pointer-only deletion, missing tombstone or premature object deletion | FAIL/BLOCKED; no erasure status until independent proof; retain receipt and legal audit | Operator assertion or pointer deletion accepted as proof |
+| F03-R06-05 | Original/normalized/attachment lineage and privacy-sensitive digest handling | Distinct artifact roles and provenance; policy-governed digest retention; erased plaintext excluded from recovery counts | Normalized copy silently replaces source or sensitive digest disclosed without policy |
+
+**Profile assertions:** FULL-C requires every retained in-scope R06 artifact to verify or a lawful independently verified tombstone; FULL-D requires each R06 dependency actually consumed by the historical decision; FULL-A requires all R06 artifacts in the signed approved scope. FULL-L has no R06 payload dependency unless its signed scope expressly includes content. All R06 test cases remain DEFINED / NOT RUN until provider/key-management semantics and isolated fixtures are approved.
+

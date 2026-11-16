@@ -154,3 +154,101 @@ The matrix requires both distinct conditions:
 - current-state serving requires the latest ICW head or a valid freshness token and a matching projection (tests 183–185).
 
 A stale checkpoint must never be mistaken for an unanchored committed tail. A stale projection must never be mistaken for current evidence state.
+
+
+## 12. Supplemental F-03 recovery crosswalk (v1.0.0, provisional)
+
+**Status: PROPOSED / PROVISIONAL — independent review and architecture-owner approval required.** This crosswalk preserves every original R01–R30 identifier and class definition. It adds traceability only; it does not modify AR-01–AR-15, renumber core tests, or claim that every class has a one-to-one core test. F-03 test IDs refer to the class-specific sections of `ICW_F03_PRACTICAL_RECOVERY_TEST_SPECIFICATION.md`; core test numbers are existing IDs in `EVIDENCE_LIFECYCLE_MIGRATION_TEST_PLAN_v4.md`.
+
+| F-03 class | Original class label | Proposed AR mapping | Architecture / server locus | F-03 test ID | Existing core tests / related tests | Profile | Objective evidence / mapping caveat |
+|---|---|---|---|---|---|---|---|
+| R01 | Genesis/bootstrap | AR-07, AR-08, AR-09, AR-14 | Architecture §§5–6,A5–A7; server recovery | F03-R01 | 30–36, 37–47, 109 | L/C/D/O/A | Pinned genesis bytes, root fingerprint, signature and continuity; core tests do not fully test genesis package enumeration |
+| R02 | Epoch/continuity | AR-07, AR-08, AR-09, AR-14 | Architecture §§5–6,A5–A7; server recovery | F03-R02 | 35, 37–47, 101–102,109 | L/C/D/O/A | Signed epoch transition and terminal receipt; epoch-specific negative cases remain F-03 additions |
+| R03 | Append receipts | AR-06, AR-07, AR-08, AR-09, AR-14 | Architecture §§4–6,A2–A7; server ICW receipt | F03-R03 | 110–118, 125–128, 173,175 | L/C/D/O/A | Exact signed receipt bytes from Spanner row, transaction/idempotency/head evidence and independent chain verification; anchor publication remains XD-06 |
+| R04 | Canonical batch envelopes | AR-01, AR-05, AR-07, AR-09, AR-14 | Architecture §§2–4,A2–A4; server ICW receipt/projection | F03-R04 | 110–124, 133–138, 173,175; F03-R06-01/02 | L/C/D/O/A | Exact S3 VersionId, digest, length, range and receipt binding; R06 payloads are separate immutable objects referenced by canonical descriptors in the accepted envelope |
+| R05 | Lifecycle events | AR-02, AR-03, AR-05, AR-10, AR-14 | Architecture §§3–4,7,A2–A4; server mutation state machine | F03-R05 | 112,115–124,158–165,173,175 | L/C/D/O/A | Complete event stream and transition proofs; F-03 class test supplies lifecycle-specific enumeration |
+| R06 | Evidence payloads | AR-01, AR-10, AR-11, AR-14 | Architecture §12; server §12.1–12.2; F-03 inventory §6.5 | F03-R06-01–05 | 151–157,178–181; new F03-R06-01–05 | C; D/A where consumed/in scope | Separate immutable payload object; exact VersionId/generation, receipt-bound descriptor, ciphertext digest/length, source/version provenance, unique DEK reference, signed tombstone and independent key-destruction proof. Documentary model resolved; provider/legal proof remains open |
+| R07 | Evidence lineage | AR-01, AR-03, AR-05, AR-10, AR-11 | Architecture §§2–4,7–8,A2–A4; server graph/snapshot | F03-R07 | 116–122,151–157,165 | C/D/A (scope-dependent) | Parent/child/source-to-claim graph and digest-bound provenance |
+| R08 | Erasure/retention tombstones | AR-01, AR-10, AR-14, AR-15 | Architecture §§7,10,A11; server privacy/retention | F03-R08 | 151,178–181 | C/D/A (scope-dependent) | Authority, scope, key/object disposition and retained metadata; legal approval is review-based |
+| R09 | Authorization assertions | AR-02, AR-06, AR-14 | Architecture §§3–4,A2; server authentication/assertion | F03-R09 | 166–172,186–187 | D/A (scope-dependent) | Exact signed assertion and issuer validation |
+| R10 | Authorization decisions | AR-02, AR-06, AR-14 | Architecture §§3–4,A2; server authorization | F03-R10 | 166–172,186–187 | D/A (scope-dependent) | Policy digest, entitlement source, context and decision outcome |
+| R11 | Issuer trust metadata | AR-06, AR-08, AR-14 | Architecture §§4,6,A5–A7; server authorization | F03-R11 | 166–172,186–187 | L/C/D/A (where required) | Historical issuer keys/JWKS/cert validity and revocation |
+| R12 | Witness key history | AR-08, AR-14 | Architecture §6,A5–A7; server crypto verification | F03-R12 | 30–36, 166–172,186–187 | L/C/D/O/A | Public key history, compromise intervals, HSM audit; key custody review remains required |
+| R13 | Crypto policy | AR-01, AR-08, AR-11, AR-14 | Architecture §§2,6,8,A2,A5–A8; server canonicalization | F03-R13 | 30–36, 59–64,151–157 | L/C/D/O/A | Algorithm, canonicalization, trusted-time and verifier policy digest |
+| R14 | Schemas/serialization | AR-01, AR-07, AR-11, AR-14 | Architecture §§2,5,8,A2,A5,A8; server envelope/schema | F03-R14 | 110–124, 151–157 | L/C/D/A | Versioned schemas and canonical byte vectors |
+| R15 | Recommendation snapshots | AR-10, AR-11, AR-12, AR-14 | Architecture §§7–8,A8; server snapshot finalization | F03-R15 | 139–157,181 | D/A | Exact snapshot bytes/input/exclusions/watermark and verification |
+| R16 | Finalization receipts | AR-07, AR-11, AR-12, AR-13 | Architecture §§5,8,A5,A8; server snapshot finalization | F03-R16 | 139–150,181 | D/A | Receipt binds snapshot digest, watermark, actor, authority and time |
+| R17 | Engine/runtime | AR-11, AR-14 | Architecture §8,A8; server replay/reconstruction | F03-R17 | 151–157 | D/A | Pinned source/build/runtime/lockfiles/SBOM; independent reproducibility evidence |
+| R18 | Policy/rules | AR-10, AR-11, AR-12, AR-14 | Architecture §§7–8,A8; server replay | F03-R18 | 151–157 | D/A | Exact rule/eligibility/ranking/abstention versions |
+| R19 | Taxonomy/reference data | AR-10, AR-11, AR-14 | Architecture §§7–8,A8; server replay | F03-R19 | 151–157 | D/A | Versioned taxonomy/enums/currency/unit references |
+| R20 | Projector/canonicalizer | AR-01, AR-07, AR-09, AR-11, AR-14 | Architecture §§2,5–8,A2–A8; server projection | F03-R20 | 120–124,133–138,151–157,173–175 | D/A; O for restoration | Independent implementation, golden vectors and pinned projector build |
+| R21 | Feature/normalization definitions | AR-10, AR-11, AR-14 | Architecture §§7–8,A8; server replay | F03-R21 | 151–157 | D/A | Exact formulas, units, rounding and normalization versions |
+| R22 | Configuration/deployment | AR-11, AR-14, AR-15 | Architecture §§8,10,A8; server deployment/config | F03-R22 | 166–172,151–157 | D/A; O/A operational | Signed configuration and deployment parameter register; operational config also maps O-03 |
+| R23 | External data consumed | AR-01, AR-11, AR-14 | Architecture §§2,8,A2,A8; server replay | F03-R23 | 151–157 | D/A | Exact response bytes, source identifiers, retrieval times and transformations |
+| R24 | Model provenance | AR-11, AR-12, AR-14 | Architecture §8,A8; server historical reconstruction | F03-R24 | 151–157,181 | D/A | Actual consumed model output and metadata; no fresh model call substitution |
+| R25 | Human inputs/approvals | AR-02, AR-10, AR-11, AR-14 | Architecture §§3,7–8,A2,A8; server actor context | F03-R25 | 166–172,186–187,151–157 | D/A | Exact edits/overrides/approval identities and signed context |
+| R26 | Reconciliation/quarantine | AR-08, AR-09, AR-14 | Architecture §6,A5–A7; server recovery/quarantine | F03-R26 | 37–52,111–115,133–138,182–185 | L/C/D/O/A | Gap/fork/outage/quarantine/release evidence |
+| R27 | Independent audit | AR-08, AR-09, AR-14, AR-15 | Architecture §6,A5–A7; server audit/roles | F03-R27 | 30–36,166–172,186–187 | L/C/D/O/A | Raw logs, reviewer evidence and independent verifier artifacts |
+| R28 | Recovery manifest/run | AR-07, AR-08, AR-09, AR-14 | Architecture §§5–6,A5–A7; server restore | F03-R28 | 37–52,111–115,133–138,182–185 | L/C/D/O/A | Signed denominator, expected IDs/counts/digests and retrieval outcomes |
+| R29 | Key custody/recovery | AR-08, AR-14 | Architecture §6,A5–A7; server crypto/key recovery | F03-R29 | 30–36,166–172,186–187 | L/C/D/O/A | HSM backup, quorum, custody approvals and key audit; external custody review required |
+| R30 | Retention/legal basis | AR-01, AR-14, AR-15 | Architecture §10,A11; server privacy/retention | F03-R30 | 151,178–181 | C/D/O/A (scope-dependent) | Approved legal basis, retention schedule, holds and erasure policy; legal sign-off is non-testable review obligation |
+
+### 12.1 Operational dependency crosswalk
+
+| Operational class | Proposed requirement mapping | F-03 test | Profile | Core test linkage | Evidence |
+|---|---|---|---|---|---|
+| O-01 Identity/IAM/authorization | AR-06, AR-14, AR-15 | F03-O-01 | O/A | 166–172,186–187 | Grant/role exports, assertion verification, break-glass audit |
+| O-02 Network/DNS/TLS | AR-14, AR-15 | F03-O-02 | O/A | New F-03 test; no direct existing core test | DNS/routing/cert/TLS evidence |
+| O-03 Deployable runtime/build | AR-11, AR-14, AR-15 | F03-O-03 | O/A | 151–157; new F-03 test | Reproducible build, image digest, SBOM |
+| O-04 Secrets/HSM/KMS | AR-08, AR-14 | F03-O-04 | O/A | 30–36,166–172,186–187 | HSM key IDs, quorum, custody and audit |
+| O-05 Queues/workers/integrations | AR-06, AR-07, AR-14 | F03-O-05 | O/A | 115–124,158–165,173–175; new F-03 test | Offsets, idempotency, retries and side-effect reconciliation |
+| O-06 Monitoring/time/audit | AR-08, AR-14, AR-15 | F03-O-06 | O/A | 30–36,48–52,97–109; new F-03 test | Trusted time, alert, log and audit-export evidence |
+| O-07 Projection/API/cache/downstream | AR-07, AR-09, AR-10, AR-14 | F03-O-07 | O/A | 111–124,133–138,145–148,182–185 | Current watermark, cache invalidation, 202/actionability gate |
+| O-08 Cutover/rollback/writer fencing | AR-06, AR-08, AR-09, AR-14 | F03-O-08 | O/A | 37–52,101–109,166–172,182–185; new F-03 test | Old-writer disablement, single-writer proof and service-owner gate |
+
+### 12.2 Profile-level acceptance traceability
+
+| Profile requirement | Required test(s) | Objective pass evidence | Fail-closed result |
+|---|---|---|---|
+| FULL-L — ledger integrity | F03-PROFILE-L; F03-ANCHOR-01/02/03; F03-R01–R05; F03-R11–R14 as required | Genesis-to-head receipt chain, exact Spanner receipt representations, S3 exact-version envelope bindings, independent expected-truth coverage, signatures and measured RPO/RTO | No FULL-L; ledger UNAVAILABLE/PARTIAL/BLOCKED |
+| FULL-C — content recovery | FULL-L plus F03-PROFILE-C, F03-R06–R08, F03-SCOPE-01 | All lawfully retained in-scope payloads and lineage/tombstones verify against approved object/key model | No FULL-C; content PARTIAL/UNAVAILABLE/ERASED_BY_AUTHORITY |
+| FULL-D — decision-history recovery | F03-PROFILE-D, F03-R09–R25, F03-SCOPE-01 | Snapshots, finalization receipts, inputs, rules, runtime and actual model outputs verify/replay | No FULL-D; decision history PARTIAL/UNAVAILABLE |
+| FULL-O — operational restoration | F03-PROFILE-O; F03-O-01–08; F03-R17/R22/R27/R29 as applicable | Clean environment restoration, IAM/network/runtime/HSM/queue/monitoring/projection/cutover evidence, independent verifier and service-owner gate | No FULL-O; service stays disabled |
+| FULL-A — complete approved scope | All applicable profile tests, F03-PROFILE-A, F03-SCOPE-01, F03-R01–R30 and F03-O-01–08 | Signed pre-disaster denominator and every mandatory class/dependency, all profile evidence, approved scope and measured RPO/RTO | No FULL-A; explicit limited/partial/unavailable outcome |
+
+All mappings in §12 are proposed. Independent review must validate both positive mappings and any missing/over-broad AR associations. Where the core v4 plan has no equivalent test ID, the F-03 test is an additive test, not a renumbering or replacement of the core suite.
+
+
+### 12.3 Accepted bounded anchor-publication policy — AUD-XD-06 (additive; 2026-11-16)
+
+**Decision status:** Option 2 ACCEPTED. Client/API success does not wait for independent expected-truth anchor publication. This is distinct from projection gating: HTTP success still requires verified receipt-bound projection under the existing core contract. The anchor is an asynchronous, independent completeness control.
+
+| Requirement / control | Normative source | Regression test(s) | Required assertion / evidence | Fail-closed result |
+|---|---|---|---|---|
+| Bounded asynchronous publication | F-03 practical recovery specification §27.6; inventory §7.5 | F03-ANCHOR-04 | Spanner commit and projection-verified client success proceed before anchor coverage within approved finite `ANCHOR_MAX_PUBLICATION_LAG`; anchor remains PENDING and completeness never extends past last published position | No false anchor-covered status; no FULL beyond anchored range |
+| Publication deadline / breach | F-03 §27.6 | F03-ANCHOR-05 | Approved numeric lag, trusted measurement clock, deadline, alert/escalation and degraded/fail-closed mode; raw publisher/commit evidence retained | Alert and stop/throttle further unanchored acceptance before approved exposure bound is exceeded |
+| Rollback after anchor prefix | F-03 §27.6 | F03-ANCHOR-03, F03-ANCHOR-06 | Recover last independently anchored position; enumerate every committed-but-uncovered sequence, count, receipt commitment and time bound | No FULL-L/C/D/O/A may include uncovered committed interval; PARTIAL/UNAVAILABLE or explicit limited statement |
+| Circular post-disaster anchoring | F-03 §27.6 | F03-ANCHOR-07 | Reject an anchor reconstructed solely from rolled-back Spanner, recovered manifest, mutable logs or operator output | No retroactive completeness proof |
+| Monotonicity / conflicting anchor | F-03 §§26.2, 27.6 | F03-ANCHOR-01, F03-ANCHOR-02 | Reject stale, replayed, regressed, conflicting, compromised or unverifiable anchor | BLOCKED/quarantine; no FULL |
+| RPO / lag compatibility | F-03 §27.6 | F03-RPO-01, F03-RTO-01 | Signed numeric lag and RPO/RTO targets; measured tail and recovery against trusted time and sequence evidence | Missing numeric parameter or trusted time = BLOCKED |
+| Anchor trust and administration | F-03 §27.6; inventory §6.4/§7.5 | F03-ANCHOR-05 plus independent trust-boundary review | Approved identity relationship to core checkpoint, owner/writer, trust root, administrative domain, source independence, retention and recovery path | Implementation and F-03 acceptance BLOCKED until approved |
+
+**Normative implementation parameters still outstanding:** finite numeric `ANCHOR_MAX_PUBLICATION_LAG`; anchor identity relative to the core checkpoint; legal owner/writer; trust root and administrative boundary; source/provider independence criteria; retention and recovery path; publisher implementation; signed RPO/RTO alignment. The accepted Option 2 policy choice itself is no longer provisional. No numeric provider count or lag is fabricated.
+
+**Reviewer checklist:** verify that client/API success is projection-gated but not anchor-gated; publication is bounded and monotonic; late publication does not retroactively undo a valid Spanner commit/client result; bound breach triggers approved fail-closed acceptance behavior; after rollback, all committed positions beyond the last independently verified anchor are explicitly enumerated and excluded from every completeness-qualified FULL profile; and a post-disaster self-generated anchor cannot close the gap.
+
+All mappings remain PROPOSED / PROVISIONAL pending independent review. The added regression tests are DEFINED / NOT RUN.
+
+### 12.4 AUD-XD-07 R06 payload contract traceability (normative design; implementation unproven)
+
+| Requirement | Normative source | Test(s) | Required evidence | Fail-closed result |
+|---|---|---|---|---|
+| Separate immutable payload placement | Append-only design §12; server spec §12.1; F-03 inventory §6.5 | F03-R06-01/02 | Artifact ID/role, exact object VersionId/generation, receipt-bound descriptor and read-back digest/length | No dependent FULL-C/D/A |
+| Exact receipt/event/source binding | Server spec §12.1; F-03 spec §27.7 | F03-R06-01/05 | R04 digest in Spanner receipt; source/version/provenance; artifact-role and lineage verification | PARTIAL/UNAVAILABLE |
+| Independent per-artifact crypto-erasure | Append-only design §12; server spec §12.2; inventory §6.5 | F03-R06-03/04 | Unique DEK reference, key-vault inventory, replica/backup/escrow/DR disposition, independent decrypt-failure evidence | BLOCKED/UNAVAILABLE; not ERASED_BY_AUTHORITY |
+| Lawful erasure authority and tombstone | F-03 inventory §6.5; F-03 spec §27.7 | F03-R06-03/04 | Signed authority, receipt-backed tombstone, policy digest, exact object/key refs, approver and trusted time | FAIL/BLOCKED |
+| Original vs derivative distinction | Server spec §12.1–12.2; F-03 spec §27.7 | F03-R06-01/05 | Explicit artifact role, source identity/version and lineage | No original-source recovery claim |
+| Recovery profile scope | F-03 spec §27.7; migration plan §22.4 | F03-R06-01–05 | Signed scope manifest and explicit decision dependency edges | No FULL-C/D/A beyond verified scope |
+
+This crosswalk resolves the documentary design ambiguity in AUD-XD-07. It does not constitute provider approval, legal sign-off, implementation evidence or test execution; those remain separate gates.
+

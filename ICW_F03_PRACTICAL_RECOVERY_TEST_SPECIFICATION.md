@@ -1,8 +1,11 @@
 # ICW F-03 — Practical Recovery Test Specification
 
-**Record date:** 2026-11-15  
+**Record date:** 2026-11-16  
+**Document version:** 1.1.3  
+**Amends:** v1.0 baseline (Git blob `79d73a5def263ae4393727d9dea8d4708f714916`)  
+
 **Baseline source:** `ICW_F03_RECOVERY_OBJECT_INVENTORY_AND_EXERCISE_RECORD.md`  
-**Baseline source blob SHA:** `8a1d86fce3cf8c5c78edeb2aa468141a60543bcc`  
+**Baseline source blob SHA (companion inventory v1.1.3):** `4b4a1e151515bcd8426dee5fe4e2e922aee4dfd0`  
 **Status:** TEST SPECIFICATION DEFINED — EXECUTION BLOCKED / NOT RUN  
 **Disposition:** Documentation only. This specification does not demonstrate recovery or authorize infrastructure, implementation, migration, ingestion, deployment or live test execution.
 
@@ -100,7 +103,7 @@ For every class below, perform the specified failure injection in an isolated no
 - **Failure injection:** Delete one receipt; reorder receipts; alter sequence/previous hash/batch digest/key ID; replay a duplicate or forked receipt.
 - **Detection:** Independent chain verifier detects missing sequence, invalid signature, duplicate identity, fork or hash discontinuity.
 - **Isolation:** Stop verification at the last independently verified predecessor; quarantine the affected tail; do not skip the gap.
-- **Recovery:** Fetch exact receipt bytes by immutable receipt identity from independent witness copies and verify signature and chain. Never synthesize a receipt.
+- **Recovery:** Fetch the exact canonical signed receipt bytes (or the formally specified exact canonical representation) from the committed Spanner receipt row by immutable receipt identity, using independent recovery credentials. Verify the Spanner row/transaction commit evidence, receipt identity, idempotency identity, sequence, head transition, signature and chain binding. The independent expected-truth anchor is a completeness oracle, not an alternate receipt authority. Never synthesize a receipt or require an unselected second witness-copy archive.
 - **Independent verification:** Independently recompute chain links and compare exact receipt bytes, witness transaction IDs and key history.
 - **Acceptance:** PASS only if the chain is contiguous from trusted genesis to the expected head with every receipt uniquely verified; otherwise no FULL ledger result.
 
@@ -474,7 +477,7 @@ For every class below, perform the specified failure injection in an isolated no
 
 The following cross-class scenarios are mandatory because isolated per-class tests do not prove the system handles interacting failures:
 
-- **C01 — Receipt present, envelope absent:** R03 exists but R04 is missing in one store; require quarantine and no ledger FULL.
+- **C01 — Receipt present, envelope absent:** the committed Spanner R03 receipt exists but its exact referenced S3 R04 VersionId is missing or unavailable; require quarantine and no ledger FULL.
 - **C02 — Checkpoint rollback versus post-checkpoint tail:** restore an older valid checkpoint while newer accepted R03 receipts exist; discover and verify the complete tail from independently anchored witness history; reject stale history.
 - **C03 — Historical key compromise:** combine R12 key compromise interval, R03 signatures, R11 issuer/key history and R26 incident record; quarantine the uncertain interval and do not retroactively trust it.
 - **C04 — Erasure and replay:** combine R08 tombstone, R06 encrypted payload, R29 key disposition and R30 legal policy; preserve permitted integrity evidence while reporting content PARTIAL, never FULL.
@@ -499,12 +502,9 @@ A recovery exercise may be marked **PASS for its declared scope** only if all co
 10. Raw logs, object refs, manifest, verifier build, output, deviations and independent sign-off are retained and digest-bound.
 11. Independent reviewer confirms role separation, verifier independence, scope completeness and absence of production DB dependence.
 
-### Status aggregation
+### Status aggregation — legacy descriptive states only
 
-- **LEDGER_RECOVERED:** R01–R05 and required trust/crypto dependencies are complete and verified through expected head.
-- **CONTENT_RECOVERED:** LEDGER_RECOVERED plus all lawfully retained R06 content and R07/R08 relationships/state in declared content scope.
-- **DECISION_HISTORY_RECOVERED:** required R09–R25 dependencies, R15/R16 snapshots and R17–R24 replay/provenance artifacts verify for the declared decision scope.
-- **FULL:** permitted only when every component required by the declared recovery scope is complete and independently verified. If any required component is missing, erased, inaccessible or unverifiable, aggregate FULL is prohibited.
+**Superseded:** This legacy §6 aggregation text is subordinate to v1.1.0 §26.3 and the explicit profile rules in §27.3 below. Unqualified `FULL` is retired and MUST NOT be emitted. `LEDGER_RECOVERED`, `CONTENT_RECOVERED` and `DECISION_HISTORY_RECOVERED` may appear only as descriptive intermediate states; they are not complete-profile acceptance claims. Successful complete recovery claims are exclusively `FULL-L`, `FULL-C`, `FULL-D`, `FULL-O` or `FULL-A`, each subject to its full mandatory profile denominator and evidence gates. The later v1.1.0/v1.1.1 rules control over any conflicting legacy wording.
 - **PARTIAL:** some valid history/content/decision material recovered but one or more required objects/dependencies are missing, erased or unverifiable.
 - **UNAVAILABLE:** authoritative genesis/continuity or other essential trust basis cannot be established; no authoritative recovery claim can be made.
 
@@ -515,7 +515,7 @@ The source inventory's individual missing-object consequences remain controlling
 **F-03 test specification: DEFINED.**  
 **F-03 live exercise: BLOCKED / NOT RUN.**
 
-The source record states that no selected/provisioned witness, dual-store object repository, issuer, HSM, recovery export or live receipt history is available. This specification therefore contains no fabricated execution result.
+The F-01 Spanner/S3 topology is selected at documentary candidate level only; no provider service is provisioned, and no issuer, HSM, recovery export or live receipt history is available. This specification therefore contains no fabricated execution result.
 
 Before a live run:
 - F-01 must provide actual stores/witness and approved failure model.
@@ -530,4 +530,188 @@ A synthetic fixture can validate verifier mechanics only and must be labelled SY
 
 ## 8. Source preservation and change control
 
-The original file `ICW_F03_RECOVERY_OBJECT_INVENTORY_AND_EXERCISE_RECORD.md` remains unchanged. This specification is a companion document. Any future change to a class name, required contents, integrity/binding or missing consequence requires an explicit reviewed amendment to the source inventory and a versioned traceability update; no silent edits are permitted.
+The v1.0 inventory source blob (`8a1d86fce3cf8c5c78edeb2aa468141a60543bcc`) is preserved in Git history. The current companion inventory is v1.1.2 (blob `848900f957398e73d1ccecdf5d8993470bf4631e`) and is the normative companion for this v1.1.2 specification. Original R01–R30 class IDs, labels, required contents, integrity/binding statements and missing consequences remain unchanged. Any future change to those definitions requires an explicit reviewed amendment and versioned traceability update; no silent edits are permitted.
+
+
+---
+
+## 26. Version 1.1.0 normative reconciliation amendment (2026-11-16)
+
+**Amendment authority:** User-directed F-03 remediation aligned to `ICW_F01_TOPOLOGY_RECONCILIATION_DECISION.md` (2026-11-15).  
+**Amendment status:** Normative documentary amendment for the selected candidate protocol. Provider deployment and operational acceptance remain NOT DEMONSTRATED.  
+**Supersession:** This section controls over any conflicting operative instruction elsewhere in this document or its companion inventory that describes DynamoDB MRSC, a two-object-store/MRSC recovery topology, generic “both stores” receipt recovery, or an unqualified independent receipt-copy requirement. Historical text is retained for auditability.
+
+### 26.1 Authoritative topology and commit protocol
+
+The selected candidate is Google Cloud Spanner multi-region as the **sole transactional ICW witness** and AWS S3 Object Lock Compliance as the **immutable exact-version archive for canonical batch envelopes**. This is a documentary design selection only, not deployment, procurement, durability or administrative-independence evidence.
+
+1. Canonicalize the complete batch envelope under the approved policy and compute its digest.
+2. Upload the envelope to S3 Object Lock; capture bucket/key/VersionId, retention metadata, length and checksum.
+3. Read back that exact VersionId and independently verify bytes/digest. If this fails, do not attempt commit.
+4. Prepare and sign a receipt candidate binding expected prior head, candidate sequence/range, envelope digest and exact S3 VersionId, idempotency identity, request digest and schema/crypto policy versions. A candidate signature is not proof of commit.
+5. Execute one Spanner serializable read-write transaction that validates the expected head and atomically inserts the committed receipt and idempotency identity and advances the head.
+6. The successful Spanner transaction is the sole logical acceptance/commit point. Acknowledge only after commit.
+
+**Authority matrix:** committed receipt, authoritative head and idempotency identity are authoritative in Spanner. Exact canonical envelope bytes are archived in the referenced S3 object version. S3 object existence never proves acceptance. A prepared/signed candidate without successful Spanner commit is not a receipt. This baseline does **not** require a second independently committed receipt-byte archive in S3 or another provider. A separate receipt archive requires a separately versioned architecture decision defining commit binding, publication lag, failure, lost-acknowledgement and recovery semantics.
+
+**Abort/orphan:** if Spanner aborts after S3 upload, no receipt is accepted and no head advances. The S3 object is an uncommitted orphan, not accepted history; quarantine and reconcile it against Spanner receipt/idempotency history under the approved retention/legal policy. Do not silently delete, promote or replay it.
+
+**Lost acknowledgement:** query Spanner by the original idempotency identity and request digest. Same identity/digest returns the original committed receipt; same identity/different digest is an integrity conflict. No second sequence is allocated. If no committed record exists, the operation was not accepted.
+
+**Post-commit S3 loss:** the Spanner commit remains a committed ledger event, but the missing exact envelope makes every profile requiring that envelope PARTIAL/UNAVAILABLE. Never substitute another version or a database export.
+
+The companion inventory v1.1.0 contains the object authority/placement matrix and orphan classifications. Required tests include upload/read-back failure, transaction abort, CAS loser, crash before commit, crash after commit before acknowledgement, idempotent retry, digest conflict, S3 version substitution, retention mismatch, S3 outage after commit and orphan reconciliation. Retain raw provider responses, transaction IDs, exact VersionIds, receipt/head/idempotency before/after state and independent verifier output.
+
+### 26.2 Independent expected-truth oracle
+
+A separately executed verifier is not an independent oracle if its expected values can be rolled back with the witness, manifest, audit source or recovery tool. Before disaster, create an independently controlled expected-truth anchor package binding at minimum: tenant/ledger/epoch scope; trusted genesis; expected committed head and sequence; cryptographic commitment to receipt identities/ranges; commitment to accepted-envelope inventory and exact S3 VersionIds; profile/scope version; schema/canonicalization/crypto policy versions; anchor time, signer/key identity and retention evidence.
+
+The anchor owner, writer, legal owner, trust root, update cadence, monotonicity, retention and recovery path must be specified in the approved trust/parameter register. It must be outside the ordinary application and recovery-package rollback boundary. A post-disaster manifest generated solely from recovered Spanner/S3 contents, mutable audit logs or operator output is not independent expected truth.
+
+This amendment does not silently impose a numeric minimum number of anchor providers. The approved threat model must explicitly set the required number and independence criteria. If no independent source can establish completeness relative to prior acknowledged commits, no completeness-qualified FULL result is allowed. The only permitted limited statement is: **“Internally consistent recovery achieved; completeness relative to all prior acknowledgements not proven.”**
+
+Required tests: coordinated rollback of Spanner head, recovered manifest and one audit source; stale-but-valid anchor; missing anchor; conflicting anchors; replay; compromised anchor key; verifier substitution; and operator-selected denominator. False completeness is FAIL.
+
+### 26.3 Fixed recovery profiles and FULL semantics
+
+Declare one or more fixed profiles before recovery. L is the common integrity prerequisite; C, D and O each include L; A is the union of L+C+D+O for the complete approved scope. Profiles cannot be redefined or narrowed during an exercise.
+
+| Profile | Mandatory claim |
+|---|---|
+| **L — Ledger integrity** | Trusted genesis/epoch continuity; complete committed Spanner receipt/head/idempotency history; exact receipt-bound accepted-envelope versions; signature/key/policy/schema verification; independent expected-truth comparison; required tombstones, manifest and audit evidence. No claim of payload recovery or service restoration. |
+| **C — Content recovery** | L plus all lawfully retained in-scope original evidence payloads, normalized captures, attachments, lineage and exact version/provenance bindings. Erased plaintext is never counted as recovered. |
+| **D — Decision-history recovery** | L plus every in-scope snapshot/finalization receipt, evidence/provenance, policy/rules, taxonomy, engine/runtime, projector/canonicalizer, feature definitions, configuration, external inputs, model provenance and human inputs required to substantiate the declared historical decision claims. |
+| **O — Operational restoration** | L plus all approved clean-environment service dependencies: identity/authorization, network/DNS/TLS, runtime/builds, secrets/key access, queues/workers, monitoring, projections, APIs/caches/exports/downstream consumers, cutover and old-site fencing. |
+| **A — Complete approved scope** | L+C+D+O across the entire pre-approved tenant/ledger/epoch/time/sequence/service scope, with no unapproved exclusions. |
+
+The companion inventory v1.1.2 defines the R01–R30 profile-to-class matrix and supplemental O-01–O-08 operational dependencies. All R01–R30 entries remain present in every manifest. A class not mandatory for a particular profile remains visible and becomes mandatory whenever the declared scope depends on it. Erasure is represented by independently verified tombstones, not recovered plaintext.
+
+**FULL semantics:** unqualified FULL is prohibited. Only FULL-L, FULL-C, FULL-D, FULL-O or FULL-A may be emitted, and only after every mandatory requirement for that profile passes. Any missing, altered, unavailable, unverified or unapproved mandatory dependency prohibits that profile's FULL result. Coverage uses the independently anchored pre-disaster denominator, never the recovered subset. PARTIAL/UNAVAILABLE is a valid safe outcome, not FULL. Ledger/content reconstruction does not imply operational restoration.
+
+### 26.4 Mandatory profile manifest and anti-scope-narrowing controls
+
+The signed pre-exercise manifest MUST bind profile/version; exact tenant/ledger/epoch/time/sequence/service scope; every R01–R30 entry and status; O-01–O-08 where O/A is declared; expected IDs/counts/digests/lengths/schema versions/receipt refs/exact object versions; independent expected head/receipt/envelope commitments; legal exclusions/tombstones/NOT_APPLICABLE approvals; key generations and crypto policies; verifier build/dependencies; RPO/RTO targets and measurement events; denominator, coverage method, omissions and exceptions; signatures, trusted time and reviewer identities.
+
+No post-disaster scope reduction, denominator change, database-export substitution or orphan promotion is permitted. Any change requires a new pre-exercise approved scope/profile version and a new independent anchor.
+
+### 26.5 F-03 status
+
+This amendment resolves the documentary topology, expected-truth and recovery-profile contracts for the selected candidate. It does not close F-03. F-03 remains **OPEN / NOT DEMONSTRATED** until provider-backed fault tests, independent expected-truth verification, complete R01–R30 recovery, profile-specific negative tests, measured RPO/RTO and independent human review are complete. Exercise status remains **BLOCKED — NOT RUN**. No implementation, procurement, infrastructure spend, migration, ingestion, deployment or live exercise is authorized.
+
+
+
+## 27. Cross-document correction addendum (v1.1.1, 2026-11-16)
+
+This addendum is normative for this test specification and its v1.1.0 inventory companion. It does not close F-03 or authorize execution.
+
+### 27.1 Witness commit, internal result and client/API result
+
+- **Witness commit:** Spanner commits the exact receipt representation, idempotency identity and authoritative head atomically. This is the sole logical acceptance point.
+- **Internal commit result:** the caller resolves an ambiguous commit response through the original idempotency identity and request digest in Spanner.
+- **Client/API success:** success is returned only after the full receipt-bound projection transaction is applied and verified. A committed-but-projection-pending operation returns typed HTTP 202; it is not current, decision-serving or actionable. No client success follows a pre-commit failure.
+- “Acknowledge only after commit” MUST NOT be interpreted as client/API success at witness-commit time.
+
+### 27.2 R03 exact receipt representation
+
+The committed Spanner R03 row MUST retain the exact canonical signed receipt bytes, or a formally specified canonical representation that reproduces the exact signed bytes without ambiguity. Recovery reads this representation from Spanner with independently issued recovery credentials and verifies commit identity, receipt identity, sequence, previous-head binding, resulting head, idempotency identity, request/batch digest, signature and chain continuity. The expected-truth anchor verifies expected inventory and completeness; it is not a second receipt authority. No independent receipt archive is assumed.
+
+### 27.3 FULL vocabulary precedence
+
+This §27.3 and v1.1.0 §26.3 supersede legacy §6 “Status aggregation”. Unqualified `FULL` is prohibited. Only profile-qualified `FULL-L`, `FULL-C`, `FULL-D`, `FULL-O` and `FULL-A` may be emitted after all mandatory requirements and denominator checks for that profile pass. Legacy recovery labels are intermediate descriptive states only. BLOCKED, NOT RUN, PARTIAL, UNAVAILABLE and ERASED_BY_AUTHORITY cannot be promoted to PASS by omission or scope reduction.
+
+### 27.4 O-01–O-08 operational recovery test suite
+
+The following tests are mandatory for FULL-O and FULL-A. Each is executed in a clean isolated recovery environment with one fault injected at a time, raw evidence retained, and an independent verifier/reviewer. Each failure must block re-enablement.
+
+| Test ID | Dependency / failure injection | Required detection and isolation | Recovery and independent verification | Negative assertion / acceptance |
+|---|---|---|---|---|
+| F03-O-01 | Identity/IAM/authorization bootstrap unavailable; revoke or substitute recovery principal, issuer trust root or role grant | Detect failed identity provenance, privilege mismatch or missing trust root; isolate service from tenant access | Restore only approved identity/issuer configuration; verify grants, signed assertions, MFA/break-glass and audit from separate reviewer credentials | No default/admin bypass, shared app credential or unaudited break-glass; PASS only with least-privilege and issuer verification |
+| F03-O-02 | Network/DNS/TLS dependency missing, stale, misrouted or certificate invalid | Detect DNS, route, firewall, certificate-chain, hostname or TLS-policy mismatch; keep service offline | Restore approved network policy and certificate chain; independently inspect DNS answers, route rules, certificate fingerprints/validity and TLS handshake | No plaintext, insecure endpoint, permissive wildcard or stale endpoint; no traffic until verified |
+| F03-O-03 | Runtime/build artifact unavailable or substituted; dependency lockfile/SBOM mismatch | Detect source/build/container digest, runtime, compiler, dependency or SBOM mismatch | Rebuild from pinned source and lockfiles or retrieve exact approved image; independent reproducibility/digest verification | No floating tag, unpinned dependency or unreviewed hotfix; service cannot start on mismatch |
+| F03-O-04 | Secrets/HSM/KMS access unavailable, wrong key version or unauthorized key recovery | Detect missing key reference, wrong generation, HSM policy/custody/quorum failure | Restore exact approved key access under custody quorum; verify public fingerprints, key IDs, HSM audit and historical verification without exposing secret material | No plaintext key export, key regeneration under old identity or single-operator bypass; no signing/verification claim without key evidence |
+| F03-O-05 | Queue/topic/worker/scheduler unavailable; duplicate, reordered or replayed delivery; dead-letter backlog | Detect stalled offsets, lost tasks, retry storm, duplicate side effects and idempotency mismatch | Restore pinned queue/worker definitions and offsets where authoritative; replay with stable idempotency; independently reconcile input/output counts and side effects | No dropped accepted task, duplicate mutation, skipped dead letter or non-idempotent replay; downstream remains gated until reconciled |
+| F03-O-06 | Monitoring, trusted time or audit export unavailable/tampered | Detect missing metrics/logs/traces, clock uncertainty, alert suppression or audit-export gap | Restore pinned alert/configuration, trusted-time source and independent audit destination; compare raw timestamps and export digests | No silent operation without audit/time evidence; if time uncertainty exceeds approved bound, affected claims remain BLOCKED |
+| F03-O-07 | Projection/API/cache/downstream dependency stale, unavailable or serving old state | Detect projection watermark mismatch, stale cache, API pending state or downstream consumer not gated | Rebuild projection from verified ICW receipts/envelopes; invalidate caches; verify API, export and consumers against current head | No decision serving/actionability on pending or stale projection; typed 202/unavailable until verified; no DB-only fallback |
+| F03-O-08 | Cutover/rollback fault; old writer remains active; split-brain or duplicate write path | Detect active old writers, conflicting DNS/traffic, dual-write or stale site credentials | Execute approved cutover with fencing, traffic switch, write-disable and rollback controls; independently verify single writer and service-owner approval | No re-enable while old writer can append or old site can serve; no rollback that regresses accepted history; re-enable requires separate service-owner authorization |
+
+**FULL-O gate:** all O-01–O-08 must be PASS or individually approved NOT_APPLICABLE under the signed pre-exercise scope, with independent evidence. Any BLOCKED/NOT RUN/FAIL/UNAVAILABLE mandatory operational dependency prohibits FULL-O and service re-enablement.
+
+**FULL-A gate:** every mandatory L, C, D and O requirement for the approved complete scope must pass, including O-01–O-08. The same denominator, anchor, anti-scope-narrowing and measured RPO/RTO gates apply. A successful data reconstruction without operational restoration is not FULL-A.
+
+### 27.5 Profile-level acceptance and anti-scope-narrowing tests
+
+- **F03-PROFILE-L:** independently verify R01–R05 plus required trust/crypto dependencies from trusted genesis to expected head; reject receipt gap, fork, altered receipt or unanchored completeness claim.
+- **F03-PROFILE-C:** require FULL-L plus every lawfully retained in-scope R06 payload and R07/R08 lineage/tombstone binding; erased plaintext is never counted.
+- **F03-PROFILE-D:** require all decision-scope R09–R25 artifacts and exact snapshot/finalization/replay dependencies; no fresh model call substitutes for preserved actual output.
+- **F03-PROFILE-O:** require O-01–O-08 and clean-environment service restoration/cutover gates above.
+- **F03-PROFILE-A:** require every mandatory L/C/D/O and all in-scope R01–R30 objects, O-01–O-08 and approved operational scope.
+- **F03-SCOPE-01:** remove a mandatory class, tenant, epoch, sequence range, key generation or dependency from the recovered manifest while retaining the signed pre-disaster denominator. PASS only if verifier rejects scope mismatch and prohibits profile FULL.
+- **F03-ANCHOR-01:** present older/replayed expected-truth anchor; reject monotonic regression.
+- **F03-ANCHOR-02:** present same-position conflicting head/digest; quarantine and prohibit FULL.
+- **F03-ANCHOR-03:** remove anchor coverage for a post-anchor receipt range; identify the exact uncovered committed interval and prohibit every completeness-qualified FULL profile from including it. Verify client/API success is not retroactively reclassified as uncommitted solely due to asynchronous anchor lag.
+- **F03-ANCHOR-04:** delay anchor publication but remain within approved `ANCHOR_MAX_PUBLICATION_LAG`; verify commit and projection-gated client/API success proceed without waiting for anchor, while anchor status remains PENDING and no completeness claim extends beyond last published position.
+- **F03-ANCHOR-05:** exceed `ANCHOR_MAX_PUBLICATION_LAG`; verify high-severity alert, escalation, raw evidence preservation and configured degraded/fail-closed acceptance mode before further unanchored exposure exceeds the approved bound.
+- **F03-ANCHOR-06:** rollback Spanner to a position behind its previously committed head while anchor covers only an earlier prefix; enumerate the uncovered committed tail and reject FULL-L/C/D/O/A even if recovered Spanner is internally consistent.
+- **F03-ANCHOR-07:** attempt to create a post-disaster anchor from recovered Spanner/manifest/mutable logs; reject it as circular and insufficient to establish prior completeness.
+- **F03-RPO-01:** calculate RPO from the last independently proven accepted position to recovered position using trusted timestamps; compare to pre-approved numeric target. Missing target/time source = BLOCKED.
+- **F03-RTO-01:** measure from declared disaster start to independently verified restoration/re-enable-ready point; compare to pre-approved numeric target. Missing target/time source = BLOCKED.
+
+### 27.6 Accepted anchor publication policy and remaining implementation parameters
+
+### Normative anchor publication and bounded-unanchored interval (AUD-XD-06 decision; v1.1.2, 2026-11-16)
+
+**Decision accepted:** Option 2. Client/API success does not wait for publication of the independent expected-truth anchor. A bounded interval between a successful Spanner witness commit and independent anchor publication is permitted, subject to the controls below.
+
+1. **Commit and client success remain distinct from anchor publication.** A successful Spanner transaction is the logical acceptance point. Client/API success remains governed by §27.1: receipt-bound projection must be applied and verified. Anchor publication is an asynchronous independent completeness-control process; it is not a second commit point and does not delay an otherwise valid client/API success.
+2. **Bounded publication lag is mandatory.** The anchor publisher MUST publish monotonic coverage of committed receipt/head positions within a maximum publication-lag parameter, `ANCHOR_MAX_PUBLICATION_LAG`. This parameter MUST be a finite, numeric duration approved in the signed threat/parameter register before implementation or production use. No value is invented by this amendment. The register MUST also define the measurement clock, publication deadline calculation, alert threshold, escalation owner and fail-closed behavior when the bound is breached.
+3. **Independent monotonic anchor.** Each publication binds the tenant/ledger/epoch, covered sequence range and expected head, receipt identity/range commitment, accepted-envelope inventory commitment including exact S3 VersionIds, scope/profile version, policy/schema/canonicalization versions, publication time, signer/key identity and retention evidence. The anchor must be outside the ordinary application and recovery rollback boundary. Publication must be append-only or otherwise provably monotonic; stale, replayed, regressed, conflicting or unverifiable anchors fail closed.
+4. **Publication failure / bound breach.** If publication has not covered a committed position by its approved deadline, raise a high-severity integrity/availability alert, preserve raw commit and publisher evidence, and block any status that asserts independent completeness beyond the last verified anchor. New client/API success is not retroactively invalidated solely because asynchronous publication is late; however the service must enter the pre-approved degraded/fail-closed mode for further acceptance before the unanchored exposure can exceed the approved bound. Exact throttling/stop-accepting behavior and operational owner must be specified in the signed parameter register.
+5. **Rollback recovery rule.** After rollback or disaster, the last independently verified anchor is the maximum position for which completeness is independently established. Every Spanner-committed receipt/head position after that anchor, up to the recovered Spanner head, is an **uncovered committed interval** unless separately proven by another approved independent source. Such records remain acknowledged committed history if independently verified from Spanner, but they MUST NOT be included in a completeness-qualified FULL-L, FULL-C, FULL-D, FULL-O or FULL-A claim. The recovery result must identify exact first/last uncovered sequence, count, receipt commitment and time bounds, and report PARTIAL/UNAVAILABLE or the limited statement: **“Internally consistent recovery achieved; completeness relative to all prior acknowledgements not proven.”** No recovered-subset denominator or scope narrowing may convert this interval into FULL.
+6. **Catch-up does not rewrite history.** If an independent anchor later proves the missing range with sufficient pre-disaster provenance and monotonic continuity, a new separately reviewed recovery assessment may evaluate completeness. A post-disaster anchor freshly generated from the rolled-back Spanner, recovered manifest, mutable logs or operator output cannot retroactively prove the missing interval.
+7. **Identity and administration remain explicit controls.** The anchor's exact relationship to the core v4 checkpoint anchor (same artifact, separate source or composite), legal owner, writer, trust root, administrative domain, retention, recovery path and required provider/source independence count remain to be approved in the signed trust/parameter register. No numeric provider count is imposed here. These unresolved implementation parameters do not reopen the accepted Option 2 acknowledgement policy, but they block implementation and F-03 acceptance until approved.
+8. **RPO/RTO relationship.** The approved anchor publication lag is a maximum exposure bound and MUST be reconciled with the approved numeric RPO target and disaster threat model. An RPO target stricter than the anchor lag requires a correspondingly tighter publication bound or additional independently proven mechanism. RPO cannot be claimed from a configured target alone; measure actual last-anchor position, uncovered committed tail and recovery position using trusted time and sequence evidence.
+
+This decision closes the policy choice portion of AUD-XD-06 only. The anchor ownership/trust/administrative design, numeric lag, provider independence, operational publisher, implementation and test evidence remain OPEN / NOT DEMONSTRATED.
+
+
+**AUD-XD-06 disposition:** Option 2 policy decision ACCEPTED and incorporated. The choice between wait-for-anchor and bounded asynchronous publication is no longer open. Implementation remains BLOCKED pending the numeric `ANCHOR_MAX_PUBLICATION_LAG`, anchor identity/ownership/trust/administrative-independence decisions, provider/source independence criteria, publisher implementation, retention/recovery path, threat-model and RPO alignment, and independent negative-test evidence. No numeric anchor-provider count or lag value is invented.
+
+**AUD-XD-07 (R06 payload object/erasure model): OPEN / DESIGN AUTHORITY AND PRIVACY DECISION REQUIRED.** This specification does not choose whether R06 bytes are embedded in the R04 envelope or separately stored as encrypted immutable objects, nor does it invent an Object Lock/key-destruction exception. Before implementation, approve a versioned object model specifying canonical envelope versus payload bytes, authoritative locator and exact VersionId for each object, receipt-bound digest/length/key references, per-object/subject key lifecycle, lawful erasure and tombstone proof, Object Lock/retention compatibility, and the exact profile downgrade when a payload is unavailable or erased. Until then R06 content recovery remains BLOCKED where those details are required; ledger integrity must not be represented as content reconstruction.
+
+### 27.7 Execution and governance boundary
+
+All new cases, including F03-ANCHOR-04 through F03-ANCHOR-07, are TESTS DEFINED / NOT RUN. Execution requires approved numeric anchor-lag and RPO parameters. No provider-backed test, operational restoration, RPO/RTO measurement, legal-erasure validation or independent acceptance is claimed. F-01–F-04 remain OPEN / NOT DEMONSTRATED; overall disposition remains HOLD — NOT ACCEPTED.
+
+### 27.7 R06 payload object, receipt binding and cryptographic-erasure contract — AUD-XD-07
+
+This section is normative and supersedes any less-specific R06 payload-placement or erasure wording in §3, §6 and the original R06 class test. R06 uses separate immutable payload objects; R04 envelopes contain canonical descriptors that bind each payload artifact's exact object version and cryptographic commitments to the Spanner-committed receipt. The inventory §6.5 is the placement/key-erasure authority.
+
+**F03-R06-01 — Descriptor and exact-version binding**
+- Fixture: original source, normalized capture and attachment artifacts uploaded as separate encrypted objects; canonical R04 envelope carries their descriptors.
+- Inject: omit VersionId/generation; substitute a later version at the same key; alter ciphertext digest/length; change event/receipt reference; replace original with normalized derivative; alter source version/provenance.
+- Expected: verifier rejects any mutable locator, missing exact version, digest/length mismatch, wrong receipt/event binding or artifact-role substitution. It independently fetches the pinned version and recomputes ciphertext digest/length; where authorized, it decrypts and verifies plaintext digest/length.
+- PASS: Spanner receipt binds the R04 envelope digest, and every in-scope descriptor resolves to exactly the committed immutable payload version. Otherwise affected content is PARTIAL/UNAVAILABLE and no FULL-C/D/A claim may include it.
+
+**F03-R06-02 — Upload/commit ordering and orphan handling**
+- Inject upload failure, read-back mismatch, Spanner abort, timeout-before-commit and lost acknowledgement after commit.
+- Expected: no receipt for an aborted append; uploaded-but-uncommitted payloads are classified as orphans and excluded from accepted history; committed receipt retry resolves to the original receipt; a committed receipt with unavailable payload remains committed but content recovery is PARTIAL/UNAVAILABLE.
+- PASS: no payload object is treated as accepted without a matching committed receipt and no committed payload descriptor is silently rewritten.
+
+**F03-R06-03 — Per-artifact key isolation and lawful crypto-erasure**
+- Fixture: multiple payload artifacts with independently erasable DEKs, wrapped-key registry, replicas/backups and an approved signed erasure authority.
+- Inject: destroy one artifact's DEK while preserving other artifacts; attempt recovery through primary key service, replica, backup, escrow and DR restore paths.
+- Expected: erased artifact remains undecryptable through every authorized recovery path; unrelated artifacts remain decryptable; ciphertext may remain under WORM retention; a signed receipt-backed tombstone binds exact payload IDs/versions, key references, policy digest, authority and destruction evidence.
+- PASS: independent verifier confirms per-artifact isolation, complete key-copy disposition and tombstone integrity. Otherwise do not label ERASED_BY_AUTHORITY.
+
+**F03-R06-04 — False, unauthorized or incomplete erasure**
+- Inject missing/invalid authority, incomplete key-copy inventory, recoverable backup key, shared DEK, deletion of only a key pointer, premature ciphertext deletion, missing tombstone and attempted restoration after erasure.
+- Expected: verifier reports FAIL or BLOCKED as appropriate; no ERASED_BY_AUTHORITY status is accepted; legal/retention controls and the original receipt remain intact.
+- PASS: every false-erasure path is rejected and no plaintext or usable key is restored contrary to the tombstone.
+
+**F03-R06-05 — Derivative, lineage and privacy handling**
+- Inject normalized capture without original source, derivative with wrong source/version, digest disclosure outside policy and tombstone missing lineage.
+- Expected: derivative is not treated as original; provenance and artifact role remain explicit; digest disclosure is governed by policy; erased plaintext is not counted as recovered.
+- PASS: R06/R07/R08 links and privacy restrictions verify independently.
+
+**R06 profile rule:** FULL-C requires all retained in-scope R06 artifacts and their exact descriptors/versions/keys to verify, or independently verified ERASED_BY_AUTHORITY tombstones where policy permits an erased outcome. FULL-D requires R06 only where a historical decision actually consumed or depended on that artifact; the dependency must be explicit in the decision manifest. FULL-A requires every R06 artifact in the signed approved scope. No profile may count erased plaintext as recovered. These tests are DEFINED / NOT RUN until an approved provider/key design and isolated fixtures exist.
+

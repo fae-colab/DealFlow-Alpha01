@@ -348,3 +348,33 @@ No stage may mark F-01 through F-04 ACCEPTED unless its own full evidence criter
 - Gemini F-01-01/F-03-01/F-04-01 → CRX-01 through CRX-04 and cross-cutting administration/key dependencies.
 - ChatGPT A01–A12 / F-04 assurance report → cross-cutting cryptographic, custody, key-recovery and independent-verification prerequisites. Exact individual mapping remains BLOCKED until the report baseline is present.
 - Grok ISA-03/04/05/08/09/10/11 → CRX-01/02/04 and cross-cutting orphan-retention, status, sequencing and integrity-pin controls.
+
+
+---
+
+## 13. F-03 v1.1.0 normative amendments recorded (2026-11-16)
+
+The F-03 companion documents have now been amended on this PR branch:
+
+- `ICW_F03_PRACTICAL_RECOVERY_TEST_SPECIFICATION.md` — v1.1.0; prior v1.0 Git blob `79d73a5def263ae4393727d9dea8d4708f714916`; current v1.1.0 Git blob `604b62dfb62eac3e037445d5bafaa629c2c5161f`.
+- `ICW_F03_RECOVERY_OBJECT_INVENTORY_AND_EXERCISE_RECORD.md` — v1.1.0; prior v1.0 Git blob `8a1d86fce3cf8c5c78edeb2aa468141a60543bcc`; v1.1.0 content was amended to clarify precedence and the final blob SHA is recorded in the next commit.
+
+The v1.1.0 amendment establishes:
+1. Spanner as the sole transactional commit authority for committed receipt/head/idempotency; S3 Object Lock as the exact-version canonical envelope archive; no implied independent S3 receipt-byte archive.
+2. Explicit pre-commit, abort, orphan, post-commit S3-loss and lost-acknowledgement semantics.
+3. A pre-disaster independent expected-truth anchor contract. The numeric minimum number of anchor providers is intentionally not invented; it must be set by the approved threat model. If completeness relative to prior acknowledgements cannot be proven, no profile-qualified FULL is allowed.
+4. Fixed L/C/D/O/A recovery claims, profile-qualified FULL semantics, R01–R30 mapping, supplemental O-01–O-08 operational dependencies and anti-scope-narrowing manifest requirements.
+5. Preservation of all R01–R30 IDs and their original class definitions.
+
+**Revised workstream dispositions:**
+
+| Workstream | Documentary state after v1.1.0 | Remaining blocker |
+|---|---|---|
+| CRX-01 — Normative recovery dependency contract | PARTIALLY ADDRESSED | Complete component/artifact-to-R01–R30 trace across all architecture, service, runtime and operational dependencies; independent review. |
+| CRX-02 — Topology consistency | DESIGN-RESOLVED at candidate/document level | Provider-backed transaction, S3 version/retention, abort/lost-ack/orphan tests; independent account/administrator evidence. |
+| CRX-03 — Independent expected-truth oracle | CONTRACT DEFINED; NOT ACCEPTED | Approve actual anchor owners, source, count/independence criteria, cadence, trust roots and retention in the threat/parameter register; execute coordinated rollback and negative tests. |
+| CRX-04 — Fixed profiles/FULL semantics | DOCUMENTED in v1.1.0; NOT OPERATIONALLY VALIDATED | Independent review of profile mapping; machine-readable schemas, fixtures and anti-scope-narrowing tests; operational O/A proof. |
+| ChatGPT source traceability | BLOCKED | Full original report baseline / immutable source mapping remains absent. |
+| Independent human review | BLOCKED / NOT ENGAGED | Charter-compliant reviewer not yet engaged. |
+
+**Important:** Documentary topology resolution is not F-01 acceptance. Profile definitions do not prove recoverability. No tests have been executed by this amendment. F-01 through F-04 remain OPEN / NOT DEMONSTRATED; overall disposition remains **HOLD — NOT ACCEPTED**. No implementation, procurement, infrastructure spend, live exercise, migration, ingestion, deployment, production authorization or PR merge is authorized.

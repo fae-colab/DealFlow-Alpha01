@@ -22,7 +22,7 @@ The decision is based on fit to the existing v4 contract:
 - The contract requires the receipt row, authoritative head advancement and idempotency identity to be committed atomically at one logical commit point.
 - Spanner supports a serializable read-write transaction that can atomically validate the expected head, insert the receipt/idempotency record and advance the head.
 - The envelope is uploaded first to S3 and its exact VersionId and digest are pinned. A Spanner transaction failure leaves an orphaned immutable object, not an accepted ledger commit.
-- Acknowledgement occurs only after the Spanner transaction commits; the transaction is the logical ICW commit point.
+- The Spanner transaction is the logical ICW witness-commit point. This is distinct from internal commit-result resolution and client/API success, which requires verified projection application; committed-but-projection-pending returns typed HTTP 202 and is not actionable (see §9).
 - Two independently administered cloud providers provide a clearer separation between the transaction witness and immutable object archive, subject to actual ownership evidence.
 
 This is a candidate selection for review, not proof of deployment, rollback resistance or production durability.

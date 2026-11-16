@@ -5,7 +5,7 @@
 **Amends:** v1.0 baseline (Git blob `79d73a5def263ae4393727d9dea8d4708f714916`)  
 
 **Baseline source:** `ICW_F03_RECOVERY_OBJECT_INVENTORY_AND_EXERCISE_RECORD.md`  
-**Baseline source blob SHA:** `8a1d86fce3cf8c5c78edeb2aa468141a60543bcc`  
+**Baseline source blob SHA (companion inventory v1.1.0):** `948082dadac5aa0c3deb18a46da0821136071267`  
 **Status:** TEST SPECIFICATION DEFINED — EXECUTION BLOCKED / NOT RUN  
 **Disposition:** Documentation only. This specification does not demonstrate recovery or authorize infrastructure, implementation, migration, ingestion, deployment or live test execution.
 

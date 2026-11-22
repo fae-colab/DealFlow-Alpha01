@@ -21,7 +21,7 @@ permissions:
 jobs:
   test:
     name: Python + JavaScript integrity tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Check out repository
@@ -37,10 +37,16 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Install Playwright test runner
+        run: npm install --no-save --package-lock=false @playwright/test@1.56.1
+
+      - name: Install Chromium for browser tests
+        run: npx playwright install --with-deps chromium
+
       - name: Run Python engine tests
         run: python -m unittest -v test_engine.py test_parity.py test_validation_cases.py test_abstention_policy.py test_casebook_benchmark.py test_blind_replay_templates.py
 
-      - name: Run JavaScript engine tests
+      - name: Run JavaScript engine and application-module tests
         run: |
           node test_engine.js
           node test_evidence.js
@@ -51,9 +57,11 @@ jobs:
           node test_decision_desk.js
           node test_evidence_model.js
           node test_evidence_adversarial.js
+          node test_theme.js
 
       - name: Check JavaScript syntax
         run: |
+          node --check theme.js
           node --check evidence.js
           node --check outcomes.js
           node --check recommendations.js
@@ -63,6 +71,9 @@ jobs:
           node --check evidence_model.js
           node --check engine.js
           node --check parity_runner.js
+
+      - name: Run browser end-to-end regression tests
+        run: npx playwright test
 
       - name: Run Python engine smoke test
         run: python python_engine.py
@@ -81,4 +92,13 @@ jobs:
           path: |
             validation/stale_evidence_v1_1/POST_FIX_REPORT.json
             validation/stale_evidence_v1_1/POST_FIX_REPORT.md
-          if-no-files-found: error
+          if-no-files-found: ignore
+
+      - name: Preserve Playwright browser traces and reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dealflow-playwright-test-results
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7

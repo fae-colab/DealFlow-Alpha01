@@ -12,7 +12,7 @@ async function addEvidenceBackedAction(page, name = 'E2E Marina buyer') {
   await form.locator('[name="pWith"]').fill('70');
   await form.locator('[name="pWithout"]').fill('30');
   await form.locator('[name="effort"]').fill('45');
-  await form.locator('[name="deadline"]').fill('24');
+  await form.locator('[name="deadline"]').fill('24.01');
   await form.locator('[name="evidenceStatus"]').selectOption('user_reported');
   await form.locator('[name="evidenceNote"]').fill('E2E fixture: agent supplied the scenario facts.');
   const validity = await form.evaluate(el => ({

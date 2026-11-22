@@ -92,4 +92,13 @@ jobs:
           path: |
             validation/stale_evidence_v1_1/POST_FIX_REPORT.json
             validation/stale_evidence_v1_1/POST_FIX_REPORT.md
-          if-no-files-found: error
+          if-no-files-found: ignore
+
+      - name: Preserve Playwright browser traces and reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dealflow-playwright-test-results
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7

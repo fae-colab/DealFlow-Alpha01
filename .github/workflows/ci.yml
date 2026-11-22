@@ -37,6 +37,12 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Install Playwright test runner
+        run: npm install --no-save --package-lock=false @playwright/test@1.56.1
+
+      - name: Install Chromium for browser tests
+        run: npx playwright install --with-deps chromium
+
       - name: Run Python engine tests
         run: python -m unittest -v test_engine.py test_parity.py test_validation_cases.py test_abstention_policy.py test_casebook_benchmark.py test_blind_replay_templates.py
 
@@ -65,6 +71,9 @@ jobs:
           node --check evidence_model.js
           node --check engine.js
           node --check parity_runner.js
+
+      - name: Run browser end-to-end regression tests
+        run: npx playwright test
 
       - name: Run Python engine smoke test
         run: python python_engine.py

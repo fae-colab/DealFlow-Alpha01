@@ -8,3 +8,50 @@
 
 /* Issue #22: mandatory five-question Decision Desk output */
 .decision-desk{display:grid;gap:14px;margin-top:14px}.decision-card,.decision-abstain{border:1px solid var(--line,#d9e0e8);border-radius:14px;padding:16px;background:var(--panel,#fff)}.decision-card header{display:grid;gap:5px;margin-bottom:12px}.decision-card header span{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--muted,#64748b)}.decision-card header strong{font-size:17px}.decision-card header small,.decision-card footer,.decision-abstain small{color:var(--muted,#64748b)}.decision-question{border-top:1px solid var(--line,#e2e8f0);padding:10px 0}.decision-question h4{font-size:13px;margin:0 0 6px}.decision-question p{font-size:13px;line-height:1.55;margin:0}.decision-card footer{border-top:1px solid var(--line,#e2e8f0);padding-top:10px;font-size:12px}.decision-abstain{border-color:#d97706;background:#fffaf0}.decision-abstain strong{color:#92400e}.decision-abstain li,.decision-abstain p{font-size:13px;line-height:1.5}
+
+
+/* Theme controls and dark Decision Desk */
+.topbar-tools{display:flex;align-items:center;gap:18px}
+.theme-toggle{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid #43516a;border-radius:9px;background:#1b2940;color:#e8eefb;font:600 11px/1.2 inherit;cursor:pointer}
+.theme-toggle:hover{background:#263753}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0b1220;--ink:#e7edf7;--muted:#9aa9bf;--line:#263449;--navy:#080e19;
+  --blue:#7da2ff;--blue2:#17294b;--green:#55d6a1;--greenbg:#12372f;
+  --amber:#f0b85c;--amberbg:#3a2b16;--white:#111c2d;--shadow:0 8px 28px rgba(0,0,0,.22)
+}
+:root[data-theme="dark"] body{background:var(--bg);color:var(--ink)}
+:root[data-theme="dark"] .topbar{background:#080e19}
+:root[data-theme="dark"] .eyebrow{color:#91a4c3}
+:root[data-theme="dark"] .alpha-badge{background:#152238;border-color:#31425e;color:#a9c0ff}
+:root[data-theme="dark"] .alpha-badge small{color:var(--muted)}
+:root[data-theme="dark"] .panel,
+:root[data-theme="dark"] .metric,
+:root[data-theme="dark"] .compare-card,
+:root[data-theme="dark"] .decision-card,
+:root[data-theme="dark"] .decision-abstain{background:#111c2d;border-color:var(--line);color:var(--ink)}
+:root[data-theme="dark"] .compare-card.featured{background:#14213a;border-color:#38538a}
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] .form-grid input,
+:root[data-theme="dark"] .outcome-form input,
+:root[data-theme="dark"] .outcome-form select{background:#0b1525;color:var(--ink);border-color:#35445b}
+:root[data-theme="dark"] input::placeholder{color:#71829b}
+:root[data-theme="dark"] .secondary{background:#1a2b49;color:#a9c0ff;border-color:#344c79}
+:root[data-theme="dark"] .tag{background:#202d41;color:#c0cde0}
+:root[data-theme="dark"] th{color:#9aa9bf;border-color:var(--line)}
+:root[data-theme="dark"] td{border-color:#202e42}
+:root[data-theme="dark"] .decision-abstain{background:#332716;border-color:#91621f}
+:root[data-theme="dark"] .decision-abstain strong{color:#ffd18a}
+:root[data-theme="dark"] .empty-state{border-color:#35445b;color:var(--muted)}
+:root[data-theme="dark"] .rank{background:#1a2b49;color:#a9c0ff}
+:root[data-theme="dark"] .rec-reason,
+:root[data-theme="dark"] .rec-value strong,
+:root[data-theme="dark"] .positive{color:#65d9ad}
+:root[data-theme="dark"] .negative,
+:root[data-theme="dark"] .row-actions .delete{color:#ff8f8f}
+:root[data-theme="dark"] .form-grid label,
+:root[data-theme="dark"] .outcome-form label{color:#b3c0d3}
+:root[data-theme="dark"] footer strong{color:#c4d0e2}
+@media(max-width:700px){.topbar-tools{gap:8px}.theme-toggle{padding:7px 8px}.theme-toggle span{display:none}.top-note{font-size:9px}}

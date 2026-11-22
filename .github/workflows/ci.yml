@@ -40,7 +40,7 @@ jobs:
       - name: Run Python engine tests
         run: python -m unittest -v test_engine.py test_parity.py test_validation_cases.py test_abstention_policy.py test_casebook_benchmark.py test_blind_replay_templates.py
 
-      - name: Run JavaScript engine tests
+      - name: Run JavaScript engine and application-module tests
         run: |
           node test_engine.js
           node test_evidence.js
@@ -51,9 +51,11 @@ jobs:
           node test_decision_desk.js
           node test_evidence_model.js
           node test_evidence_adversarial.js
+          node test_theme.js
 
       - name: Check JavaScript syntax
         run: |
+          node --check theme.js
           node --check evidence.js
           node --check outcomes.js
           node --check recommendations.js

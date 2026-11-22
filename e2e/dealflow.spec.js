@@ -61,12 +61,12 @@ test('record an outcome and reconcile it to a recommendation snapshot', async ({
   await page.locator('#outcomeForm button[type="submit"]').click();
   await expect(page.locator('#outcomeHistory')).toContainText('E2E recorded outcome');
   await page.locator('#reconcileSnapshot').selectOption({ index: 0 });
-  await page.locator('#reconcileAction').selectOption({ label: /E2E Outcome buyer/ });
+  await page.locator('#reconcileAction').selectOption({ index: 0 });
   await page.locator('#reconcileOutcomeEvent').selectOption({ index: 0 });
   await page.locator('#reconcileAttribution').selectOption('associated_only');
   await page.locator('#reconcileForm button[type="submit"]').click();
   await expect(page.locator('#reconciliationHistory')).toContainText('associated_only');
-  await expect(page.locator('#reconciliationHistory')).toContainText('12500 AED');
+  await expect(page.locator('#reconciliationHistory')).toContainText('12,500 AED');
 });
 
 test('edit and remove an action through the actual table controls', async ({ page }) => {

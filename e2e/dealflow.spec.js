@@ -15,8 +15,24 @@ async function addEvidenceBackedAction(page, name = 'E2E Marina buyer') {
   await form.locator('[name="deadline"]').fill('24');
   await form.locator('[name="evidenceStatus"]').selectOption('user_reported');
   await form.locator('[name="evidenceNote"]').fill('E2E fixture: agent supplied the scenario facts.');
-  await form.getByRole('button', { name: 'Add to portfolio' }).click();
-  await expect(page.locator('#actionRows')).toContainText(name);
+  const validity = await form.evaluate(el => ({
+    valid: el.checkValidity(),
+    invalid: [...el.elements].filter(input => !input.checkValidity()).map(input => ({
+      name: input.name, value: input.value, message: input.validationMessage
+    }))
+  }));
+  expect(validity.invalid, JSON.stringify(validity)).toEqual([]);
+  const dialogs = [];
+  const pageErrors = [];
+  page.on('dialog', async dialog => { dialogs.push(dialog.message()); await dialog.accept(); });
+  page.on('pageerror', error => pageErrors.push(error.message));
+  await form.locator('button[type="submit"]').click();
+  try {
+    await expect(page.locator('#actionRows')).toContainText(name);
+  } catch (error) {
+    throw new Error('Action was not added. Dialogs: ' + dialogs.join(' | ') +
+      '; page errors: ' + pageErrors.join(' | ') + '; form validity: ' + JSON.stringify(validity));
+  }
 }
 
 async function optimize(page) {

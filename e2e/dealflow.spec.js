@@ -53,7 +53,7 @@ test('record an outcome and reconcile it to a recommendation snapshot', async ({
   await page.goto('/');
   await addEvidenceBackedAction(page, 'E2E Outcome buyer');
   await optimize(page);
-  await page.locator('#outcomeAction').selectOption({ label: /E2E Outcome buyer/ });
+  await page.locator('#outcomeAction').selectOption({ index: 8 });
   await page.locator('#outcomeStatus').selectOption('completed');
   await page.locator('#actualCommission').fill('12500');
   await page.locator('#actualEffort').fill('50');
